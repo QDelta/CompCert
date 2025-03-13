@@ -162,7 +162,7 @@ Scheme reachable_ind := Induction for reachable Sort Prop.
 
 Lemma reachable_trans:
   forall n1 n2, reachable n1 n2 -> forall n3, reachable n2 n3 -> reachable n1 n3.
-Proof.
+Proof using.
   induction 1; intros.
 - auto.
 - econstructor; eauto.
@@ -172,7 +172,7 @@ Lemma reachable_right:
   forall n1 n2 n3 i,
   reachable n1 n2 -> code!n2 = Some i -> In n3 (successors i) ->
   reachable n1 n3.
-Proof.
+Proof using.
   intros. apply reachable_trans with n2; auto. econstructor; eauto. constructor.
 Qed.
 
@@ -333,10 +333,10 @@ Inductive optge: option L.t -> option L.t -> Prop :=
       optge ol None.
 
 Remark optge_refl: forall ol, optge ol ol.
-Proof. destruct ol; constructor. apply L.ge_refl; apply L.eq_refl. Qed.
+Proof using. destruct ol; constructor. apply L.ge_refl; apply L.eq_refl. Qed.
 
 Remark optge_trans: forall ol1 ol2 ol3, optge ol1 ol2 -> optge ol2 ol3 -> optge ol1 ol3.
-Proof.
+Proof using.
   intros. inv H0.
   inv H. constructor. eapply L.ge_trans; eauto.
   constructor.
@@ -346,7 +346,7 @@ Remark optge_abstr_value:
   forall st st' n,
   optge st.(aval)!n st'.(aval)!n ->
   L.ge (abstr_value n st) (abstr_value n st').
-Proof.
+Proof using.
   intros. unfold abstr_value. inv H. auto. apply L.ge_bot.
 Qed.
 
@@ -362,7 +362,7 @@ Lemma propagate_succ_charact:
   /\ (forall n', st.(visited) n' -> st'.(visited) n')
   /\ (forall n', st'.(visited) n' -> NS.In n' st'.(worklist) \/ st.(visited) n')
   /\ (forall n', st.(aval)!n' = None -> st'.(aval)!n' <> None -> st'.(visited) n').
-Proof.
+Proof using transf.
   unfold propagate_succ; intros; simpl.
   destruct st.(aval)!n as [v|] eqn:E;
   [predSpec L.beq L.beq_correct v (L.lub v out) | idtac].
@@ -416,7 +416,7 @@ Lemma propagate_succ_list_charact:
   /\ (forall n', st.(visited) n' -> st'.(visited) n')
   /\ (forall n', st'.(visited) n' -> NS.In n' st'.(worklist) \/ st.(visited) n')
   /\ (forall n', st.(aval)!n' = None -> st'.(aval)!n' <> None -> st'.(visited) n').
-Proof.
+Proof using transf.
   induction l; simpl; intros.
 - repeat split; intros.
   + contradiction.
@@ -465,7 +465,7 @@ Lemma fixpoint_from_charact:
   forall start res,
   fixpoint_from start = Some res ->
   exists st, steps start st /\ NS.pick st.(worklist) = None /\ res = (L.bot, st.(aval)).
-Proof.
+Proof using.
   unfold fixpoint; intros.
   eapply (PrimIter.iterate_prop _ _ step
               (fun st => steps start st)
@@ -491,7 +491,7 @@ evolve monotonically:
 Lemma step_incr:
   forall n s1 s2, step s1 = inr s2 ->
   optge s2.(aval)!n s1.(aval)!n /\ (s1.(visited) n -> s2.(visited) n).
-Proof.
+Proof using.
   unfold step; intros.
   destruct (NS.pick (worklist s1)) as [[p rem] | ]; try discriminate.
   destruct (code!p) as [instr|]; inv H.
@@ -510,7 +510,7 @@ Qed.
 Lemma steps_incr:
   forall n s1 s2, steps s1 s2 ->
   optge s2.(aval)!n s1.(aval)!n /\ (s1.(visited) n -> s2.(visited) n).
-Proof.
+Proof using.
   induction 1.
 - split. apply optge_refl. auto.
 - destruct IHsteps. exploit (step_incr n); eauto. intros [P Q].
@@ -550,7 +550,7 @@ Lemma step_state_good:
   good_state (propagate_succ_list (mkstate st.(aval) rem st.(visited))
                                   (transf pc (abstr_value pc st))
                                   (successors instr)).
-Proof.
+Proof using.
   intros until instr; intros PICK CODEAT [GOOD1 GOOD2].
   generalize (NS.pick_some _ _ _ PICK); intro PICK2.
   set (out := transf pc (abstr_value pc st)).
@@ -586,7 +586,7 @@ Lemma step_state_good_2:
   NS.pick (worklist st) = Some (pc, rem) ->
   code!pc = None ->
   good_state (mkstate st.(aval) rem st.(visited)).
-Proof.
+Proof using.
   intros until rem; intros [GOOD1 GOOD2] PICK CODE.
   generalize (NS.pick_some _ _ _ PICK); intro PICK2.
   constructor; simpl; intros.
@@ -601,7 +601,7 @@ Qed.
 
 Lemma steps_state_good:
   forall st1 st2, steps st1 st2 -> good_state st1 -> good_state st2.
-Proof.
+Proof using.
   induction 1; intros.
 - auto.
 - unfold step in e.
@@ -615,7 +615,7 @@ Qed.
 
 Lemma start_state_good:
   forall enode eval, good_state (start_state enode eval).
-Proof.
+Proof using.
   intros. unfold start_state; constructor; simpl; intros.
 - subst n. rewrite NS.add_spec; auto.
 - rewrite PTree.gsspec in H. rewrite PTree.gempty in H.
@@ -624,7 +624,7 @@ Qed.
 
 Lemma start_state_nodeset_good:
   forall enodes, good_state (start_state_nodeset enodes).
-Proof.
+Proof using.
   intros. unfold start_state_nodeset; constructor; simpl; intros.
 - left. auto.
 - rewrite PTree.gempty in H. congruence.
@@ -632,7 +632,7 @@ Qed.
 
 Lemma start_state_allnodes_good:
   good_state start_state_allnodes.
-Proof.
+Proof using.
   unfold start_state_allnodes; constructor; simpl; intros.
 - destruct H as [instr CODE]. left. eapply NS.all_nodes_spec; eauto.
 - rewrite PTree.gempty in H. congruence.
@@ -643,7 +643,7 @@ Qed.
 Lemma reachable_visited:
   forall st, good_state st -> NS.pick st.(worklist) = None ->
   forall p q, reachable code successors p q -> st.(visited) p -> st.(visited) q.
-Proof.
+Proof using.
   intros st [GOOD1 GOOD2] PICK. induction 1; intros.
 - auto.
 - eapply IHreachable; eauto.
@@ -665,7 +665,7 @@ Theorem fixpoint_solution:
   In s (successors instr) ->
   (forall n, L.eq (transf n L.bot) L.bot) ->
   L.ge res!!s (transf n res!!n).
-Proof.
+Proof using.
   unfold fixpoint; intros.
   exploit fixpoint_from_charact; eauto. intros (st & STEPS & PICK & RES).
   exploit steps_state_good; eauto. apply start_state_good. intros [GOOD1 GOOD2].
@@ -684,7 +684,7 @@ Theorem fixpoint_entry:
   forall ep ev res,
   fixpoint ep ev = Some res ->
   L.ge res!!ep ev.
-Proof.
+Proof using.
   unfold fixpoint; intros.
   exploit fixpoint_from_charact; eauto. intros (st & STEPS & PICK & RES).
   exploit (steps_incr ep); eauto. simpl. rewrite PTree.gss. intros [P Q].
@@ -700,7 +700,7 @@ Theorem fixpoint_allnodes_solution:
   code!n = Some instr ->
   In s (successors instr) ->
   L.ge res!!s (transf n res!!n).
-Proof.
+Proof using.
   unfold fixpoint_allnodes; intros.
   exploit fixpoint_from_charact; eauto. intros (st & STEPS & PICK & RES).
   exploit steps_state_good; eauto. apply start_state_allnodes_good. intros [GOOD1 GOOD2].
@@ -722,7 +722,7 @@ Theorem fixpoint_nodeset_solution:
   code!n = Some instr ->
   In s (successors instr) ->
   L.ge res!!s (transf n res!!n).
-Proof.
+Proof using.
   unfold fixpoint_nodeset; intros.
   exploit fixpoint_from_charact; eauto. intros (st & STEPS & PICK & RES).
   exploit steps_state_good; eauto. apply start_state_nodeset_good. intros GOOD.
@@ -748,7 +748,7 @@ Theorem fixpoint_invariant:
     res pc,
   fixpoint ep ev = Some res ->
   P res!!pc.
-Proof.
+Proof using.
   intros.
   set (inv := fun st => forall x, P (abstr_value x st)).
   assert (inv (start_state ep ev)).
@@ -827,7 +827,7 @@ Lemma add_successors_correct:
   forall tolist from pred n s,
   In n pred!!!s \/ (n = from /\ In s tolist) ->
   In n (add_successors pred from tolist)!!!s.
-Proof.
+Proof using.
   induction tolist; simpl; intros.
   tauto.
   apply IHtolist.
@@ -845,7 +845,7 @@ Lemma make_predecessors_correct_1:
   forall n instr s,
   code!n = Some instr -> In s (successors instr) ->
   In n make_predecessors!!!s.
-Proof.
+Proof using.
   intros until s.
   set (P := fun m p => m!n = Some instr -> In s (successors instr) ->
                        In n p!!!s).
@@ -866,7 +866,7 @@ Lemma make_predecessors_correct_2:
   forall n instr s,
   code!n = Some instr -> In s (successors instr) ->
   exists l, make_predecessors!s = Some l /\ In n l.
-Proof.
+Proof using.
   intros. exploit make_predecessors_correct_1; eauto.
   unfold successors_list. destruct (make_predecessors!s); simpl; intros.
   exists l; auto.
@@ -877,7 +877,7 @@ Lemma reachable_predecessors:
   forall p q,
   reachable code successors p q ->
   reachable make_predecessors (fun l => l) q p.
-Proof.
+Proof using.
   induction 1.
 - constructor.
 - exploit make_predecessors_correct_2; eauto. intros [l [P Q]].
@@ -978,7 +978,7 @@ Definition exit_points : NS.t :=
 Lemma exit_points_charact:
   forall n,
   NS.In n exit_points <-> exists i, code!n = Some i /\ sequential_node n i = false.
-Proof.
+Proof using transf.
   intros n. unfold exit_points. eapply PTree_Properties.fold_rec.
 - (* extensionality *)
   intros. rewrite <- H. auto.
@@ -1000,7 +1000,7 @@ Qed.
 Lemma reachable_exit_points:
   forall pc i,
   code!pc = Some i -> exists x, NS.In x exit_points /\ reachable code successors pc x.
-Proof.
+Proof using transf.
   intros pc0. pattern pc0. apply (well_founded_ind Plt_wf).
   intros pc HR i CODE.
   destruct (sequential_node pc i) eqn:SN.
@@ -1021,7 +1021,7 @@ Lemma reachable_exit_points_predecessor:
   forall pc i,
   code!pc = Some i ->
   exists x, NS.In x exit_points /\ reachable (make_predecessors code successors) (fun l => l) x pc.
-Proof.
+Proof using transf.
   intros. exploit reachable_exit_points; eauto. intros [x [P Q]].
   exists x; split; auto. apply reachable_predecessors. auto.
 Qed.
@@ -1041,7 +1041,7 @@ Theorem fixpoint_solution:
   code!n = Some instr -> In s (successors instr) ->
   (forall n a, code!n = None -> L.eq (transf n a) L.bot) ->
   L.ge res!!n (transf s res!!s).
-Proof.
+Proof using.
   intros.
   exploit (make_predecessors_correct_2 code); eauto. intros [l [P Q]].
   destruct code!s as [instr'|] eqn:CS.
@@ -1064,7 +1064,7 @@ Theorem fixpoint_allnodes_solution:
   fixpoint_allnodes = Some res ->
   code!n = Some instr -> In s (successors instr) ->
   L.ge res!!n (transf s res!!s).
-Proof.
+Proof using.
   intros.
   exploit (make_predecessors_correct_2 code); eauto. intros [l [P Q]].
   unfold fixpoint_allnodes in H.
@@ -1243,7 +1243,7 @@ Definition predecessors := make_predecessors code successors.
 Lemma predecessors_correct:
   forall n instr s,
   code!n = Some instr -> In s (successors instr) -> In n predecessors!!!s.
-Proof.
+Proof using.
   intros. unfold predecessors. eapply make_predecessors_correct_1; eauto.
 Qed.
 
@@ -1253,7 +1253,7 @@ Lemma multiple_predecessors:
   code!n2 = Some instr2 -> In s (successors instr2) ->
   n1 <> n2 ->
   basic_block_map s = true.
-Proof.
+Proof using.
   intros.
   assert (In n1 predecessors!!!s). eapply predecessors_correct; eauto.
   assert (In n2 predecessors!!!s). eapply predecessors_correct; eauto.
@@ -1270,7 +1270,7 @@ Qed.
 Lemma no_self_loop:
   forall n instr,
   code!n = Some instr -> In n (successors instr) -> basic_block_map n = true.
-Proof.
+Proof using.
   intros. unfold basic_block_map, is_basic_block_head.
   destruct (peq n entrypoint). auto.
   fold predecessors.
@@ -1301,7 +1301,7 @@ Lemma propagate_successors_charact1:
   forall bb succs l st,
   incl st.(worklist)
        (propagate_successors bb succs l st).(worklist).
-Proof.
+Proof using.
   induction succs; simpl; intros.
   apply incl_refl.
   case (bb a).
@@ -1318,7 +1318,7 @@ Lemma propagate_successors_charact2:
   let st' := propagate_successors bb succs l st in
   (In n succs -> bb n = false -> In n st'.(worklist) /\ st'.(aval)!!n = l)
 /\ (~In n succs \/ bb n = true -> st'.(aval)!!n = st.(aval)!!n).
-Proof.
+Proof using.
   induction succs; simpl; intros.
   (* Base case *)
   split. tauto. auto.
@@ -1351,7 +1351,7 @@ Lemma propagate_successors_invariant:
     (propagate_successors basic_block_map (successors instr)
                           (transf pc res!!pc)
                           (mkstate res rem)).
-Proof.
+Proof using.
   intros until rem. intros CODE [INV1 INV2]. simpl in INV1. simpl in INV2.
   set (l := transf pc res!!pc).
   generalize (propagate_successors_charact1 basic_block_map
@@ -1412,7 +1412,7 @@ Lemma propagate_successors_invariant_2:
   code!pc = None ->
   state_invariant (mkstate res (pc :: rem)) ->
   state_invariant (mkstate res rem).
-Proof.
+Proof using.
   intros until rem. intros CODE [INV1 INV2]. simpl in INV1. simpl in INV2.
   split; simpl; intros.
   apply INV1; auto.
@@ -1424,7 +1424,7 @@ Qed.
 
 Lemma initial_state_invariant:
   state_invariant (mkstate (PMap.init L.top) (basic_block_list basic_block_map)).
-Proof.
+Proof using.
   split; simpl; intros.
   apply PMap.gi.
   right. intros. repeat rewrite PMap.gi. apply L.top_ge.
@@ -1434,7 +1434,7 @@ Lemma analyze_invariant:
   forall res,
   fixpoint = Some res ->
   state_invariant (mkstate res nil).
-Proof.
+Proof using.
   unfold fixpoint; intros. pattern res.
   eapply (PrimIter.iterate_prop _ _ (step basic_block_map)
            state_invariant).
@@ -1456,7 +1456,7 @@ Theorem fixpoint_solution:
   fixpoint = Some res ->
   code!n = Some instr -> In s (successors instr) ->
   L.ge res!!s (transf n res!!n).
-Proof.
+Proof using.
   intros.
   assert (state_invariant (mkstate res nil)).
   eapply analyze_invariant; eauto.
@@ -1470,7 +1470,7 @@ Theorem fixpoint_entry:
   forall res,
   fixpoint = Some res ->
   res!!entrypoint = L.top.
-Proof.
+Proof using.
   intros.
   assert (state_invariant (mkstate res nil)).
   eapply analyze_invariant; eauto.
@@ -1490,7 +1490,7 @@ Lemma propagate_successors_P:
   forall succs st,
   Pstate st ->
   Pstate (propagate_successors bb succs l st).
-Proof.
+Proof using.
   induction succs; simpl; intros.
   auto.
   case (bb a). auto.
@@ -1501,7 +1501,7 @@ Qed.
 
 Theorem fixpoint_invariant:
   forall res pc, fixpoint = Some res -> P res!!pc.
-Proof.
+Proof using Ptransf Ptop.
   unfold fixpoint; intros. pattern res.
   eapply (PrimIter.iterate_prop _ _ (step basic_block_map) Pstate).
 
@@ -1553,19 +1553,19 @@ Module NodeSetForward <: NODE_SET.
 
   Lemma empty_spec:
     forall n, ~In n empty.
-  Proof.
+  Proof using.
     intros. apply PHeap.In_empty.
   Qed.
 
   Lemma add_spec:
     forall n n' s, In n' (add n s) <-> n = n' \/ In n' s.
-  Proof.
+  Proof using.
     intros. rewrite PHeap.In_insert. unfold In. intuition.
   Qed.
 
   Lemma pick_none:
     forall s n, pick s = None -> ~In n s.
-  Proof.
+  Proof using.
     intros until n; unfold pick. caseEq (PHeap.findMax s); intros.
     congruence.
     apply PHeap.findMax_empty. auto.
@@ -1574,7 +1574,7 @@ Module NodeSetForward <: NODE_SET.
   Lemma pick_some:
     forall s n s', pick s = Some(n, s') ->
     forall n', In n' s <-> n = n' \/ In n' s'.
-  Proof.
+  Proof using.
     intros until s'; unfold pick. caseEq (PHeap.findMax s); intros.
     inv H0.
     generalize (PHeap.In_deleteMax s n n' H). unfold In. intuition.
@@ -1584,7 +1584,7 @@ Module NodeSetForward <: NODE_SET.
   Lemma all_nodes_spec:
     forall A (code: PTree.t A) n instr,
     code!n = Some instr -> In n (all_nodes code).
-  Proof.
+  Proof using.
     intros A code n instr.
     apply PTree_Properties.fold_rec with
       (P := fun m set => m!n = Some instr -> In n set).
@@ -1621,7 +1621,7 @@ Module NodeSetBackward <: NODE_SET.
 
   Lemma pick_none:
     forall s n, pick s = None -> ~In n s.
-  Proof.
+  Proof using.
     intros until n; unfold pick. caseEq (PHeap.findMin s); intros.
     congruence.
     apply PHeap.findMin_empty. auto.
@@ -1630,7 +1630,7 @@ Module NodeSetBackward <: NODE_SET.
   Lemma pick_some:
     forall s n s', pick s = Some(n, s') ->
     forall n', In n' s <-> n = n' \/ In n' s'.
-  Proof.
+  Proof using.
     intros until s'; unfold pick. caseEq (PHeap.findMin s); intros.
     inv H0.
     generalize (PHeap.In_deleteMin s n n' H). unfold In. intuition.

@@ -66,7 +66,7 @@ Definition DN_UP_parity_prop :=
 Lemma DN_UP_parity_aux :
   DN_UP_parity_pos_prop ->
   DN_UP_parity_prop.
-Proof.
+Proof using.
 intros Hpos x xd xu Hfx Hd Hu Hxd Hxu.
 destruct (total_order_T 0 x) as [[Hx|Hx]|Hx].
 (* . *)
@@ -107,7 +107,7 @@ Context { exists_NE_ : Exists_NE }.
 
 Theorem DN_UP_parity_generic_pos :
   DN_UP_parity_pos_prop.
-Proof with auto with typeclass_instances.
+Proof using (valid_exp exists_NE_) with auto with typeclass_instances.
 intros x xd xu H0x Hfx Hd Hu Hxd Hxu.
 destruct (mag beta x) as (ex, Hexa).
 specialize (Hexa (Rgt_not_eq _ _ H0x)).
@@ -255,14 +255,14 @@ Qed.
 
 Theorem DN_UP_parity_generic :
   DN_UP_parity_prop.
-Proof.
+Proof using valid_exp exists_NE_.
 apply DN_UP_parity_aux.
 apply DN_UP_parity_generic_pos.
 Qed.
 
 Theorem Rnd_NE_pt_total :
   round_pred_total Rnd_NE_pt.
-Proof.
+Proof using valid_exp exists_NE_.
 apply satisfies_any_imp_NG.
 now apply generic_format_satisfies_any.
 intros x d u Hf Hd Hu.
@@ -305,7 +305,7 @@ Qed.
 
 Theorem Rnd_NE_pt_monotone :
   round_pred_monotone Rnd_NE_pt.
-Proof.
+Proof using valid_exp exists_NE_.
 apply Rnd_NG_pt_monotone.
 intros x d u Hd Hdn Hu Hun (cd, (Hd1, Hd2)) (cu, (Hu1, Hu2)).
 destruct (Req_dec x d) as [Hx|Hx].
@@ -330,7 +330,7 @@ Qed.
 
 Theorem Rnd_NE_pt_round :
   round_pred Rnd_NE_pt.
-Proof.
+Proof using valid_exp exists_NE_.
 split.
 apply Rnd_NE_pt_total.
 apply Rnd_NE_pt_monotone.
@@ -340,7 +340,7 @@ Lemma round_NE_pt_pos :
   forall x,
   (0 < x)%R ->
   Rnd_NE_pt x (round beta fexp ZnearestE x).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp exists_NE_) with auto with typeclass_instances.
 intros x Hx.
 split.
 now apply round_N_pt.
@@ -482,7 +482,7 @@ Qed.
 Theorem round_NE_opp :
   forall x,
   round beta fexp ZnearestE (-x) = (- round beta fexp ZnearestE x)%R.
-Proof.
+Proof using.
 intros x.
 unfold round. simpl.
 rewrite scaled_mantissa_opp, cexp_opp.
@@ -502,7 +502,7 @@ Qed.
 Lemma round_NE_abs:
   forall x : R,
   round beta fexp ZnearestE (Rabs x) = Rabs (round beta fexp ZnearestE x).
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x.
 apply sym_eq.
 unfold Rabs at 2.
@@ -521,7 +521,7 @@ Qed.
 Theorem round_NE_pt :
   forall x,
   Rnd_NE_pt x (round beta fexp ZnearestE x).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp exists_NE_) with auto with typeclass_instances.
 intros x.
 destruct (total_order_T x 0) as [[Hx|Hx]|Hx].
 apply Rnd_NG_pt_opp_inv.

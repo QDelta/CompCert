@@ -50,7 +50,7 @@ Lemma pop_spec_ptl A symbols_to_pop action word_stk stk (res : A) stk' :
     (word_stk' ++ word_res = word_stk)%list /\
     word_has_stack_semantics word_stk' stk' /\
     ptl_sem ptl action = res.
-Proof.
+Proof using.
   intros Hspec. revert word_stk.
   induction Hspec as [stk sem|symbols_to_pop st stk action sem stk' res Hspec IH];
     intros word_stk Hword_stk.
@@ -72,7 +72,7 @@ Lemma reduce_step_invariant (stk:stack) (prod:production) Hv Hi word buffer :
     buffer = buffer_new /\ word_has_stack_semantics word stk'
   | Fail_sr => True
   end.
-Proof.
+Proof using.
   intros Hword_stk. unfold reduce_step.
   match goal with
   | |- context [pop_state_valid init ?stp stk ?x1 ?x2 ?x3 ?x4 ?x5] =>
@@ -106,7 +106,7 @@ Lemma step_invariant stk word buffer safe Hi :
       word_has_stack_semantics word_new stk_new
   | Fail_sr => True
   end.
-Proof.
+Proof using.
   intros Hword_stk. unfold step.
   generalize (reduce_ok safe (state_of_stack init stk)).
   destruct action_table as [prod|awt].
@@ -142,7 +142,7 @@ Lemma parse_fix_invariant stk word buffer safe log_n_steps Hi :
       word_has_stack_semantics word_new stk_new
   | Fail_sr => True
   end.
-Proof.
+Proof using.
   revert stk word buffer Hi.
   induction log_n_steps as [|log_n_steps IH]=>/= stk word buffer Hi Hstk;
     [by apply step_invariant|].
@@ -162,7 +162,7 @@ Theorem parse_correct safe buffer log_n_steps:
       pt_sem pt = sem
   | _ => True
   end.
-Proof.
+Proof using.
   unfold parse.
   assert (Hparse := parse_fix_invariant [] [] buffer safe log_n_steps
                                         (parse_subproof init)).

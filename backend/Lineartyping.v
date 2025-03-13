@@ -103,7 +103,7 @@ Definition wt_locset (ls: locset) : Prop :=
 Lemma wt_setreg:
   forall ls r v,
   Val.has_type v (mreg_type r) -> wt_locset ls -> wt_locset (Locmap.set (R r) v ls).
-Proof.
+Proof using.
   intros; red; intros.
   unfold Locmap.set.
   destruct (Loc.eq (R r) l).
@@ -114,7 +114,7 @@ Qed.
 Lemma wt_setstack:
   forall ls sl ofs ty v,
   wt_locset ls -> wt_locset (Locmap.set (S sl ofs ty) v ls).
-Proof.
+Proof using.
   intros; red; intros.
   unfold Locmap.set.
   destruct (Loc.eq (S sl ofs ty) l).
@@ -127,13 +127,13 @@ Qed.
 
 Lemma wt_undef_regs:
   forall rs ls, wt_locset ls -> wt_locset (undef_regs rs ls).
-Proof.
+Proof using.
   induction rs; simpl; intros. auto. apply wt_setreg; auto. red; auto.
 Qed.
 
 Lemma wt_call_regs:
   forall ls, wt_locset ls -> wt_locset (call_regs ls).
-Proof.
+Proof using.
   intros; red; intros. unfold call_regs. destruct l. auto.
   destruct sl.
   red; auto.
@@ -144,7 +144,7 @@ Qed.
 Lemma wt_return_regs:
   forall caller callee,
   wt_locset caller -> wt_locset callee -> wt_locset (return_regs caller callee).
-Proof.
+Proof using.
   intros; red; intros.
   unfold return_regs. destruct l.
 - destruct (is_callee_save r); auto.
@@ -153,7 +153,7 @@ Qed.
 
 Lemma wt_undef_caller_save_regs:
   forall ls, wt_locset ls -> wt_locset (undef_caller_save_regs ls).
-Proof.
+Proof using.
   intros; red; intros. unfold undef_caller_save_regs.
   destruct l.
   destruct (is_callee_save r); auto; simpl; auto.
@@ -162,7 +162,7 @@ Qed.
 
 Lemma wt_init:
   wt_locset (Locmap.init Vundef).
-Proof.
+Proof using.
   red; intros. unfold Locmap.init. red; auto.
 Qed.
 
@@ -171,7 +171,7 @@ Lemma wt_setpair:
   Val.has_type v (proj_sig_res sg) ->
   wt_locset rs ->
   wt_locset (Locmap.setpair (loc_result sg) v rs).
-Proof.
+Proof using.
   intros. generalize (loc_result_pair sg) (loc_result_type sg).
   destruct (loc_result sg); simpl Locmap.setpair.
 - intros. apply wt_setreg; auto. eapply Val.has_subtype; eauto.
@@ -187,7 +187,7 @@ Lemma wt_setres:
   Val.has_type v ty ->
   wt_locset rs ->
   wt_locset (Locmap.setres res v rs).
-Proof.
+Proof using.
   induction res; simpl; intros.
 - apply wt_setreg; auto. eapply Val.has_subtype; eauto.
 - auto.
@@ -200,7 +200,7 @@ Lemma wt_find_label:
   wt_function f = true ->
   find_label lbl f.(fn_code) = Some c ->
   wt_code f c = true.
-Proof.
+Proof using.
   unfold wt_function; intros until c. generalize (fn_code f). induction c0; simpl; intros.
   discriminate.
   InvBooleans. destruct (is_label lbl a).
@@ -246,7 +246,7 @@ Inductive wt_callstack: list stackframe -> Prop :=
 
 Lemma wt_parent_locset:
   forall s, wt_callstack s -> wt_locset (parent_locset s).
-Proof.
+Proof using.
   induction 1; simpl.
 - apply wt_init.
 - auto.
@@ -285,7 +285,7 @@ Hypothesis wt_prog:
 
 Lemma wt_find_function:
   forall ros rs f, find_function ge ros rs = Some f -> wt_fundef f.
-Proof.
+Proof using wt_prog.
   intros.
   assert (X: exists i, In (i, Gfun f) prog.(prog_defs)).
   {
@@ -299,7 +299,7 @@ Qed.
 
 Theorem step_type_preservation:
   forall S1 t S2, step ge S1 t S2 -> wt_state S1 -> wt_state S2.
-Proof.
+Proof using wt_prog.
 Local Opaque mreg_type.
   induction 1; intros WTS; inv WTS.
 - (* getstack *)
@@ -391,7 +391,7 @@ Qed.
 
 Theorem wt_initial_state:
   forall S, initial_state prog S -> wt_state S.
-Proof.
+Proof using wt_prog.
   induction 1. econstructor. constructor.
   unfold ge0 in H1. exploit Genv.find_funct_ptr_inversion; eauto.
   intros [id IN]. eapply wt_prog; eauto.
@@ -408,7 +408,7 @@ Lemma wt_state_getstack:
   forall s f sp sl ofs ty rd c rs m,
   wt_state (State s f sp (Lgetstack sl ofs ty rd :: c) rs m) ->
   slot_valid f sl ofs ty = true.
-Proof.
+Proof using.
   intros. inv H. simpl in WTC; InvBooleans. auto.
 Qed.
 
@@ -416,7 +416,7 @@ Lemma wt_state_setstack:
   forall s f sp sl ofs ty r c rs m,
   wt_state (State s f sp (Lsetstack r sl ofs ty :: c) rs m) ->
   slot_valid f sl ofs ty = true /\ slot_writable sl = true.
-Proof.
+Proof using.
   intros. inv H. simpl in WTC; InvBooleans. intuition.
 Qed.
 
@@ -424,7 +424,7 @@ Lemma wt_state_tailcall:
   forall s f sp sg ros c rs m,
   wt_state (State s f sp (Ltailcall sg ros :: c) rs m) ->
   size_arguments sg = 0.
-Proof.
+Proof using.
   intros. inv H. simpl in WTC; InvBooleans. auto.
 Qed.
 
@@ -432,7 +432,7 @@ Lemma wt_state_builtin:
   forall s f sp ef args res c rs m,
   wt_state (State s f sp (Lbuiltin ef args res :: c) rs m) ->
   forallb (loc_valid f) (params_of_builtin_args args) = true.
-Proof.
+Proof using.
   intros. inv H. simpl in WTC; InvBooleans. auto.
 Qed.
 
@@ -440,7 +440,7 @@ Lemma wt_callstate_wt_regs:
   forall s f rs m,
   wt_state (Callstate s f rs m) ->
   forall r, Val.has_type (rs (R r)) (mreg_type r).
-Proof.
+Proof using.
   intros. inv H. apply WTRS.
 Qed.
 
@@ -448,7 +448,7 @@ Lemma wt_callstate_agree:
   forall s f rs m,
   wt_state (Callstate s f rs m) ->
   agree_callee_save rs (parent_locset s) /\ agree_outgoing_arguments (funsig f) rs (parent_locset s).
-Proof.
+Proof using.
   intros. inv H; auto.
 Qed.
 
@@ -456,6 +456,6 @@ Lemma wt_returnstate_agree:
   forall s rs m,
   wt_state (Returnstate s rs m) ->
   agree_callee_save rs (parent_locset s) /\ outgoing_undef rs.
-Proof.
+Proof using.
   intros. inv H; auto.
 Qed.

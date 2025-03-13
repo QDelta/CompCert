@@ -536,7 +536,7 @@ Definition expr_true := Econst_int Int.one type_int32s.
 
 Definition is_Sskip:
   forall s, {s = Csyntax.Sskip} + {s <> Csyntax.Sskip}.
-Proof.
+Proof using.
   destruct s; ((left; reflexivity) || (right; congruence)).
 Defined.
 

@@ -25,7 +25,7 @@ Class Comparable (A:Type) := {
 
 Theorem compare_refl {A:Type} (C: Comparable A) :
   forall x, compare x x = Eq.
-Proof.
+Proof using.
 intros.
 pose proof (compare_antisym x x).
 destruct (compare x x); intuition; try discriminate.
@@ -37,7 +37,7 @@ Definition comparableLt {A:Type} (C: Comparable A) : relation A :=
 
 Global Instance ComparableLtStrictOrder {A:Type} (C: Comparable A) :
   StrictOrder (comparableLt C).
-Proof.
+Proof using.
 apply Build_StrictOrder.
 unfold Irreflexive, Reflexive, complement, comparableLt.
 intros.
@@ -123,7 +123,7 @@ Definition compare_eqb {A:Type} {C:Comparable A} (x y:A) :=
 
 Theorem compare_eqb_iff {A:Type} {C:Comparable A} {U:ComparableLeibnizEq C} :
   forall x y, compare_eqb x y = true <-> x = y.
-Proof.
+Proof using.
 unfold compare_eqb.
 intuition.
 apply compare_eq.
@@ -139,7 +139,7 @@ Global Instance PairComparableLeibnizEq
   {A:Type} {CA:Comparable A} (UA:ComparableLeibnizEq CA)
   {B:Type} {CB:Comparable B} (UB:ComparableLeibnizEq CB) :
     ComparableLeibnizEq (PairComparable CA CB).
-Proof.
+Proof using.
 intros x y; destruct x, y; simpl.
 pose proof (compare_eq a a0); pose proof (compare_eq b b0).
 destruct (compare a a0); try discriminate.
@@ -235,10 +235,10 @@ Module OrderedTypeAlt_from_ComparableM (C:ComparableM) <: OrderedTypeAlt.
   Infix "?=" := compare (at level 70, no associativity).
 
   Lemma compare_sym x y : (y?=x) = CompOpp (x?=y).
-  Proof. exact (Logic.eq_sym (compare_antisym x y)). Qed.
+  Proof using. exact (Logic.eq_sym (compare_antisym x y)). Qed.
   Lemma compare_trans c x y z :
     (x?=y) = c -> (y?=z) = c -> (x?=z) = c.
-  Proof.
+  Proof using.
   apply compare_trans.
   Qed.
 End OrderedTypeAlt_from_ComparableM.

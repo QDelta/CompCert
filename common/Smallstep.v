@@ -62,7 +62,7 @@ Inductive star (ge: genv): state -> trace -> state -> Prop :=
 
 Lemma star_one:
   forall ge s1 t s2, step ge s1 t s2 -> star ge s1 t s2.
-Proof.
+Proof using.
   intros. eapply star_step; eauto. apply star_refl. traceEq.
 Qed.
 
@@ -70,7 +70,7 @@ Lemma star_two:
   forall ge s1 t1 s2 t2 s3 t,
   step ge s1 t1 s2 -> step ge s2 t2 s3 -> t = t1 ** t2 ->
   star ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply star_step; eauto. apply star_one; auto.
 Qed.
 
@@ -78,7 +78,7 @@ Lemma star_three:
   forall ge s1 t1 s2 t2 s3 t3 s4 t,
   step ge s1 t1 s2 -> step ge s2 t2 s3 -> step ge s3 t3 s4 -> t = t1 ** t2 ** t3 ->
   star ge s1 t s4.
-Proof.
+Proof using.
   intros. eapply star_step; eauto. eapply star_two; eauto.
 Qed.
 
@@ -87,14 +87,14 @@ Lemma star_four:
   step ge s1 t1 s2 -> step ge s2 t2 s3 ->
   step ge s3 t3 s4 -> step ge s4 t4 s5 -> t = t1 ** t2 ** t3 ** t4 ->
   star ge s1 t s5.
-Proof.
+Proof using.
   intros. eapply star_step; eauto. eapply star_three; eauto.
 Qed.
 
 Lemma star_trans:
   forall ge s1 t1 s2, star ge s1 t1 s2 ->
   forall t2 s3 t, star ge s2 t2 s3 -> t = t1 ** t2 -> star ge s1 t s3.
-Proof.
+Proof using.
   induction 1; intros.
   rewrite H0. simpl. auto.
   eapply star_step; eauto. traceEq.
@@ -110,7 +110,7 @@ Lemma star_right:
   forall ge s1 t1 s2 t2 s3 t,
   star ge s1 t1 s2 -> step ge s2 t2 s3 -> t = t1 ** t2 ->
   star ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply star_trans. eauto. apply star_one. eauto. auto.
 Qed.
 
@@ -119,7 +119,7 @@ Lemma star_E0_ind:
   (forall s, P s s) ->
   (forall s1 s2 s3, step ge s1 E0 s2 -> P s2 s3 -> P s1 s3) ->
   forall s1 s2, star ge s1 E0 s2 -> P s1 s2.
-Proof.
+Proof using.
   intros ge P BASE REC.
   assert (forall s1 t s2, star ge s1 t s2 -> t = E0 -> P s1 s2).
     induction 1; intros; subst.
@@ -138,7 +138,7 @@ Inductive plus (ge: genv): state -> trace -> state -> Prop :=
 Lemma plus_one:
   forall ge s1 t s2,
   step ge s1 t s2 -> plus ge s1 t s2.
-Proof.
+Proof using.
   intros. econstructor; eauto. apply star_refl. traceEq.
 Qed.
 
@@ -146,7 +146,7 @@ Lemma plus_two:
   forall ge s1 t1 s2 t2 s3 t,
   step ge s1 t1 s2 -> step ge s2 t2 s3 -> t = t1 ** t2 ->
   plus ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply plus_left; eauto. apply star_one; auto.
 Qed.
 
@@ -154,7 +154,7 @@ Lemma plus_three:
   forall ge s1 t1 s2 t2 s3 t3 s4 t,
   step ge s1 t1 s2 -> step ge s2 t2 s3 -> step ge s3 t3 s4 -> t = t1 ** t2 ** t3 ->
   plus ge s1 t s4.
-Proof.
+Proof using.
   intros. eapply plus_left; eauto. eapply star_two; eauto.
 Qed.
 
@@ -163,13 +163,13 @@ Lemma plus_four:
   step ge s1 t1 s2 -> step ge s2 t2 s3 ->
   step ge s3 t3 s4 -> step ge s4 t4 s5 -> t = t1 ** t2 ** t3 ** t4 ->
   plus ge s1 t s5.
-Proof.
+Proof using.
   intros. eapply plus_left; eauto. eapply star_three; eauto.
 Qed.
 
 Lemma plus_star:
   forall ge s1 t s2, plus ge s1 t s2 -> star ge s1 t s2.
-Proof.
+Proof using.
   intros. inversion H; subst.
   eapply star_step; eauto.
 Qed.
@@ -178,7 +178,7 @@ Lemma plus_right:
   forall ge s1 t1 s2 t2 s3 t,
   star ge s1 t1 s2 -> step ge s2 t2 s3 -> t = t1 ** t2 ->
   plus ge s1 t s3.
-Proof.
+Proof using.
   intros. inversion H; subst. simpl. apply plus_one. auto.
   rewrite Eapp_assoc. eapply plus_left; eauto.
   eapply star_right; eauto.
@@ -188,7 +188,7 @@ Lemma plus_left':
   forall ge s1 t1 s2 t2 s3 t,
   step ge s1 t1 s2 -> plus ge s2 t2 s3 -> t = t1 ** t2 ->
   plus ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply plus_left; eauto. apply plus_star; auto.
 Qed.
 
@@ -196,14 +196,14 @@ Lemma plus_right':
   forall ge s1 t1 s2 t2 s3 t,
   plus ge s1 t1 s2 -> step ge s2 t2 s3 -> t = t1 ** t2 ->
   plus ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply plus_right; eauto. apply plus_star; auto.
 Qed.
 
 Lemma plus_star_trans:
   forall ge s1 t1 s2 t2 s3 t,
   plus ge s1 t1 s2 -> star ge s2 t2 s3 -> t = t1 ** t2 -> plus ge s1 t s3.
-Proof.
+Proof using.
   intros. inversion H; subst.
   econstructor; eauto. eapply star_trans; eauto.
   traceEq.
@@ -212,7 +212,7 @@ Qed.
 Lemma star_plus_trans:
   forall ge s1 t1 s2 t2 s3 t,
   star ge s1 t1 s2 -> plus ge s2 t2 s3 -> t = t1 ** t2 -> plus ge s1 t s3.
-Proof.
+Proof using.
   intros. inversion H; subst.
   simpl; auto.
   rewrite Eapp_assoc.
@@ -223,7 +223,7 @@ Qed.
 Lemma plus_trans:
   forall ge s1 t1 s2 t2 s3 t,
   plus ge s1 t1 s2 -> plus ge s2 t2 s3 -> t = t1 ** t2 -> plus ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply plus_star_trans. eauto. apply plus_star. eauto. auto.
 Qed.
 
@@ -231,7 +231,7 @@ Lemma plus_inv:
   forall ge s1 t s2,
   plus ge s1 t s2 ->
   step ge s1 t s2 \/ exists s', exists t1, exists t2, step ge s1 t1 s' /\ plus ge s' t2 s2 /\ t = t1 ** t2.
-Proof.
+Proof using.
   intros. inversion H; subst. inversion H1; subst.
   left. rewrite E0_right. auto.
   right. exists s3; exists t1; exists (t0 ** t3); split. auto.
@@ -242,7 +242,7 @@ Lemma star_inv:
   forall ge s1 t s2,
   star ge s1 t s2 ->
   (s2 = s1 /\ t = E0) \/ plus ge s1 t s2.
-Proof.
+Proof using.
   intros. inv H. left; auto. right; econstructor; eauto.
 Qed.
 
@@ -253,7 +253,7 @@ Lemma plus_ind2:
    step ge s1 t1 s2 -> plus ge s2 t2 s3 -> P s2 t2 s3 -> t = t1 ** t2 ->
    P s1 t s3) ->
   forall s1 t s2, plus ge s1 t s2 -> P s1 t s2.
-Proof.
+Proof using.
   intros ge P BASE IND.
   assert (forall s1 t s2, star ge s1 t s2 ->
          forall s0 t0, step ge s0 t0 s1 ->
@@ -269,7 +269,7 @@ Lemma plus_E0_ind:
   forall ge (P: state -> state -> Prop),
   (forall s1 s2 s3, step ge s1 E0 s2 -> star ge s2 E0 s3 -> P s1 s3) ->
   forall s1 s2, plus ge s1 E0 s2 -> P s1 s2.
-Proof.
+Proof using.
   intros. inv H0. exploit Eapp_E0_inv; eauto. intros [A B]; subst. eauto.
 Qed.
 
@@ -284,13 +284,13 @@ Inductive starN (ge: genv): nat -> state -> trace -> state -> Prop :=
 
 Remark starN_star:
   forall ge n s t s', starN ge n s t s' -> star ge s t s'.
-Proof.
+Proof using.
   induction 1; econstructor; eauto.
 Qed.
 
 Remark star_starN:
   forall ge s t s', star ge s t s' -> exists n, starN ge n s t s'.
-Proof.
+Proof using.
   induction 1.
   exists O; constructor.
   destruct IHstar as [n P]. exists (S n); econstructor; eauto.
@@ -307,7 +307,7 @@ Lemma star_forever:
   forall ge s1 t s2, star ge s1 t s2 ->
   forall T, forever ge s2 T ->
   forever ge s1 (t *** T).
-Proof.
+Proof using.
   induction 1; intros. simpl. auto.
   subst t. rewrite Eappinf_assoc.
   econstructor; eauto.
@@ -339,7 +339,7 @@ Lemma forever_N_inv:
   forever_N ge a s T ->
   exists t, exists s', exists a', exists T',
   step ge s t s' /\ forever_N ge a' s' T' /\ T = t *** T'.
-Proof.
+Proof using order_wf.
   intros ge a0. pattern a0. apply (well_founded_ind order_wf).
   intros. inv H0.
   (* star case *)
@@ -361,7 +361,7 @@ Qed.
 
 Lemma forever_N_forever:
   forall ge a s T, forever_N ge a s T -> forever ge s T.
-Proof.
+Proof using order_wf.
   cofix COINDHYP; intros.
   destruct (forever_N_inv H) as [t [s' [a' [T' [P [Q R]]]]]].
   rewrite R. apply forever_intro with s'. auto.
@@ -382,7 +382,7 @@ Lemma forever_plus_inv:
   forever_plus ge s T ->
   exists s', exists t, exists T',
   step ge s t s' /\ forever_plus ge s' T' /\ T = t *** T'.
-Proof.
+Proof using.
   intros. inv H. inv H0. exists s0; exists t1; exists (t2 *** T2).
   split. auto.
   split. exploit star_inv; eauto. intros [[P Q] | R].
@@ -392,7 +392,7 @@ Qed.
 
 Lemma forever_plus_forever:
   forall ge s T, forever_plus ge s T -> forever ge s T.
-Proof.
+Proof using.
   cofix COINDHYP; intros.
   destruct (forever_plus_inv H) as [s' [t [T' [P [Q R]]]]].
   subst. econstructor; eauto.
@@ -423,7 +423,7 @@ Lemma forever_silent_N_inv:
   forever_silent_N ge a s ->
   exists s', exists a',
   step ge s E0 s' /\ forever_silent_N ge a' s'.
-Proof.
+Proof using order_wf.
   intros ge a0. pattern a0. apply (well_founded_ind order_wf).
   intros. inv H0.
   (* star case *)
@@ -443,7 +443,7 @@ Qed.
 
 Lemma forever_silent_N_forever:
   forall ge a s, forever_silent_N ge a s -> forever_silent ge s.
-Proof.
+Proof using order_wf.
   cofix COINDHYP; intros.
   destruct (forever_silent_N_inv H) as [s' [a' [P Q]]].
   apply forever_silent_intro with s'. auto.
@@ -461,7 +461,7 @@ Lemma star_forever_reactive:
   forall ge s1 t s2 T,
   star ge s1 t s2 -> forever_reactive ge s2 T ->
   forever_reactive ge s1 (t *** T).
-Proof.
+Proof using.
   intros. inv H0. rewrite <- Eappinf_assoc. econstructor.
   eapply star_trans; eauto.
   red; intro. exploit Eapp_E0_inv; eauto. intros [P Q]. contradiction.
@@ -487,7 +487,7 @@ Lemma eventually_one: forall ge s (P: state -> Prop),
   (forall r, ~ final_state s r) ->
   (forall t s', step ge s t s' -> t = E0 /\ P s') ->
   eventually ge 1%nat s P.
-Proof.
+Proof using.
   intros. apply eventually_later; auto. intros. apply H0 in H1. intuition auto using eventually.
 Qed.
 
@@ -495,7 +495,7 @@ Lemma eventually_trans: forall ge n1 s1 P1 n2 P2,
   eventually ge n1 s1 P1 -> 
   (forall s2, P1 s2 -> eventually ge n2 s2 P2) ->
   eventually ge (n1 + n2)%nat s1 P2.
-Proof.
+Proof using.
   intros. revert n1 s1 H. induction n1; intros s1 EV; inv EV; simpl.
 - apply H0; assumption.
 - apply eventually_later; auto. intros t s' ST. destruct (H2 t s' ST) as [U V]. auto.
@@ -505,7 +505,7 @@ Corollary eventually_implies: forall ge n s (P1 P2: state -> Prop),
   eventually ge n s P1 ->
   (forall s, P1 s -> P2 s) ->
   eventually ge n s P2.
-Proof.
+Proof using.
   intros. replace n with (n + 0)%nat by lia. eapply eventually_trans; eauto using eventually_now.
 Qed.
 
@@ -513,7 +513,7 @@ Lemma eventually_and_invariant: forall ge (Inv: state -> Prop) n s P,
   (forall s t s', step ge s t s' -> Inv s -> Inv s') ->
   eventually ge n s P -> Inv s ->
   eventually ge n s (fun s' => P s' /\ Inv s').
-Proof.
+Proof using.
   intros. revert n s H0 H1. induction n; intros s EV IV; inv EV.
 - apply eventually_now. auto.
 - apply eventually_later; auto. intros. edestruct H2; eauto. 
@@ -605,7 +605,7 @@ Lemma fsim_simulation':
   forall s2, match_states i s1 s2 ->
   (exists i', exists s2', Plus L2 s2 t s2' /\ match_states i' s1' s2')
   \/ (exists i', order i' i /\ t = E0 /\ match_states i' s1' s2).
-Proof.
+Proof using.
   intros. exploit fsim_simulation; eauto.
   intros [i' [s2' [A B]]]. intuition.
   left; exists i'; exists s2'; auto.
@@ -661,7 +661,7 @@ Hypothesis simulation:
   /\ match_states s1' s2'.
 
 Lemma forward_simulation_star_wf: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved order_wf order match_states match_initial_states match_final_states.
   apply Forward_simulation with order (fun idx s1 s2 => idx = s1 /\ match_states s1 s2);
   constructor.
 - auto.
@@ -690,7 +690,7 @@ Hypothesis simulation:
   \/ (measure s1' < measure s1 /\ t = E0 /\ match_states s1' s2)%nat.
 
 Lemma forward_simulation_star: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved measure match_states match_initial_states match_final_states.
   apply forward_simulation_star_wf with (ltof _ measure).
   apply well_founded_ltof.
   intros. exploit simulation; eauto. intros [[s2' [A B]] | [A [B C]]].
@@ -711,7 +711,7 @@ Hypothesis simulation:
   exists s2', Plus L2 s2 t s2' /\ match_states s1' s2'.
 
 Lemma forward_simulation_plus: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved match_states match_initial_states match_final_states.
   apply forward_simulation_star with (measure := fun _ => O).
   intros. exploit simulation; eauto.
 Qed.
@@ -729,7 +729,7 @@ Hypothesis simulation:
   exists s2', Step L2 s2 t s2' /\ match_states s1' s2'.
 
 Lemma forward_simulation_step: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved match_states match_initial_states match_final_states.
   apply forward_simulation_plus.
   intros. exploit simulation; eauto. intros [s2' [A B]].
   exists s2'; split; auto. apply plus_one; auto.
@@ -754,7 +754,7 @@ Hypothesis simulation:
   \/ (measure s1' < measure s1 /\ t = E0 /\ match_states s1' s2)%nat.
 
 Lemma forward_simulation_opt: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved measure match_states match_initial_states match_final_states.
   apply forward_simulation_star with measure.
   intros. exploit simulation; eauto. intros [[s2' [A B]] | [A [B C]]].
   left; exists s2'; split; auto. apply plus_one; auto.
@@ -795,7 +795,7 @@ Hypothesis public_preserved:
   forall id, Senv.public_symbol (symbolenv L2) id = Senv.public_symbol (symbolenv L1) id.
 
 Lemma forward_simulation_eventually: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved order_wf order match_states initial_states index final_states.
   apply @Forward_simulation with
     (index := (index * nat)%type)
     (order := lex_ord order Nat.lt)
@@ -849,7 +849,7 @@ Hypothesis simulation:
   /\ Eventually L1 n s1' (fun s1'' => match_states s1'' s2').
 
 Lemma forward_simulation_eventually_plus: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved match_states initial_states final_states.
   apply forward_simulation_eventually with (order := lt) (match_states := fun i s1 s2 => match_states s1 s2).
 - apply lt_wf.
 - intros. exploit initial_states; eauto. intros (s2 & A & B). exists O, s2; auto.
@@ -877,7 +877,7 @@ Hypothesis simulation:
         Plus L2 s2 t s2' /\ Eventually L1 n s1' (fun s1'' => match_states s1'' s2')).
 
 Lemma forward_simulation_eventually_star_wf: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved order_wf order match_states initial_states final_states.
   apply @Forward_simulation with
     (index := (nat * state L1)%type)
     (order := lex_ord Nat.lt order)
@@ -922,7 +922,7 @@ Hypothesis simulation:
         Plus L2 s2 t s2' /\ Eventually L1 n s1' (fun s1'' => match_states s1'' s2')).
 
 Lemma forward_simulation_eventually_star: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved measure match_states initial_states final_states.
   apply forward_simulation_eventually_star_wf with (ltof _ measure).
 - apply well_founded_ltof.
 - exact simulation.
@@ -942,7 +942,7 @@ Lemma simulation_star:
   forall s1 t s1', Star L1 s1 t s1' ->
   forall i s2, match_states i s1 s2 ->
   exists i', exists s2', Star L2 s2 t s2' /\ match_states i' s1' s2'.
-Proof.
+Proof using S.
   induction 1; intros.
   exists i; exists s2; split; auto. apply star_refl.
   exploit fsim_simulation; eauto. intros [i' [s2' [A B]]].
@@ -956,7 +956,7 @@ Lemma simulation_plus:
   forall i s2, match_states i s1 s2 ->
   (exists i', exists s2', Plus L2 s2 t s2' /\ match_states i' s1' s2')
   \/ (exists i', clos_trans _ order i' i /\ t = E0 /\ match_states i' s1' s2).
-Proof.
+Proof using S.
   induction 1 using plus_ind2; intros.
 (* base case *)
   exploit fsim_simulation'; eauto. intros [A | [i' A]].
@@ -977,7 +977,7 @@ Lemma simulation_forever_silent:
   forall i s1 s2,
   Forever_silent L1 s1 -> match_states i s1 s2 ->
   Forever_silent L2 s2.
-Proof.
+Proof using order S.
   assert (forall i s1 s2,
           Forever_silent L1 s1 -> match_states i s1 s2 ->
           forever_silent_N (step L2) order (globalenv L2) i s2).
@@ -993,7 +993,7 @@ Lemma simulation_forever_reactive:
   forall i s1 s2 T,
   Forever_reactive L1 s1 T -> match_states i s1 s2 ->
   Forever_reactive L2 s2 T.
-Proof.
+Proof using order S.
   cofix COINDHYP; intros.
   inv H.
   edestruct simulation_star as [i' [st2' [A B]]]; eauto.
@@ -1006,7 +1006,7 @@ End SIMULATION_SEQUENCES.
 
 Lemma compose_forward_simulations:
   forall L1 L2 L3, forward_simulation L1 L2 -> forward_simulation L2 L3 -> forward_simulation L1 L3.
-Proof.
+Proof using.
   intros L1 L2 L3 S12 S23.
   destruct S12 as [index order match_states props].
   destruct S23 as [index' order' match_states' props'].
@@ -1082,21 +1082,21 @@ Hypothesis DET: determinate L.
 Lemma sd_determ_1:
   forall s t1 s1 t2 s2,
   Step L s t1 s1 -> Step L s t2 s2 -> match_traces (symbolenv L) t1 t2.
-Proof.
+Proof using DET.
   intros. eapply sd_determ; eauto.
 Qed.
 
 Lemma sd_determ_2:
   forall s t s1 s2,
   Step L s t s1 -> Step L s t s2 -> s1 = s2.
-Proof.
+Proof using DET.
   intros. eapply sd_determ; eauto.
 Qed.
 
 Lemma sd_determ_3:
   forall s t s1 s2,
   Step L s t s1 -> Step L s E0 s2 -> t = E0 /\ s1 = s2.
-Proof.
+Proof using DET.
   intros. exploit (sd_determ DET). eexact H. eexact H0.
   intros [A B]. inv A. auto.
 Qed.
@@ -1104,7 +1104,7 @@ Qed.
 Lemma star_determinacy:
   forall s t s', Star L s t s' ->
   forall s'', Star L s t s'' -> Star L s' E0 s'' \/ Star L s'' E0 s'.
-Proof.
+Proof using DET.
   induction 1; intros.
   auto.
   inv H2.
@@ -1164,7 +1164,7 @@ Lemma star_match_eventually:
   forall s1 s1', Star L1 s1 E0 s1' ->
   forall i s2, match_states i s1' s2 ->
   exists n, Eventually L1 n s1 (fun s1'' => match_states i s1'' s2).
-Proof.
+Proof using L1det.
   intros s10 s10' STAR0. pattern s10, s10'; eapply star_E0_ind; eauto.
   - intros s1 i s2 M. exists O; constructor; auto.
   - intros s1 s1' s1'' STEP IH i s2 M.
@@ -1176,7 +1176,7 @@ Proof.
 Qed.
 
 Lemma forward_simulation_determ: forward_simulation L1 L2.
-Proof.
+Proof using wf_order simulation public_preserved order match_states match_initial_states match_final_states index L1det.
   apply forward_simulation_eventually with (order := order) (match_states := match_states); auto.
   intros. exploit simulation; eauto. intros (s1'' & i' & s2' & A & B & C).
   exploit star_match_eventually; eauto. intros (n & D).
@@ -1222,7 +1222,7 @@ Hypothesis simulation:
    /\ match_states s1'' s2'.
 
 Lemma forward_simulation_determ_star: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved measure match_states match_initial_states match_final_states L1det.
   apply forward_simulation_determ with
     (match_states := fun i s1 s2 => i = s1 /\ match_states s1 s2)
     (order := ltof _ measure).
@@ -1247,7 +1247,7 @@ Hypothesis simulation:
   exists s1'' s2', Star L1 s1' E0 s1'' /\ Plus L2 s2 t s2' /\ match_states s1'' s2'.
 
 Lemma forward_simulation_determ_plus: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved match_states match_initial_states match_final_states L1det.
   apply forward_simulation_determ_star with (measure := fun _ => O).
   intros. exploit simulation; eauto. intros (s1'' & s2' & A & B & C).
   exists s1'', s2'; auto.
@@ -1263,7 +1263,7 @@ Hypothesis simulation:
   exists s1'' s2', Star L1 s1' E0 s1'' /\ Step L2 s2 t s2' /\ match_states s1'' s2'.
 
 Lemma forward_simulation_determ_one: forward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved match_states match_initial_states match_final_states L1det.
   apply forward_simulation_determ_plus.
   intros. exploit simulation; eauto. intros (s1'' & s2' & A & B & C).
   exists s1'', s2'; auto using plus_one.
@@ -1284,7 +1284,7 @@ Definition safe (L: semantics) (s: state L) : Prop :=
 Lemma star_safe:
   forall (L: semantics) s s',
   Star L s E0 s' -> safe L s -> safe L s'.
-Proof.
+Proof using.
   intros; red; intros. apply H0. eapply star_trans; eauto.
 Qed.
 
@@ -1336,7 +1336,7 @@ Lemma bsim_simulation':
   forall s1, match_states i s1 s2 -> safe L1 s1 ->
   (exists i', exists s1', Plus L1 s1 t s1' /\ match_states i' s1' s2')
   \/ (exists i', order i' i /\ t = E0 /\ match_states i' s1 s2').
-Proof.
+Proof using.
   intros. exploit bsim_simulation; eauto.
   intros [i' [s1' [A B]]]. intuition.
   left; exists i'; exists s1'; auto.
@@ -1384,7 +1384,7 @@ Hypothesis simulation:
   exists s1', Plus L1 s1 t s1' /\ match_states s1' s2'.
 
 Lemma backward_simulation_plus: backward_simulation L1 L2.
-Proof.
+Proof using simulation public_preserved progress match_states match_initial_states match_final_states initial_states_exist.
   apply Backward_simulation with
     (fun (x y: unit) => False)
     (fun (i: unit) s1 s2 => match_states s1 s2);
@@ -1410,7 +1410,7 @@ Lemma bsim_E0_star:
   forall s2 s2', Star L2 s2 E0 s2' ->
   forall i s1, match_states i s1 s2 -> safe L1 s1 ->
   exists i', exists s1', Star L1 s1 E0 s1' /\ match_states i' s1' s2'.
-Proof.
+Proof using order S.
   intros s20 s20' STAR0. pattern s20, s20'. eapply star_E0_ind; eauto.
 - (* base case *)
   intros. exists i; exists s1; split; auto. apply star_refl.
@@ -1424,7 +1424,7 @@ Qed.
 Lemma bsim_safe:
   forall i s1 s2,
   match_states i s1 s2 -> safe L1 s1 -> safe L2 s2.
-Proof.
+Proof using order S.
   intros; red; intros.
   exploit bsim_E0_star; eauto. intros [i' [s1' [A B]]].
   eapply bsim_progress; eauto. eapply star_safe; eauto.
@@ -1435,7 +1435,7 @@ Lemma bsim_E0_plus:
   forall i s1, match_states i s1 s2 -> safe L1 s1 ->
      (exists i', exists s1', Plus L1 s1 E0 s1' /\ match_states i' s1' s2')
   \/ (exists i', clos_trans _ order i' i /\ match_states i' s1 s2').
-Proof.
+Proof using S.
   induction 1 using plus_ind2; intros; subst t.
 - (* base case *)
   exploit bsim_simulation'; eauto. intros [[i' [s1' [A B]]] | [i' [A [B C]]]].
@@ -1455,7 +1455,7 @@ Qed.
 Lemma star_non_E0_split:
   forall s2 t s2', Star L2 s2 t s2' -> (length t = 1)%nat ->
   exists s2x, exists s2y, Star L2 s2 E0 s2x /\ Step L2 s2x t s2y /\ Star L2 s2y E0 s2'.
-Proof.
+Proof using.
   induction 1; intros.
   simpl in H; discriminate.
   subst t.
@@ -1493,7 +1493,7 @@ Inductive bb_match_states: bb_index -> state L1 -> state L3 -> Prop :=
 Lemma bb_match_at: forall i1 i2 s1 s3 s2,
   match_states i1 s1 s2 -> match_states' i2 s2 s3 ->
   bb_match_states (i1, i2) s1 s3.
-Proof.
+Proof using.
   intros. econstructor; eauto. apply star_refl.
 Qed.
 
@@ -1503,7 +1503,7 @@ Lemma bb_simulation_base:
   exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' (i1, i2)))
     /\ bb_match_states i' s1' s3'.
-Proof.
+Proof using S23 S12 L3_single_events.
   intros.
   exploit (bsim_simulation' S23); eauto. eapply bsim_safe; eauto.
   intros [ [i2' [s2' [PLUS2 MATCH2]]] | [i2' [ORD2 [EQ MATCH2]]]].
@@ -1541,7 +1541,7 @@ Lemma bb_simulation:
   exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' i))
     /\ bb_match_states i' s1' s3'.
-Proof.
+Proof using S23 S12 L3_single_events.
   intros. inv H0.
   exploit star_inv; eauto. intros [[EQ1 EQ2] | PLUS].
 - (* 1. match at *)
@@ -1571,7 +1571,7 @@ Lemma compose_backward_simulation:
   forall L1 L2 L3,
   single_events L3 -> backward_simulation L1 L2 -> backward_simulation L2 L3 ->
   backward_simulation L1 L3.
-Proof.
+Proof using.
   intros L1 L2 L3 L3single S12 S23.
   destruct S12 as [index order match_states props].
   destruct S23 as [index' order' match_states' props'].
@@ -1633,7 +1633,7 @@ Inductive f2b_transitions: state L1 -> state L2 -> Prop :=
 
 Lemma f2b_progress:
   forall i s1 s2, match_states i s1 s2 -> safe L1 s1 -> f2b_transitions s1 s2.
-Proof.
+Proof using order FS.
   intros i0; pattern i0. apply well_founded_ind with (R := order).
   eapply fsim_order_wf; eauto.
   intros i REC s1 s2 MATCH SAFE.
@@ -1659,7 +1659,7 @@ Lemma fsim_simulation_not_E0:
   forall s1 t s1', Step L1 s1 t s1' -> t <> E0 ->
   forall i s2, match_states i s1 s2 ->
   exists i', exists s2', Plus L2 s2 t s2' /\ match_states i' s1' s2'.
-Proof.
+Proof using order FS.
   intros. exploit (fsim_simulation FS); eauto. intros [i' [s2' [A B]]].
   exists i'; exists s2'; split; auto.
   destruct A. auto. destruct H2. exploit star_inv; eauto. intros [[EQ1 EQ2] | P]; auto.
@@ -1670,13 +1670,13 @@ Qed.
 
 Remark silent_or_not_silent:
   forall t, t = E0 \/ t <> E0.
-Proof.
+Proof using.
   intros; unfold E0; destruct t; auto; right; congruence.
 Qed.
 
 Remark not_silent_length:
   forall t1 t2, (length (t1 ** t2) <= 1)%nat -> t1 = E0 \/ t2 = E0.
-Proof.
+Proof using.
   unfold Eapp, E0; intros. rewrite app_length in H.
   destruct t1; destruct t2; auto. simpl in H. extlia.
 Qed.
@@ -1686,7 +1686,7 @@ Lemma f2b_determinacy_inv:
   Step L2 s2 t' s2' -> Step L2 s2 t'' s2'' ->
   (t' = E0 /\ t'' = E0 /\ s2' = s2'')
   \/ (t' <> E0 /\ t'' <> E0 /\ match_traces (symbolenv L1) t' t'').
-Proof.
+Proof using order match_states index L2_determinate FS.
   intros.
   assert (match_traces (symbolenv L2) t' t'').
     eapply sd_determ_1; eauto.
@@ -1706,7 +1706,7 @@ Lemma f2b_determinacy_star:
   Step L2 s1 t s2 -> t <> E0 ->
   Star L2 s t s3 ->
   Star L2 s1 t s3.
-Proof.
+Proof using order match_states index L2_determinate L1 FS.
   intros s0 s01 ST0. pattern s0, s01. eapply star_E0_ind; eauto.
   intros. inv H3. congruence.
   exploit f2b_determinacy_inv. eexact H. eexact H4.
@@ -1733,7 +1733,7 @@ Inductive f2b_order: f2b_index -> f2b_index -> Prop :=
 
 Lemma wf_f2b_order:
   well_founded f2b_order.
-Proof.
+Proof using.
   assert (ACC1: forall n, Acc f2b_order (F2BI_before n)).
     intros n0; pattern n0; apply lt_wf_ind; intros.
     constructor; intros. inv H0. auto.
@@ -1765,7 +1765,7 @@ Remark f2b_match_after':
   starN (step L2) (globalenv L2) n s2 E0 s2a ->
   match_states i s1 s2a ->
   f2b_match_states (F2BI_after n) s1 s2.
-Proof.
+Proof using.
   intros. inv H.
   econstructor; eauto.
   econstructor; eauto. econstructor; eauto.
@@ -1779,7 +1779,7 @@ Lemma f2b_simulation_step:
   exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ f2b_order i' i))
      /\ f2b_match_states i' s1' s2'.
-Proof.
+Proof using order L2_determinate L1_receptive FS.
   intros s2 t s2' STEP2 i s1 MATCH SAFE.
   inv MATCH.
 - (* 1. At matching states *)
@@ -1868,7 +1868,7 @@ Lemma forward_to_backward_simulation:
   forall L1 L2,
   forward_simulation L1 L2 -> receptive L1 -> determinate L2 ->
   backward_simulation L1 L2.
-Proof.
+Proof using.
   intros L1 L2 FS L1_receptive L2_determinate.
   destruct FS as [index order match_states FS].
   apply Backward_simulation with f2b_order (f2b_match_states L1 L2 match_states); constructor.
@@ -1961,7 +1961,7 @@ Lemma star_non_E0_split':
   | nil => True
   | ev :: t' => exists s2x, Plus L2 s2 (ev :: nil) s2x /\ Star L2 s2x t' s2'
   end.
-Proof.
+Proof using L2single.
   induction 1. simpl. auto.
   exploit L2single; eauto. intros LEN.
   destruct t1. simpl in *. subst. destruct t2. auto.
@@ -1977,7 +1977,7 @@ Lemma ffs_simulation:
   exists i', exists s2',
      (Plus L2 s2 t s2' \/ (Star L2 s2 t s2') /\ order i' i)
   /\ ffs_match i' s1' s2'.
-Proof.
+Proof using sim L2single.
   induction 1; intros.
 - (* silent step *)
   inv H0.
@@ -2009,7 +2009,7 @@ Theorem factor_forward_simulation:
   forall L1 L2,
   forward_simulation L1 L2 -> single_events L2 ->
   forward_simulation (atomic L1) L2.
-Proof.
+Proof using.
   intros L1 L2 FS L2single.
   destruct FS as [index order match_states sim].
   apply Forward_simulation with order (ffs_match L1 L2 match_states); constructor.
@@ -2051,7 +2051,7 @@ Lemma fbs_simulation:
   exists i', exists s1',
      (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ order i' i))
      /\ fbs_match i' s1' s2'.
-Proof.
+Proof using sim L2wb L1single.
   induction 1; intros.
 - (* silent step *)
   inv H0.
@@ -2082,7 +2082,7 @@ Lemma fbs_progress:
   fbs_match i s1 s2 -> safe L1 s1 ->
   (exists r, final_state (atomic L2) s2 r) \/
   (exists t, exists s2', Step (atomic L2) s2 t s2').
-Proof.
+Proof using sim order.
   intros. inv H. destruct t.
 - (* 1. no buffered events *)
   exploit (bsim_progress sim); eauto. eapply star_safe; eauto.
@@ -2104,7 +2104,7 @@ Theorem factor_backward_simulation:
   forall L1 L2,
   backward_simulation L1 L2 -> single_events L1 -> well_behaved_traces L2 ->
   backward_simulation L1 (atomic L2).
-Proof.
+Proof using.
   intros L1 L2 BS L1single L2wb.
   destruct BS as [index order match_states sim].
   apply Backward_simulation with order (fbs_match L1 L2 match_states); constructor.
@@ -2143,7 +2143,7 @@ Record strongly_receptive (L: semantics) : Prop :=
 
 Theorem atomic_receptive:
   forall L, strongly_receptive L -> receptive (atomic L).
-Proof.
+Proof using.
   intros. constructor; intros.
 (* receptive *)
   inv H0.

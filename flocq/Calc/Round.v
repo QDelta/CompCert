@@ -40,7 +40,7 @@ Theorem cexp_inbetween_float :
   inbetween_float beta m e x l ->
   (e <= cexp beta fexp x \/ e <= fexp (Zdigits beta m + e))%Z ->
   cexp beta fexp x = fexp (Zdigits beta m + e).
-Proof.
+Proof using valid_exp.
 intros x m e l Px Bx He.
 unfold cexp.
 apply inbetween_float_bounds in Bx.
@@ -73,7 +73,7 @@ Theorem cexp_inbetween_float_loc_Exact :
   inbetween_float beta m e x l ->
   (e <= cexp beta fexp x \/ l = loc_Exact <->
    e <= fexp (Zdigits beta m + e) \/ l = loc_Exact)%Z.
-Proof.
+Proof using valid_exp.
 intros x m e l Px Bx.
 destruct Px as [Px|Px].
 - split ; (intros [H|H] ; [left|now right]).
@@ -102,7 +102,7 @@ Theorem inbetween_float_round :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp rnd x = F2R (Float beta (choice m l) e).
-Proof.
+Proof using.
 intros rnd choice Hc x m l e Hl.
 unfold round, F2R. simpl.
 apply (f_equal (fun m => (IZR m * bpow e)%R)).
@@ -116,7 +116,7 @@ Definition cond_incr (b : bool) m := if b then (m + 1)%Z else m.
 
 Lemma le_cond_incr_le :
   forall b m, (m <= cond_incr b m <= m + 1)%Z.
-Proof.
+Proof using.
 unfold cond_incr; intros b; case b; lia.
 Qed.
 
@@ -128,7 +128,7 @@ Theorem inbetween_float_round_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp rnd x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (choice (Rlt_bool x 0) m l)) e).
-Proof.
+Proof using.
 intros rnd choice Hc x m l e Hx.
 apply (f_equal (fun m => (IZR m * bpow e)%R)).
 simpl.
@@ -159,7 +159,7 @@ Theorem inbetween_int_DN :
   forall x m l,
   inbetween_int m x l ->
   Zfloor x = m.
-Proof.
+Proof using.
 intros x m l Hl.
 refine (Zfloor_imp m _ _).
 apply inbetween_bounds with (2 := Hl).
@@ -172,7 +172,7 @@ Theorem inbetween_float_DN :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp Zfloor x = F2R (Float beta m e).
-Proof.
+Proof using.
 apply inbetween_float_round with (choice := fun m l => m).
 exact inbetween_int_DN.
 Qed.
@@ -187,7 +187,7 @@ Theorem inbetween_int_DN_sign :
   forall x m l,
   inbetween_int m (Rabs x) l ->
   Zfloor x = cond_Zopp (Rlt_bool x 0) (cond_incr (round_sign_DN (Rlt_bool x 0) l) m).
-Proof.
+Proof using.
 intros x m l Hl.
 unfold Rabs in Hl.
 destruct (Rcase_abs x) as [Zx|Zx] .
@@ -224,7 +224,7 @@ Theorem inbetween_float_DN_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp Zfloor x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (cond_incr (round_sign_DN (Rlt_bool x 0) l) m)) e).
-Proof.
+Proof using.
 apply inbetween_float_round_sign with (choice := fun s m l => cond_incr (round_sign_DN s l) m).
 exact inbetween_int_DN_sign.
 Qed.
@@ -241,7 +241,7 @@ Theorem inbetween_int_UP :
   forall x m l,
   inbetween_int m x l ->
   Zceil x = cond_incr (round_UP l) m.
-Proof.
+Proof using.
 intros x m l Hl.
 assert (Hl': l = loc_Exact \/ (l <> loc_Exact /\ round_UP l = true)).
 case l ; try (now left) ; now right ; split.
@@ -265,7 +265,7 @@ Theorem inbetween_float_UP :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp Zceil x = F2R (Float beta (cond_incr (round_UP l) m) e).
-Proof.
+Proof using.
 apply inbetween_float_round with (choice := fun m l => cond_incr (round_UP l) m).
 exact inbetween_int_UP.
 Qed.
@@ -280,7 +280,7 @@ Theorem inbetween_int_UP_sign :
   forall x m l,
   inbetween_int m (Rabs x) l ->
   Zceil x = cond_Zopp (Rlt_bool x 0) (cond_incr (round_sign_UP (Rlt_bool x 0) l) m).
-Proof.
+Proof using.
 intros x m l Hl.
 unfold Rabs in Hl.
 destruct (Rcase_abs x) as [Zx|Zx] .
@@ -315,7 +315,7 @@ Theorem inbetween_float_UP_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp Zceil x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (cond_incr (round_sign_UP (Rlt_bool x 0) l) m)) e).
-Proof.
+Proof using.
 apply inbetween_float_round_sign with (choice := fun s m l => cond_incr (round_sign_UP s l) m).
 exact inbetween_int_UP_sign.
 Qed.
@@ -332,7 +332,7 @@ Theorem inbetween_int_ZR :
   forall x m l,
   inbetween_int m x l ->
   Ztrunc x = cond_incr (round_ZR (Zlt_bool m 0) l) m.
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros x m l Hl.
 inversion_clear Hl as [Hx|l' Hx Hl'].
 (* Exact *)
@@ -366,7 +366,7 @@ Theorem inbetween_float_ZR :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp Ztrunc x = F2R (Float beta (cond_incr (round_ZR (Zlt_bool m 0) l) m) e).
-Proof.
+Proof using.
 apply inbetween_float_round with (choice := fun m l => cond_incr (round_ZR (Zlt_bool m 0) l) m).
 exact inbetween_int_ZR.
 Qed.
@@ -375,7 +375,7 @@ Theorem inbetween_int_ZR_sign :
   forall x m l,
   inbetween_int m (Rabs x) l ->
   Ztrunc x = cond_Zopp (Rlt_bool x 0) m.
-Proof.
+Proof using.
 intros x m l Hl.
 simpl.
 unfold Ztrunc.
@@ -405,7 +405,7 @@ Theorem inbetween_float_ZR_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp Ztrunc x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) m) e).
-Proof.
+Proof using.
 apply inbetween_float_round_sign with (choice := fun s m l => m).
 exact inbetween_int_ZR_sign.
 Qed.
@@ -424,7 +424,7 @@ Theorem inbetween_int_N :
   forall choice x m l,
   inbetween_int m x l ->
   Znearest choice x = cond_incr (round_N (choice m) l) m.
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros choice x m l Hl.
 inversion_clear Hl as [Hx|l' Hx Hl'].
 (* Exact *)
@@ -452,7 +452,7 @@ Theorem inbetween_int_N_sign :
   forall choice x m l,
   inbetween_int m (Rabs x) l ->
   Znearest choice x = cond_Zopp (Rlt_bool x 0) (cond_incr (round_N (if Rlt_bool x 0 then negb (choice (-(m + 1))%Z) else choice m) l) m).
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros choice x m l Hl.
 simpl.
 unfold Rabs in Hl.
@@ -512,7 +512,7 @@ Theorem inbetween_int_NE :
   forall x m l,
   inbetween_int m x l ->
   ZnearestE x = cond_incr (round_N (negb (Z.even m)) l) m.
-Proof.
+Proof using.
 intros x m l Hl.
 now apply inbetween_int_N with (choice := fun x => negb (Z.even x)).
 Qed.
@@ -522,7 +522,7 @@ Theorem inbetween_float_NE :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp ZnearestE x = F2R (Float beta (cond_incr (round_N (negb (Z.even m)) l) m) e).
-Proof.
+Proof using.
 apply inbetween_float_round with (choice := fun m l => cond_incr (round_N (negb (Z.even m)) l) m).
 exact inbetween_int_NE.
 Qed.
@@ -531,7 +531,7 @@ Theorem inbetween_int_NE_sign :
   forall x m l,
   inbetween_int m (Rabs x) l ->
   ZnearestE x = cond_Zopp (Rlt_bool x 0) (cond_incr (round_N (negb (Z.even m)) l) m).
-Proof.
+Proof using.
 intros x m l Hl.
 erewrite inbetween_int_N_sign with (choice := fun x => negb (Z.even x)).
 2: eexact Hl.
@@ -547,7 +547,7 @@ Theorem inbetween_float_NE_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp ZnearestE x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (cond_incr (round_N (negb (Z.even m)) l) m)) e).
-Proof.
+Proof using.
 apply inbetween_float_round_sign with (choice := fun s m l => cond_incr (round_N (negb (Z.even m)) l) m).
 exact inbetween_int_NE_sign.
 Qed.
@@ -558,7 +558,7 @@ Theorem inbetween_int_NA :
   forall x m l,
   inbetween_int m x l ->
   ZnearestA x = cond_incr (round_N (Zle_bool 0 m) l) m.
-Proof.
+Proof using.
 intros x m l Hl.
 now apply inbetween_int_N with (choice := fun x => Zle_bool 0 x).
 Qed.
@@ -568,7 +568,7 @@ Theorem inbetween_float_NA :
   let e := cexp beta fexp x in
   inbetween_float beta m e x l ->
   round beta fexp ZnearestA x = F2R (Float beta (cond_incr (round_N (Zle_bool 0 m) l) m) e).
-Proof.
+Proof using.
 apply inbetween_float_round with (choice := fun m l => cond_incr (round_N (Zle_bool 0 m) l) m).
 exact inbetween_int_NA.
 Qed.
@@ -577,7 +577,7 @@ Theorem inbetween_int_NA_sign :
   forall x m l,
   inbetween_int m (Rabs x) l ->
   ZnearestA x = cond_Zopp (Rlt_bool x 0) (cond_incr (round_N true l) m).
-Proof.
+Proof using.
 intros x m l Hl.
 erewrite inbetween_int_N_sign with (choice := Zle_bool 0).
 2: eexact Hl.
@@ -601,7 +601,7 @@ Theorem inbetween_float_NA_sign :
   let e := cexp beta fexp x in
   inbetween_float beta m e (Rabs x) l ->
   round beta fexp ZnearestA x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (cond_incr (round_N true l) m)) e).
-Proof.
+Proof using.
 apply inbetween_float_round_sign with (choice := fun s m l => cond_incr (round_N true l) m).
 exact inbetween_int_NA_sign.
 Qed.
@@ -616,7 +616,7 @@ Theorem truncate_aux_comp :
   (0 < k1)%Z ->
   (0 < k2)%Z ->
   truncate_aux t (k1 + k2) = truncate_aux (truncate_aux t k1) k2.
-Proof.
+Proof using.
 intros ((m,e),l) k1 k2 Hk1 Hk2.
 unfold truncate_aux.
 destruct (inbetween_float_ex beta m e l) as (x,Hx).
@@ -645,7 +645,7 @@ Theorem truncate_0 :
   forall e l,
   let '(m', e', l') := truncate (0, e, l)%Z in
   m' = Z0.
-Proof.
+Proof using.
 intros e l.
 unfold truncate.
 case Zlt_bool.
@@ -659,7 +659,7 @@ Theorem generic_format_truncate :
   (0 <= m)%Z ->
   let '(m', e', l') := truncate (m, e, l) in
   format (F2R (Float beta m' e')).
-Proof.
+Proof using.
 intros m e l Hm.
 unfold truncate.
 set (k := (fexp (Zdigits beta m + e) - e)%Z).
@@ -705,7 +705,7 @@ Theorem truncate_correct_format :
   (e <= fexp (Zdigits beta m + e))%Z ->
   let '(m', e', l') := truncate (m, e, loc_Exact) in
   x = F2R (Float beta m' e') /\ e' = cexp beta fexp x.
-Proof.
+Proof using.
 intros m e Hm x Fx He.
 assert (Hc: cexp beta fexp x = fexp (Zdigits beta m + e)).
 unfold cexp, x.
@@ -752,7 +752,7 @@ Theorem truncate_correct_partial' :
   (e <= cexp beta fexp x)%Z ->
   let '(m', e', l') := truncate (m, e, l) in
   inbetween_float beta m' e' x l' /\ e' = cexp beta fexp x.
-Proof.
+Proof using valid_exp.
 intros x m e l Hx H1 H2.
 unfold truncate.
 rewrite <- cexp_inbetween_float with (1 := Hx) (2 := H1) by now left.
@@ -772,7 +772,7 @@ Theorem truncate_correct_partial :
   (e <= fexp (Zdigits beta m + e))%Z ->
   let '(m', e', l') := truncate (m, e, l) in
   inbetween_float beta m' e' x l' /\ e' = cexp beta fexp x.
-Proof.
+Proof using valid_exp.
 intros x m e l Hx H1 H2.
 apply truncate_correct_partial' with (1 := Hx) (2 := H1).
 rewrite cexp_inbetween_float with (1 := Hx) (2 := H1).
@@ -788,7 +788,7 @@ Theorem truncate_correct' :
   let '(m', e', l') := truncate (m, e, l) in
   inbetween_float beta m' e' x l' /\
   (e' = cexp beta fexp x \/ (l' = loc_Exact /\ format x)).
-Proof.
+Proof using valid_exp.
 intros x m e l [Hx|Hx] H1 H2.
 - destruct (Zle_or_lt e (fexp (Zdigits beta m + e))) as [H3|H3].
   + generalize (truncate_correct_partial x m e l Hx H1 H3).
@@ -860,7 +860,7 @@ Theorem truncate_correct :
   let '(m', e', l') := truncate (m, e, l) in
   inbetween_float beta m' e' x l' /\
   (e' = cexp beta fexp x \/ (l' = loc_Exact /\ format x)).
-Proof.
+Proof using valid_exp.
 intros x m e l Hx H1 H2.
 apply truncate_correct' with (1 := Hx) (2 := H1).
 now apply cexp_inbetween_float_loc_Exact with (2 := H1).
@@ -882,7 +882,7 @@ Theorem round_any_correct :
   inbetween_float beta m e x l ->
   (e = cexp beta fexp x \/ (l = loc_Exact /\ format x)) ->
   round beta fexp rnd x = F2R (Float beta (choice m l) e).
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd inbetween_int_valid) with auto with typeclass_instances.
 intros x m e l Hin [He|(Hl,Hf)].
 rewrite He in Hin |- *.
 apply inbetween_float_round with (2 := Hin).
@@ -906,7 +906,7 @@ Theorem round_trunc_any_correct :
   inbetween_float beta m e x l ->
   (e <= fexp (Zdigits beta m + e))%Z \/ l = loc_Exact ->
   round beta fexp rnd x = let '(m', e', l') := truncate (m, e, l) in F2R (Float beta (choice m' l') e').
-Proof.
+Proof using (valid_rnd valid_exp inbetween_int_valid).
 intros x m e l Hx Hl He.
 generalize (truncate_correct x m e l Hx Hl He).
 destruct (truncate (m, e, l)) as ((m', e'), l').
@@ -920,7 +920,7 @@ Theorem round_trunc_any_correct' :
   inbetween_float beta m e x l ->
   (e <= cexp beta fexp x)%Z \/ l = loc_Exact ->
   round beta fexp rnd x = let '(m', e', l') := truncate (m, e, l) in F2R (Float beta (choice m' l') e').
-Proof.
+Proof using valid_rnd valid_exp inbetween_int_valid.
 intros x m e l Hx Hl He.
 generalize (truncate_correct' x m e l Hx Hl He).
 destruct (truncate (m, e, l)) as [[m' e'] l'].
@@ -946,7 +946,7 @@ Theorem round_sign_any_correct :
   inbetween_float beta m e (Rabs x) l ->
   (e = cexp beta fexp x \/ (l = loc_Exact /\ format x)) ->
   round beta fexp rnd x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (choice (Rlt_bool x 0) m l)) e).
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd inbetween_int_valid) with auto with typeclass_instances.
 intros x m e l Hin [He|(Hl,Hf)].
 rewrite He in Hin |- *.
 apply inbetween_float_round_sign with (2 := Hin).
@@ -1009,7 +1009,7 @@ Theorem round_trunc_sign_any_correct' :
   inbetween_float beta m e (Rabs x) l ->
   (e <= cexp beta fexp x)%Z \/ l = loc_Exact ->
   round beta fexp rnd x = let '(m', e', l') := truncate (m, e, l) in F2R (Float beta (cond_Zopp (Rlt_bool x 0) (choice (Rlt_bool x 0) m' l')) e').
-Proof.
+Proof using valid_rnd valid_exp inbetween_int_valid.
 intros x m e l Hl He.
 rewrite <- cexp_abs in He.
 generalize (truncate_correct' (Rabs x) m e l (Rabs_pos _) Hl He).
@@ -1030,7 +1030,7 @@ Theorem round_trunc_sign_any_correct :
   inbetween_float beta m e (Rabs x) l ->
   (e <= fexp (Zdigits beta m + e))%Z \/ l = loc_Exact ->
   round beta fexp rnd x = let '(m', e', l') := truncate (m, e, l) in F2R (Float beta (cond_Zopp (Rlt_bool x 0) (choice (Rlt_bool x 0) m' l')) e').
-Proof.
+Proof using valid_rnd valid_exp inbetween_int_valid.
 intros x m e l Hl He.
 apply round_trunc_sign_any_correct' with (1 := Hl).
 rewrite <- cexp_abs.
@@ -1153,7 +1153,7 @@ Theorem truncate_FIX_correct :
   let '(m', e', l') := truncate_FIX (m, e, l) in
   inbetween_float beta m' e' x l' /\
   (e' = cexp beta (FIX_exp emin) x \/ (l' = loc_Exact /\ generic_format beta (FIX_exp emin) x)).
-Proof.
+Proof using.
 intros x m e l H1 H2.
 unfold truncate_FIX.
 set (k := (emin - e)%Z).

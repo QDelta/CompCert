@@ -121,7 +121,7 @@ Lemma analyze_solution:
   f.(fn_code)!n = Some i ->
   In s (successors_instr i) ->
   Regset.Subset (transfer f s live!!s) live!!n.
-Proof.
+Proof using.
   unfold analyze; intros. eapply DS.fixpoint_solution; eauto.
   intros. unfold transfer; rewrite H2. apply DS.L.eq_refl.
 Qed.

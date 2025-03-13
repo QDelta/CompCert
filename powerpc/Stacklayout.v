@@ -67,7 +67,7 @@ Lemma frame_env_separated:
        ** range sp (fe_ofs_retaddr fe) (fe_ofs_retaddr fe + 4)
        ** range sp (fe_ofs_callee_save fe) (size_callee_save_area b (fe_ofs_callee_save fe))
        ** P.
-Proof.
+Proof using.
 Local Opaque Z.add Z.mul sepconj range.
   intros; simpl.
   set (ol := align (8 + 4 * b.(bound_outgoing)) 8).
@@ -103,7 +103,7 @@ Lemma frame_env_range:
   forall b,
   let fe := make_env b in
   0 <= fe_stack_data fe /\ fe_stack_data fe + bound_stack_data b <= fe_size fe.
-Proof.
+Proof using.
   intros; simpl.
   set (ol := align (8 + 4 * b.(bound_outgoing)) 8).
   set (ora := ol + 4 * b.(bound_local)).
@@ -128,7 +128,7 @@ Lemma frame_env_aligned:
   /\ (8 | fe_stack_data fe)
   /\ (4 | fe_ofs_link fe)
   /\ (4 | fe_ofs_retaddr fe).
-Proof.
+Proof using.
   intros; simpl.
   set (ol := align (8 + 4 * b.(bound_outgoing)) 8).
   set (ora := ol + 4 * b.(bound_local)).

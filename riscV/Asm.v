@@ -63,13 +63,13 @@ Inductive freg: Type :=
   | F28: freg | F29: freg | F30: freg | F31: freg.
 
 Lemma ireg_eq: forall (x y: ireg), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 
 Lemma ireg0_eq: forall (x y: ireg0), {x=y} + {x<>y}.
-Proof. decide equality. apply ireg_eq. Defined.
+Proof using. decide equality. apply ireg_eq. Defined.
 
 Lemma freg_eq: forall (x y: freg), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
   
 (** We model the following registers of the RISC-V architecture. *)
 
@@ -82,7 +82,7 @@ Coercion IR: ireg >-> preg.
 Coercion FR: freg >-> preg.
 
 Lemma preg_eq: forall (x y: preg), {x=y} + {x<>y}.
-Proof. decide equality. apply ireg_eq. apply freg_eq. Defined.
+Proof using. decide equality. apply ireg_eq. apply freg_eq. Defined.
 
 Module PregEq.
   Definition t  := preg.
@@ -518,7 +518,7 @@ Definition is_label (lbl: label) (instr: instruction) : bool :=
 Lemma is_label_correct:
   forall lbl instr,
   if is_label lbl instr then instr = Plabel lbl else instr <> Plabel lbl.
-Proof.
+Proof using.
   intros.  destruct instr; simpl; try discriminate.
   case (peq lbl lbl0); intro; congruence.
 Qed.
@@ -1127,7 +1127,7 @@ Definition semantics (p: program) :=
 Remark extcall_arguments_determ:
   forall rs m sg args1 args2,
   extcall_arguments rs m sg args1 -> extcall_arguments rs m sg args2 -> args1 = args2.
-Proof.
+Proof using.
   intros until m.
   assert (A: forall l v1 v2,
              extcall_arg rs m l v1 -> extcall_arg rs m l v2 -> v1 = v2).
@@ -1147,7 +1147,7 @@ Proof.
 Qed.
 
 Lemma semantics_determinate: forall p, determinate (semantics p).
-Proof.
+Proof using.
 Ltac Equalities :=
   match goal with
   | [ H1: ?a = ?b, H2: ?a = ?c |- _ ] =>

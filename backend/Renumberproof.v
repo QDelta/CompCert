@@ -22,7 +22,7 @@ Definition match_prog (p tp: RTL.program) :=
 
 Lemma transf_program_match:
   forall p, match_prog p (transf_program p).
-Proof.
+Proof using.
   intros. eapply match_transform_program; eauto.
 Qed.
 
@@ -56,7 +56,7 @@ Proof (Genv.senv_transf TRANSL).
 
 Lemma sig_preserved:
   forall f, funsig (transf_fundef f) = funsig f.
-Proof.
+Proof using.
   destruct f; reflexivity.
 Qed.
 
@@ -64,7 +64,7 @@ Lemma find_function_translated:
   forall ros rs fd,
   find_function ge ros rs = Some fd ->
   find_function tge ros rs = Some (transf_fundef fd).
-Proof.
+Proof using TRANSL.
   unfold find_function; intros. destruct ros as [r|id].
   eapply functions_translated; eauto.
   rewrite symbols_preserved. destruct (Genv.find_symbol ge id); try congruence.
@@ -82,7 +82,7 @@ Hypothesis f_inj: forall x1 x2 y, f!x1 = Some y -> f!x2 = Some y -> x1 = x2.
 Lemma renum_cfg_nodes:
   forall c x y i,
   c!x = Some i -> f!x = Some y -> (renum_cfg f c)!y = Some(renum_instr f i).
-Proof.
+Proof using f_inj.
   set (P := fun (c c': code) =>
               forall x y i, c!x = Some i -> f!x = Some y -> c'!y = Some(renum_instr f i)).
   intros c0. change (P c0 (renum_cfg f c0)). unfold renum_cfg.
@@ -110,7 +110,7 @@ Lemma transf_function_at:
   f.(fn_code)!pc = Some i ->
   reach f pc ->
   (transf_function f).(fn_code)!(renum_pc (pnum f) pc) = Some(renum_instr (pnum f) i).
-Proof.
+Proof using.
   intros.
   destruct (postorder_correct (successors_map f) f.(fn_entrypoint)) as [A B].
   fold (pnum f) in *.
@@ -129,7 +129,7 @@ Lemma reach_succ:
   forall f pc i s,
   f.(fn_code)!pc = Some i -> In s (successors_instr i) ->
   reach f pc -> reach f s.
-Proof.
+Proof using.
   unfold reach; intros. econstructor; eauto.
   unfold successors_map. rewrite PTree.gmap1. rewrite H. auto.
 Qed.
@@ -159,7 +159,7 @@ Lemma step_simulation:
   forall S1 t S2, RTL.step ge S1 t S2 ->
   forall S1', match_states S1 S1' ->
   exists S2', RTL.step tge S1' t S2' /\ match_states S2 S2'.
-Proof.
+Proof using TRANSL.
   induction 1; intros S1' MS; inv MS; try TR_AT.
 (* nop *)
   econstructor; split. eapply exec_Inop; eauto.
@@ -233,7 +233,7 @@ Qed.
 Lemma transf_initial_states:
   forall S1, RTL.initial_state prog S1 ->
   exists S2, RTL.initial_state tprog S2 /\ match_states S1 S2.
-Proof.
+Proof using TRANSL.
   intros. inv H. econstructor; split.
   econstructor.
     eapply (Genv.init_mem_transf TRANSL); eauto.
@@ -245,13 +245,13 @@ Qed.
 
 Lemma transf_final_states:
   forall S1 S2 r, match_states S1 S2 -> RTL.final_state S1 r -> RTL.final_state S2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STACKS. constructor.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_step.
   apply senv_preserved.
   eexact transf_initial_states.

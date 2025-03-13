@@ -44,7 +44,7 @@ Definition FTZ_exp e := if Zlt_bool (e - prec) emin then (emin + prec - 1)%Z els
 
 (** Properties of the FTZ format *)
 Global Instance FTZ_exp_valid : Valid_exp FTZ_exp.
-Proof.
+Proof using prec_gt_0_.
 intros k.
 unfold FTZ_exp.
 generalize (Zlt_cases (k - prec) emin).
@@ -70,7 +70,7 @@ Qed.
 
 Theorem FLXN_format_FTZ :
   forall x, FTZ_format x -> FLXN_format beta prec x.
-Proof.
+Proof using.
 intros x [[xm xe] Hx1 Hx2 Hx3].
 eexists.
 exact Hx1.
@@ -79,7 +79,7 @@ Qed.
 
 Theorem generic_format_FTZ :
   forall x, FTZ_format x -> generic_format beta FTZ_exp x.
-Proof.
+Proof using.
 intros x Hx.
 cut (generic_format beta (FLX_exp prec) x).
 apply generic_inclusion_mag.
@@ -105,7 +105,7 @@ Qed.
 
 Theorem FTZ_format_generic :
   forall x, generic_format beta FTZ_exp x -> FTZ_format x.
-Proof.
+Proof using prec_gt_0_.
 intros x Hx.
 destruct (Req_dec x 0) as [->|Hx3].
 exists (Float beta 0 emin).
@@ -166,7 +166,7 @@ Qed.
 
 Theorem FTZ_format_satisfies_any :
   satisfies_any FTZ_format.
-Proof.
+Proof using prec_gt_0_.
 refine (satisfies_any_eq _ _ _ (generic_format_satisfies_any beta FTZ_exp)).
 intros x.
 split.
@@ -178,7 +178,7 @@ Theorem FTZ_format_FLXN :
   forall x : R,
   (bpow (emin + prec - 1) <= Rabs x)%R ->
   FLXN_format beta prec x -> FTZ_format x.
-Proof.
+Proof using prec_gt_0_.
 intros x Hx Fx.
 apply FTZ_format_generic.
 apply generic_format_FLXN in Fx.
@@ -193,7 +193,7 @@ Qed.
 
 Theorem ulp_FTZ_0 :
   ulp beta FTZ_exp 0 = bpow (emin+prec-1).
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 unfold ulp; rewrite Req_bool_true; trivial.
 case (negligible_exp_spec FTZ_exp).
 intros T; specialize (T (emin-1)%Z); contradict T.
@@ -217,7 +217,7 @@ Definition Zrnd_FTZ x :=
   if Rle_bool 1 (Rabs x) then rnd x else Z0.
 
 Global Instance valid_rnd_FTZ : Valid_rnd Zrnd_FTZ.
-Proof with auto with typeclass_instances.
+Proof using valid_rnd with auto with typeclass_instances.
 split.
 (* *)
 intros x y Hxy.
@@ -263,7 +263,7 @@ Theorem round_FTZ_FLX :
   forall x : R,
   (bpow (emin + prec - 1) <= Rabs x)%R ->
   round beta FTZ_exp Zrnd_FTZ x = round beta (FLX_exp prec) rnd x.
-Proof.
+Proof using prec_gt_0_.
 intros x Hx.
 unfold round, scaled_mantissa, cexp.
 destruct (mag beta x) as (ex, He). simpl.
@@ -304,7 +304,7 @@ Theorem round_FTZ_small :
   forall x : R,
   (Rabs x < bpow (emin + prec - 1))%R ->
   round beta FTZ_exp Zrnd_FTZ x = 0%R.
-Proof with auto with typeclass_instances.
+Proof using valid_rnd with auto with typeclass_instances.
 intros x Hx.
 destruct (Req_dec x 0) as [Hx0|Hx0].
 rewrite Hx0.

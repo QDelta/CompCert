@@ -50,7 +50,7 @@ Lemma mag_div_F2R :
   (0 < m1)%Z -> (0 < m2)%Z ->
   let e := ((Zdigits beta m1 + e1) - (Zdigits beta m2 + e2))%Z in
   (e <= mag beta (F2R (Float beta m1 e1) / F2R (Float beta m2 e2)) <= e + 1)%Z.
-Proof.
+Proof using.
 intros m1 e1 m2 e2 Hm1 Hm2.
 rewrite <- (mag_F2R_Zdigits beta m1 e1) by now apply Zgt_not_eq.
 rewrite <- (mag_F2R_Zdigits beta m2 e2) by now apply Zgt_not_eq.
@@ -72,7 +72,7 @@ Theorem Fdiv_core_correct :
   (0 < m1)%Z -> (0 < m2)%Z ->
   let '(m, l) := Fdiv_core m1 e1 m2 e2 e in
   inbetween_float beta m e (F2R (Float beta m1 e1) / F2R (Float beta m2 e2)) l.
-Proof.
+Proof using.
 intros m1 e1 m2 e2 e Hm1 Hm2.
 unfold Fdiv_core.
 match goal with |- context [if ?b then ?b1 else ?b2] => set (m12 := if b then b1 else b2) end.
@@ -135,7 +135,7 @@ Theorem Fdiv_correct :
   let '(m, e, l) := Fdiv x y in
   (e <= cexp beta fexp (F2R x / F2R y))%Z /\
   inbetween_float beta m e (F2R x / F2R y) l.
-Proof.
+Proof using.
 intros [m1 e1] [m2 e2] Hm1 Hm2.
 apply gt_0_F2R in Hm1.
 apply gt_0_F2R in Hm2.

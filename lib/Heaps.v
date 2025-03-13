@@ -151,7 +151,7 @@ Definition le (x y: E.t) := E.eq x y \/ E.lt x y.
 
 Lemma le_lt_trans:
   forall x1 x2 x3, le x1 x2 -> E.lt x2 x3 -> E.lt x1 x3.
-Proof.
+Proof using.
   unfold le; intros; intuition.
   destruct (E.compare x1 x3).
     auto.
@@ -162,7 +162,7 @@ Qed.
 
 Lemma lt_le_trans:
   forall x1 x2 x3, E.lt x1 x2 -> le x2 x3 -> E.lt x1 x3.
-Proof.
+Proof using.
   unfold le; intros; intuition.
   destruct (E.compare x1 x3).
     auto.
@@ -173,7 +173,7 @@ Qed.
 
 Lemma le_trans:
   forall x1 x2 x3, le x1 x2 -> le x2 x3 -> le x1 x3.
-Proof.
+Proof using.
   intros. destruct H. destruct H0. red; left; eapply E.eq_trans; eauto.
   red. right. eapply le_lt_trans; eauto. red; auto.
   red. right. eapply lt_le_trans; eauto.
@@ -182,7 +182,7 @@ Qed.
 Lemma lt_heap_trans:
   forall x y, le x y ->
   forall h, lt_heap h x -> lt_heap h y.
-Proof.
+Proof using.
   induction h; simpl; intros.
   auto.
   intuition. eapply lt_le_trans; eauto.
@@ -191,7 +191,7 @@ Qed.
 Lemma gt_heap_trans:
   forall x y, le y x ->
   forall h, gt_heap h x -> gt_heap h y.
-Proof.
+Proof using.
   induction h; simpl; intros.
   auto.
   intuition. eapply le_lt_trans; eauto.
@@ -202,7 +202,7 @@ Qed.
 Lemma In_partition:
   forall x pivot, ~E.eq x pivot ->
   forall h, bst h -> (In x h <-> In x (fst (partition pivot h)) \/ In x (snd (partition pivot h))).
-Proof.
+Proof using.
   intros x pivot NEQ h0. functional induction (partition pivot h0); simpl; intros.
 - tauto.
 - tauto.
@@ -219,7 +219,7 @@ Qed.
 Lemma partition_lt:
   forall x pivot h,
   lt_heap h x -> lt_heap (fst (partition pivot h)) x /\ lt_heap (snd (partition pivot h)) x.
-Proof.
+Proof using.
   intros x pivot h0. functional induction (partition pivot h0); simpl; try tauto.
 - rewrite e3 in *; simpl in *; tauto.
 - rewrite e3 in *; simpl in *; tauto.
@@ -230,7 +230,7 @@ Qed.
 Lemma partition_gt:
   forall x pivot h,
   gt_heap h x -> gt_heap (fst (partition pivot h)) x /\ gt_heap (snd (partition pivot h)) x.
-Proof.
+Proof using.
   intros x pivot h0. functional induction (partition pivot h0); simpl; try tauto.
 - rewrite e3 in *; simpl in *; tauto.
 - rewrite e3 in *; simpl in *; tauto.
@@ -241,7 +241,7 @@ Qed.
 Lemma partition_split:
   forall pivot h,
   bst h -> lt_heap (fst (partition pivot h)) pivot /\ gt_heap (snd (partition pivot h)) pivot.
-Proof.
+Proof using.
   intros pivot h0. functional induction (partition pivot h0); simpl.
 - tauto.
 - intuition. eapply lt_heap_trans; eauto. red; auto.
@@ -275,7 +275,7 @@ Lemma partition_bst:
   forall pivot h,
   bst h ->
   bst (fst (partition pivot h)) /\ bst (snd (partition pivot h)).
-Proof.
+Proof using.
   intros pivot h0. functional induction (partition pivot h0); simpl; try tauto.
 - rewrite e3 in *; simpl in *. intuition.
     apply lt_heap_trans with x; auto. red; auto.
@@ -295,7 +295,7 @@ Qed.
 
 Lemma insert_bst:
   forall x h, bst h -> bst (insert x h).
-Proof.
+Proof using.
   intros.
   unfold insert. case_eq (partition x h). intros a b EQ; simpl.
   generalize (partition_bst x h H).
@@ -305,7 +305,7 @@ Qed.
 
 Lemma In_insert:
   forall x h y, bst h -> (In y (insert x h) <-> E.eq y x \/ In y h).
-Proof.
+Proof using.
   intros. unfold insert.
   case_eq (partition x h). intros a b EQ; simpl.
   assert (E.eq y x \/ ~E.eq y x).
@@ -320,7 +320,7 @@ Qed.
 
 Lemma deleteMin_lt:
   forall x h, lt_heap h x -> lt_heap (deleteMin h) x.
-Proof.
+Proof using.
 Opaque deleteMin.
   intros x h0. functional induction (deleteMin h0) ; simpl; intros.
   auto.
@@ -331,7 +331,7 @@ Qed.
 
 Lemma deleteMin_bst:
   forall h, bst h -> bst (deleteMin h).
-Proof.
+Proof using.
   intros h0. functional induction (deleteMin h0); simpl; intros.
   auto.
   tauto.
@@ -346,7 +346,7 @@ Lemma In_deleteMin:
   forall y x h,
   findMin h = Some x ->
   (In y h <-> E.eq y x \/ In y (deleteMin h)).
-Proof.
+Proof using.
 Transparent deleteMin.
   intros y x h0. functional induction (deleteMin h0); simpl; intros.
   discriminate.
@@ -357,7 +357,7 @@ Qed.
 
 Lemma gt_heap_In:
   forall x y h, gt_heap h x -> In y h -> E.lt x y.
-Proof.
+Proof using.
   induction h; simpl; intros.
   contradiction.
   intuition. apply lt_le_trans with x0; auto. red. left. apply E.eq_sym; auto.
@@ -365,7 +365,7 @@ Qed.
 
 Lemma findMin_min:
   forall x h, findMin h = Some x -> bst h -> forall y, In y h -> le x y.
-Proof.
+Proof using.
   induction h; simpl; intros.
   contradiction.
   destruct h1.
@@ -383,7 +383,7 @@ Qed.
 
 Lemma findMin_empty:
   forall h, h <> Empty -> findMin h <> None.
-Proof.
+Proof using.
   induction h; simpl; intros.
   congruence.
   destruct h1. congruence. apply IHh1. congruence.
@@ -393,7 +393,7 @@ Qed.
 
 Lemma deleteMax_gt:
   forall x h, gt_heap h x -> gt_heap (deleteMax h) x.
-Proof.
+Proof using.
 Opaque deleteMax.
   intros x h0. functional induction (deleteMax h0); simpl; intros.
   auto.
@@ -404,7 +404,7 @@ Qed.
 
 Lemma deleteMax_bst:
   forall h, bst h -> bst (deleteMax h).
-Proof.
+Proof using.
   intros h0. functional induction (deleteMax h0); simpl; intros.
   auto.
   tauto.
@@ -419,7 +419,7 @@ Lemma In_deleteMax:
   forall y x h,
   findMax h = Some x ->
   (In y h <-> E.eq y x \/ In y (deleteMax h)).
-Proof.
+Proof using.
 Transparent deleteMax.
   intros y x h0. functional induction (deleteMax h0); simpl; intros.
   congruence.
@@ -430,7 +430,7 @@ Qed.
 
 Lemma lt_heap_In:
   forall x y h, lt_heap h x -> In y h -> E.lt y x.
-Proof.
+Proof using.
   induction h; simpl; intros.
   contradiction.
   intuition. apply le_lt_trans with x0; auto. red. left. assumption.
@@ -438,7 +438,7 @@ Qed.
 
 Lemma findMax_max:
   forall x h, findMax h = Some x -> bst h -> forall y, In y h -> le y x.
-Proof.
+Proof using.
   induction h; simpl; intros.
   contradiction.
   destruct h2.
@@ -458,7 +458,7 @@ Qed.
 
 Lemma findMax_empty:
   forall h, h <> Empty -> findMax h <> None.
-Proof.
+Proof using.
   induction h; simpl; intros.
   congruence.
   destruct h2. congruence. apply IHh2. congruence.
@@ -494,7 +494,7 @@ Program Definition In (x: E.t) (h: t) : Prop := R.In x h.
 (** Properties of [empty] *)
 
 Lemma In_empty: forall x, ~In x empty.
-Proof.
+Proof using.
   intros; red; intros.
   red in H. simpl in H. tauto.
 Qed.
@@ -504,7 +504,7 @@ Qed.
 Lemma In_insert:
   forall x h y,
   In y (insert x h) <-> E.eq y x \/ In y h.
-Proof.
+Proof using.
   intros. unfold In, insert; simpl. apply R.In_insert. apply proj2_sig.
 Qed.
 
@@ -512,7 +512,7 @@ Qed.
 
 Lemma findMin_empty:
   forall h y, findMin h = None -> ~In y h.
-Proof.
+Proof using.
   unfold findMin, In; intros; simpl.
   destruct (proj1_sig h).
   simpl. tauto.
@@ -521,7 +521,7 @@ Qed.
 
 Lemma findMin_min:
   forall h x y, findMin h = Some x -> In y h -> E.eq x y \/ E.lt x y.
-Proof.
+Proof using.
   unfold findMin, In; simpl. intros.
   change (R.le x y). eapply R.findMin_min; eauto. apply proj2_sig.
 Qed.
@@ -532,7 +532,7 @@ Lemma In_deleteMin:
   forall h x y,
   findMin h = Some x ->
   (In y h <-> E.eq y x \/ In y (deleteMin h)).
-Proof.
+Proof using.
   unfold findMin, In; simpl; intros.
   apply R.In_deleteMin. auto.
 Qed.
@@ -541,7 +541,7 @@ Qed.
 
 Lemma findMax_empty:
   forall h y, findMax h = None -> ~In y h.
-Proof.
+Proof using.
   unfold findMax, In; intros; simpl.
   destruct (proj1_sig h).
   simpl. tauto.
@@ -550,7 +550,7 @@ Qed.
 
 Lemma findMax_max:
   forall h x y, findMax h = Some x -> In y h -> E.eq y x \/ E.lt y x.
-Proof.
+Proof using.
   unfold findMax, In; simpl. intros.
   change (R.le y x). eapply R.findMax_max; eauto. apply proj2_sig.
 Qed.
@@ -561,7 +561,7 @@ Lemma In_deleteMax:
   forall h x y,
   findMax h = Some x ->
   (In y h <-> E.eq y x \/ In y (deleteMax h)).
-Proof.
+Proof using.
   unfold findMax, In; simpl; intros.
   apply R.In_deleteMax. auto.
 Qed.

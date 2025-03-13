@@ -144,13 +144,13 @@ Fixpoint undef_regs (rl: list mreg) (rs: regset) {struct rl} : regset :=
 
 Lemma undef_regs_other:
   forall r rl rs, ~In r rl -> undef_regs rl rs r = rs r.
-Proof.
+Proof using.
   induction rl; simpl; intros. auto. rewrite Regmap.gso. apply IHrl. intuition. intuition.
 Qed.
 
 Lemma undef_regs_same:
   forall r rl rs, In r rl -> undef_regs rl rs r = Vundef.
-Proof.
+Proof using.
   induction rl; simpl; intros. tauto.
   destruct H. subst a. apply Regmap.gss.
   unfold Regmap.set. destruct (RegEq.eq r a); auto.
@@ -181,7 +181,7 @@ Definition is_label (lbl: label) (instr: instruction) : bool :=
 Lemma is_label_correct:
   forall lbl instr,
   if is_label lbl instr then instr = Mlabel lbl else instr <> Mlabel lbl.
-Proof.
+Proof using.
   intros.  destruct instr; simpl; try discriminate.
   case (peq lbl l); intro; congruence.
 Qed.
@@ -194,14 +194,14 @@ Fixpoint find_label (lbl: label) (c: code) {struct c} : option code :=
 
 Lemma find_label_tail:
   forall lbl c c', find_label lbl c = Some c' -> is_tail c' c.
-Proof.
+Proof using.
   induction c; simpl; intros. discriminate.
   destruct (is_label lbl a). inv H. auto with coqlib. eauto with coqlib.
 Qed.
 
 Lemma find_label_incl:
   forall lbl c c', find_label lbl c = Some c' -> incl c' c.
-Proof.
+Proof using.
   intros; red; intros. eapply is_tail_incl; eauto. eapply find_label_tail; eauto.
 Qed.
 
@@ -476,7 +476,7 @@ Inductive wf_state: state -> Prop :=
 
 Lemma wf_step:
   forall S1 t S2, step rao ge S1 t S2 -> wf_state S1 -> wf_state S2.
-Proof.
+Proof using.
   induction 1; intros WF; inv WF; try (econstructor; now eauto with coqlib).
 - (* call *)
   assert (f0 = f) by congruence. subst f0.
@@ -499,6 +499,6 @@ End WF_STATES.
 
 Lemma wf_initial:
   forall p S, initial_state p S -> wf_state (Genv.globalenv p) S.
-Proof.
+Proof using.
   intros. inv H. fold ge. constructor. constructor.
 Qed.

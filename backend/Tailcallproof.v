@@ -43,7 +43,7 @@ Definition return_measure (c: code) (pc: node) :=
 
 Lemma return_measure_bounds:
   forall f pc, (return_measure f pc <= niter)%nat.
-Proof.
+Proof using.
   intro f.
   assert (forall n pc, (return_measure_rec n f pc <= n)%nat).
     induction n; intros; simpl.
@@ -59,7 +59,7 @@ Remark return_measure_rec_incr:
   forall f n1 n2 pc,
   (n1 <= n2)%nat ->
   (return_measure_rec n1 f pc <= return_measure_rec n2 f pc)%nat.
-Proof.
+Proof using.
   induction n1; intros; simpl.
   lia.
   destruct n2. extlia. assert (n1 <= n2)%nat by lia.
@@ -72,7 +72,7 @@ Lemma is_return_measure_rec:
   forall f n n' pc r,
   is_return n f pc r = true -> (n <= n')%nat ->
   return_measure_rec n f.(fn_code) pc = return_measure_rec n' f.(fn_code) pc.
-Proof.
+Proof using.
   induction n; simpl; intros.
   congruence.
   destruct n'. extlia. simpl.
@@ -111,7 +111,7 @@ Lemma is_return_charact:
   forall f n pc rret,
   is_return n f pc rret = true -> (n <= niter)%nat ->
   is_return_spec f pc rret.
-Proof.
+Proof using.
   induction n; intros.
   simpl in H. congruence.
   generalize H. simpl.
@@ -155,7 +155,7 @@ Lemma transf_instr_charact:
   forall f pc instr,
   f.(fn_stacksize) = 0 ->
   transf_instr_spec f instr (transf_instr f pc instr).
-Proof.
+Proof using.
   intros. unfold transf_instr. destruct instr; try constructor.
   destruct (is_return niter f n r && tailcall_is_possible s &&
             xtype_eq (sig_res s) (sig_res (fn_sig f))) eqn:B.
@@ -167,7 +167,7 @@ Lemma transf_instr_lookup:
   forall f pc i,
   f.(fn_code)!pc = Some i ->
   exists i',  (transf_function f).(fn_code)!pc = Some i' /\ transf_instr_spec f i i'.
-Proof.
+Proof using.
   intros. unfold transf_function.
   destruct (zeq (fn_stacksize f) 0 && option_eq zeq (cc_vararg (sig_cc (fn_sig f))) None) eqn:B.
   InvBooleans.
@@ -191,7 +191,7 @@ Lemma regs_lessdef_init_regs:
   forall params vl vl',
   Val.lessdef_list vl vl' ->
   regs_lessdef (init_regs vl params) (init_regs vl' params).
-Proof.
+Proof using.
   induction params; intros.
   simpl. red; intros. rewrite Regmap.gi. constructor.
   simpl. inv H.   red; intros. rewrite Regmap.gi. constructor.
@@ -205,7 +205,7 @@ Definition match_prog (p tp: RTL.program) :=
 
 Lemma transf_program_match:
   forall p, match_prog p (transf_program p).
-Proof.
+Proof using.
   intros. apply match_transform_program; auto.
 Qed.
 
@@ -239,14 +239,14 @@ Proof (Genv.senv_transf TRANSL).
 
 Lemma sig_preserved:
   forall f, funsig (transf_fundef f) = funsig f.
-Proof.
+Proof using.
   destruct f; auto. simpl. unfold transf_function.
   destruct (zeq (fn_stacksize f) 0 && option_eq zeq (cc_vararg (sig_cc (fn_sig f))) None); auto.
 Qed.
 
 Lemma stacksize_preserved:
   forall f, fn_stacksize (transf_function f) = fn_stacksize f.
-Proof.
+Proof using.
   unfold transf_function. intros.
   destruct (zeq (fn_stacksize f) 0 && option_eq zeq (cc_vararg (sig_cc (fn_sig f))) None); auto.
 Qed.
@@ -256,7 +256,7 @@ Lemma find_function_translated:
   find_function ge ros rs = Some f ->
   regs_lessdef rs rs' ->
   find_function tge ros rs' = Some (transf_fundef f).
-Proof.
+Proof using TRANSL.
   intros until f; destruct ros; simpl.
   intros.
   assert (rs'#r = rs#r).
@@ -400,7 +400,7 @@ Lemma transf_step_correct:
   forall s1' (MS: match_states s1 s1'),
   (exists s2', step tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
-Proof.
+Proof using TRANSL.
   induction 1; intros; inv MS; EliminatedInstr.
 
 - (* nop *)
@@ -574,7 +574,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSL.
   intros. inv H.
   exploit funct_ptr_translated; eauto. intro FIND.
   exists (Callstate nil (transf_fundef f) nil m0); split.
@@ -589,7 +589,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv H5. inv H3. constructor.
 Qed.
 
@@ -599,7 +599,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_opt with (measure := measure); eauto.
   apply senv_preserved.
   eexact transf_initial_states.

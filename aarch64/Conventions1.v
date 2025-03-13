@@ -134,7 +134,7 @@ Definition loc_result (s: signature) : rpair mreg :=
 Lemma loc_result_type:
   forall sig,
   subtype (proj_sig_res sig) (typ_rpair mreg_type (loc_result sig)) = true.
-Proof.
+Proof using.
   intros. unfold loc_result. destruct (proj_sig_res sig); auto.
 Qed.
 
@@ -143,7 +143,7 @@ Qed.
 Lemma loc_result_caller_save:
   forall (s: signature),
   forall_rpair (fun r => is_callee_save r = false) (loc_result s).
-Proof.
+Proof using.
   intros.
   unfold loc_result. destruct (proj_sig_res s); simpl; auto.
 Qed.
@@ -159,7 +159,7 @@ Lemma loc_result_pair:
      /\ subtype Tint (mreg_type r1) = true /\ subtype Tint (mreg_type r2) = true
      /\ Archi.ptr64 = false
   end.
-Proof.
+Proof using.
   intros; unfold loc_result; destruct (proj_sig_res sg); exact I.
 Qed.
 
@@ -167,7 +167,7 @@ Qed.
 
 Lemma loc_result_exten:
   forall s1 s2, s1.(sig_res) = s2.(sig_res) -> loc_result s1 = loc_result s2.
-Proof.
+Proof using.
   intros. unfold loc_result, proj_sig_res. rewrite H; auto.
 Qed.
 
@@ -279,7 +279,7 @@ Lemma loc_arguments_rec_charact:
   forall tyl fixed ri rf ofs p,
   ofs >= 0 ->
   In p (loc_arguments_rec tyl fixed ri rf ofs) -> forall_rpair loc_argument_acceptable p.
-Proof.
+Proof using.
   set (OK := fun (l: list (rpair loc)) =>
              forall p, In p l -> forall_rpair loc_argument_acceptable p).
   set (OKF := fun (f: Z -> Z -> Z -> list (rpair loc)) =>
@@ -347,7 +347,7 @@ Qed.
 Lemma loc_arguments_acceptable:
   forall (s: signature) (p: rpair loc),
   In p (loc_arguments s) -> forall_rpair loc_argument_acceptable p.
-Proof.
+Proof using.
   unfold loc_arguments; intros.
   eapply loc_arguments_rec_charact; eauto. lia.
 Qed.
@@ -356,7 +356,7 @@ Global Hint Resolve loc_arguments_acceptable: locs.
 
 Lemma loc_arguments_main:
   loc_arguments signature_main = nil.
-Proof.
+Proof using.
   unfold loc_arguments; reflexivity.
 Qed.
 

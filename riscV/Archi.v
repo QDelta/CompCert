@@ -30,7 +30,7 @@ Definition align_float64 := 8%Z.
 Definition splitlong := negb ptr64.
 
 Lemma splitlong_ptr32: splitlong = true -> ptr64 = false.
-Proof.
+Proof using.
   unfold splitlong. destruct ptr64; simpl; congruence. 
 Qed.
 
@@ -51,11 +51,11 @@ Definition choose_nan_32 (l: list (bool * positive)) : bool * positive :=
 
 Lemma choose_nan_64_idem: forall n,
   choose_nan_64 (n :: n :: nil) = choose_nan_64 (n :: nil).
-Proof. auto. Qed.
+Proof using. auto. Qed.
 
 Lemma choose_nan_32_idem: forall n,
   choose_nan_32 (n :: n :: nil) = choose_nan_32 (n :: nil).
-Proof. auto. Qed.
+Proof using. auto. Qed.
 
 Definition fma_order {A: Type} (x y z: A) := (x, y, z).
 

@@ -70,12 +70,12 @@ Inductive sincr (s1 s2: state) : Prop :=
         (STKSIZE: s1.(st_stksize) <= s2.(st_stksize)).
 
 Remark sincr_refl: forall s, sincr s s.
-Proof.
+Proof using.
   intros; constructor; extlia.
 Qed.
 
 Lemma sincr_trans: forall s1 s2 s3, sincr s1 s2 -> sincr s2 s3 -> sincr s1 s3.
-Proof.
+Proof using.
   intros. inv H; inv H0. constructor; extlia.
 Qed.
 

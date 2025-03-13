@@ -28,7 +28,7 @@ Definition match_prog (p: Linear.program) (tp: Mach.program) :=
 
 Lemma transf_program_match:
   forall p tp, transf_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program; eauto.
 Qed.
 
@@ -36,26 +36,26 @@ Qed.
 
 Lemma typesize_typesize:
   forall ty, AST.typesize ty = 4 * Locations.typesize ty.
-Proof.
+Proof using.
   destruct ty; auto.
 Qed.
 
 Remark size_type_chunk:
   forall ty, size_chunk (chunk_of_type ty) = AST.typesize ty.
-Proof.
+Proof using.
   destruct ty; reflexivity.
 Qed.
 
 Remark align_type_chunk:
   forall ty, align_chunk (chunk_of_type ty) = 4 * Locations.typealign ty.
-Proof.
+Proof using.
   destruct ty; reflexivity.
 Qed.
 
 Lemma slot_outgoing_argument_valid:
   forall f ofs ty sg,
   In (S Outgoing ofs ty) (regs_of_rpairs (loc_arguments sg)) -> slot_valid f Outgoing ofs ty = true.
-Proof.
+Proof using.
   intros. exploit loc_arguments_acceptable_2; eauto. intros [A B].
   unfold slot_valid. unfold proj_sumbool.
   rewrite zle_true by lia.
@@ -66,7 +66,7 @@ Qed.
 Lemma load_result_inject:
   forall j ty v v',
   Val.inject j v v' -> Val.has_type v ty -> Val.inject j v (Val.load_result (chunk_of_type ty) v').
-Proof.
+Proof using.
   intros until v'; unfold Val.has_type, Val.load_result; destruct Archi.ptr64;
   destruct 1; intros; auto; destruct ty; simpl;
   try contradiction; try discriminate; econstructor; eauto.
@@ -104,7 +104,7 @@ Lemma unfold_transf_function:
          fe.(fe_size)
          (Ptrofs.repr fe.(fe_ofs_link))
          (Ptrofs.repr fe.(fe_ofs_retaddr)).
-Proof.
+Proof using TRANSF_F.
   generalize TRANSF_F. unfold transf_function.
   destruct (wt_function f); simpl negb.
   destruct (zlt Ptrofs.max_unsigned (fe_size (make_env (function_bounds f)))).
@@ -115,13 +115,13 @@ Qed.
 
 Lemma transf_function_well_typed:
   wt_function f = true.
-Proof.
+Proof using tf TRANSF_F.
   generalize TRANSF_F. unfold transf_function.
   destruct (wt_function f); simpl negb. auto. intros; discriminate.
 Qed.
 
 Lemma size_no_overflow: fe.(fe_size) <= Ptrofs.max_unsigned.
-Proof.
+Proof using tf TRANSF_F.
   generalize TRANSF_F. unfold transf_function.
   destruct (wt_function f); simpl negb.
   destruct (zlt Ptrofs.max_unsigned (fe_size (make_env (function_bounds f)))).
@@ -132,7 +132,7 @@ Qed.
 
 Remark bound_stack_data_stacksize:
   f.(Linear.fn_stacksize) <= b.(bound_stack_data).
-Proof.
+Proof using.
   unfold b, function_bounds, bound_stack_data. apply Z.le_max_l.
 Qed.
 
@@ -146,7 +146,7 @@ Lemma contains_get_stack:
   forall spec m ty sp ofs,
   m |= contains (chunk_of_type ty) sp ofs spec ->
   exists v, load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr ofs) = Some v /\ spec v.
-Proof.
+Proof using.
   intros. unfold load_stack.
   replace (Val.offset_ptr (Vptr sp Ptrofs.zero) (Ptrofs.repr ofs)) with (Vptr sp (Ptrofs.repr ofs)).
   eapply loadv_rule; eauto.
@@ -157,7 +157,7 @@ Lemma hasvalue_get_stack:
   forall ty m sp ofs v,
   m |= hasvalue (chunk_of_type ty) sp ofs v ->
   load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr ofs) = Some v.
-Proof.
+Proof using.
   intros. exploit contains_get_stack; eauto. intros (v' & A & B). congruence.
 Qed.
 
@@ -168,7 +168,7 @@ Lemma contains_set_stack:
   exists m',
       store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr ofs) v = Some m'
   /\ m' |= contains (chunk_of_type ty) sp ofs spec ** P.
-Proof.
+Proof using.
   intros. unfold store_stack.
   replace (Val.offset_ptr (Vptr sp Ptrofs.zero) (Ptrofs.repr ofs)) with (Vptr sp (Ptrofs.repr ofs)).
   eapply storev_rule; eauto.
@@ -212,7 +212,7 @@ Remark valid_access_location:
   Mem.range_perm m sp pos (pos + 4 * bound) Cur Freeable ->
   0 <= ofs -> ofs + typesize ty <= bound -> (typealign ty | ofs) ->
   Mem.valid_access m (chunk_of_type ty) sp (pos + 4 * ofs) p.
-Proof.
+Proof using.
   intros; split.
 - red; intros. apply Mem.perm_implies with Freeable; auto with mem.
   apply H0. rewrite size_type_chunk, typesize_typesize in H4. lia.
@@ -229,7 +229,7 @@ Lemma get_location:
   exists v,
      load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (pos + 4 * ofs)) = Some v
   /\ Val.inject j (ls (S sl ofs ty)) v.
-Proof.
+Proof using.
   intros. destruct H as (D & E & F & G & H).
   exploit H; eauto. intros (v & U & V). exists v; split; auto.
   unfold load_stack; simpl. rewrite Ptrofs.add_zero_l, Ptrofs.unsigned_repr; auto.
@@ -244,7 +244,7 @@ Lemma set_location:
   exists m',
      store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (pos + 4 * ofs)) v' = Some m'
   /\ m' |= contains_locations j sp pos bound sl (Locmap.set (S sl ofs ty) v ls) ** P.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). destruct A as (D & E & F & G & H).
   edestruct Mem.valid_access_store as [m' STORE].
   eapply valid_access_location; eauto.
@@ -282,7 +282,7 @@ Lemma initial_locations:
   (8 | pos) ->
   (forall ofs ty, ls (S sl ofs ty) = Vundef) ->
   m |= contains_locations j sp pos bound sl ls ** P.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). destruct A as (D & E & F). split.
 - simpl; intuition auto. red; intros; eauto with mem.
   destruct (Mem.valid_access_load m (chunk_of_type ty) sp (pos + 4 * ofs)) as [v LOAD].
@@ -297,7 +297,7 @@ Lemma contains_locations_exten:
   (forall ofs ty, Val.lessdef (ls' (S sl ofs ty)) (ls (S sl ofs ty))) ->
   massert_imp (contains_locations j sp pos bound sl ls)
               (contains_locations j sp pos bound sl ls').
-Proof.
+Proof using.
   intros; split; simpl; intros; auto.
   intuition auto. exploit H5; eauto. intros (v & A & B). exists v; split; auto. 
   specialize (H ofs ty). inv H. congruence. auto. 
@@ -308,7 +308,7 @@ Lemma contains_locations_incr:
   inject_incr j j' ->
   massert_imp (contains_locations j sp pos bound sl ls)
               (contains_locations j' sp pos bound sl ls).
-Proof.
+Proof using.
   intros; split; simpl; intros; auto.
   intuition auto. exploit H5; eauto. intros (v & A & B). exists v; eauto.
 Qed.
@@ -336,7 +336,7 @@ Lemma contains_callee_saves_incr:
   forall rl pos,
   massert_imp (contains_callee_saves j sp pos rl ls)
               (contains_callee_saves j' sp pos rl ls).
-Proof.
+Proof using.
   induction rl as [ | r1 rl]; simpl; intros.
 - reflexivity.
 - apply sepconj_morph_1; auto. apply contains_imp. eauto.
@@ -347,7 +347,7 @@ Lemma contains_callee_saves_exten:
   (forall r, In r rl -> ls' (R r) = ls (R r)) ->
   massert_eqv (contains_callee_saves j sp pos rl ls)
               (contains_callee_saves j sp pos rl ls').
-Proof.
+Proof using.
   induction rl as [ | r1 rl]; simpl; intros.
 - reflexivity.
 - apply sepconj_morph_2; auto. rewrite H by auto. reflexivity.
@@ -387,7 +387,7 @@ Lemma frame_get_local:
   exists v,
      load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (offset_local fe ofs)) = Some v
   /\ Val.inject j (ls (S Local ofs ty)) v.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros. unfold slot_valid in H1; InvBooleans.
   apply mconj_proj1 in H. apply sep_proj1 in H. apply sep_proj1 in H.
   eapply get_location; eauto.
@@ -400,7 +400,7 @@ Lemma frame_get_outgoing:
   exists v,
      load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (offset_arg ofs)) = Some v
   /\ Val.inject j (ls (S Outgoing ofs ty)) v.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros. unfold slot_valid in H1; InvBooleans.
   apply mconj_proj1 in H. apply sep_proj1 in H. apply sep_pick2 in H.
   eapply get_location; eauto.
@@ -410,7 +410,7 @@ Lemma frame_get_parent:
   forall j sp ls ls0 parent retaddr m P,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   load_stack m (Vptr sp Ptrofs.zero) Tptr (Ptrofs.repr fe.(fe_ofs_link)) = Some parent.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros.
   apply mconj_proj1 in H. apply sep_proj1 in H. apply sep_pick3 in H. rewrite <- chunk_of_Tptr in H.
   eapply hasvalue_get_stack; eauto.
@@ -420,7 +420,7 @@ Lemma frame_get_retaddr:
   forall j sp ls ls0 parent retaddr m P,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   load_stack m (Vptr sp Ptrofs.zero) Tptr (Ptrofs.repr fe.(fe_ofs_retaddr)) = Some retaddr.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros.
   apply mconj_proj1 in H. apply sep_proj1 in H. apply sep_pick4 in H. rewrite <- chunk_of_Tptr in H.
   eapply hasvalue_get_stack; eauto.
@@ -436,7 +436,7 @@ Lemma frame_set_local:
   exists m',
      store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (offset_local fe ofs)) v' = Some m'
   /\ m' |= frame_contents j sp (Locmap.set (S Local ofs ty) v ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
   intros. unfold frame_contents in H.
   exploit mconj_proj1; eauto. unfold frame_contents_1.
   rewrite ! sep_assoc; intros SEP.
@@ -461,7 +461,7 @@ Lemma frame_set_outgoing:
   exists m',
      store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.repr (offset_arg ofs)) v' = Some m'
   /\ m' |= frame_contents j sp (Locmap.set (S Outgoing ofs ty) v ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
   intros. unfold frame_contents in H.
   exploit mconj_proj1; eauto. unfold frame_contents_1.
   rewrite ! sep_assoc, sep_swap. intros SEP.
@@ -487,7 +487,7 @@ Lemma frame_contents_exten:
   (forall r, In r b.(used_callee_save) -> ls0' (R r) = ls0 (R r)) ->
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   m |= frame_contents j sp ls' ls0' parent retaddr ** P.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros.
   rewrite <- ! (contains_locations_exten ls ls') by auto.
   erewrite  <- contains_callee_saves_exten by eauto.
@@ -500,7 +500,7 @@ Corollary frame_set_reg:
   forall r v j sp ls ls0 parent retaddr m P,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   m |= frame_contents j sp (Locmap.set (R r) v ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
   intros. apply frame_contents_exten with ls ls0; auto.
 Qed.
 
@@ -508,7 +508,7 @@ Corollary frame_undef_regs:
   forall j sp ls ls0 parent retaddr m P rl,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   m |= frame_contents j sp (LTL.undef_regs rl ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
 Local Opaque sepconj.
   induction rl; simpl; intros.
 - auto.
@@ -519,7 +519,7 @@ Corollary frame_set_regpair:
   forall j sp ls0 parent retaddr m P p v ls,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   m |= frame_contents j sp (Locmap.setpair p v ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
   intros. destruct p; simpl.
   apply frame_set_reg; auto.
   apply frame_set_reg; apply frame_set_reg; auto.
@@ -529,7 +529,7 @@ Corollary frame_set_res:
   forall j sp ls0 parent retaddr m P res v ls,
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   m |= frame_contents j sp (Locmap.setres res v ls) ls0 parent retaddr ** P.
-Proof.
+Proof using.
   induction res; simpl; intros.
 - apply frame_set_reg; auto.
 - auto.
@@ -543,7 +543,7 @@ Lemma frame_contents_incr:
   m |= frame_contents j sp ls ls0 parent retaddr ** P ->
   inject_incr j j' ->
   m |= frame_contents j' sp ls ls0 parent retaddr ** P.
-Proof.
+Proof using.
   unfold frame_contents, frame_contents_1; intros.
   rewrite <- (contains_locations_incr j j') by auto.
   rewrite <- (contains_locations_incr j j') by auto.
@@ -582,14 +582,14 @@ Record agree_locs (ls ls0: locset) : Prop :=
 Lemma agree_reg:
   forall j ls rs r,
   agree_regs j ls rs -> Val.inject j (ls (R r)) (rs r).
-Proof.
+Proof using.
   intros. auto.
 Qed.
 
 Lemma agree_reglist:
   forall j ls rs rl,
   agree_regs j ls rs -> Val.inject_list j (reglist ls rl) (rs##rl).
-Proof.
+Proof using.
   induction rl; simpl; intros.
   auto. constructor; auto using agree_reg.
 Qed.
@@ -603,7 +603,7 @@ Lemma agree_regs_set_reg:
   agree_regs j ls rs ->
   Val.inject j v v' ->
   agree_regs j (Locmap.set (R r) v ls) (Regmap.set r v' rs).
-Proof.
+Proof using.
   intros; red; intros.
   unfold Regmap.set. destruct (RegEq.eq r0 r). subst r0.
   rewrite Locmap.gss; auto.
@@ -615,7 +615,7 @@ Lemma agree_regs_set_pair:
   agree_regs j ls rs ->
   Val.inject j v v' ->
   agree_regs j (Locmap.setpair p v ls) (set_pair p v' rs).
-Proof.
+Proof using.
   intros. destruct p; simpl.
 - apply agree_regs_set_reg; auto.
 - apply agree_regs_set_reg. apply agree_regs_set_reg; auto.
@@ -627,7 +627,7 @@ Lemma agree_regs_set_res:
   agree_regs j ls rs ->
   Val.inject j v v' ->
   agree_regs j (Locmap.setres res v ls) (set_res res v' rs).
-Proof.
+Proof using.
   induction res; simpl; intros.
 - apply agree_regs_set_reg; auto.
 - auto.
@@ -641,7 +641,7 @@ Lemma agree_regs_exten:
   agree_regs j ls rs ->
   (forall r, ls' (R r) = Vundef \/ ls' (R r) = ls (R r) /\ rs' r = rs r) ->
   agree_regs j ls' rs'.
-Proof.
+Proof using.
   intros; red; intros.
   destruct (H0 r) as [A | [A B]].
   rewrite A. constructor.
@@ -652,7 +652,7 @@ Lemma agree_regs_undef_regs:
   forall j rl ls rs,
   agree_regs j ls rs ->
   agree_regs j (LTL.undef_regs rl ls) (Mach.undef_regs rl rs).
-Proof.
+Proof using.
   induction rl; simpl; intros.
   auto.
   apply agree_regs_set_reg; auto.
@@ -662,7 +662,7 @@ Lemma agree_regs_undef_caller_save_regs:
   forall j ls rs,
   agree_regs j ls rs ->
   agree_regs j (LTL.undef_caller_save_regs ls) (Mach.undef_caller_save_regs rs).
-Proof.
+Proof using.
   intros; red; intros. 
   unfold LTL.undef_caller_save_regs, Mach.undef_caller_save_regs. 
   destruct (is_callee_save r); auto. 
@@ -674,7 +674,7 @@ Lemma agree_regs_set_slot:
   forall j ls rs sl ofs ty v,
   agree_regs j ls rs ->
   agree_regs j (Locmap.set (S sl ofs ty) v ls) rs.
-Proof.
+Proof using.
   intros; red; intros. rewrite Locmap.gso; auto. red. auto.
 Qed.
 
@@ -683,7 +683,7 @@ Qed.
 Lemma agree_regs_inject_incr:
   forall j ls rs j',
   agree_regs j ls rs -> inject_incr j j' -> agree_regs j' ls rs.
-Proof.
+Proof using.
   intros; red; intros; eauto with stacking.
 Qed.
 
@@ -693,7 +693,7 @@ Lemma agree_regs_call_regs:
   forall j ls rs,
   agree_regs j ls rs ->
   agree_regs j (call_regs ls) rs.
-Proof.
+Proof using.
   intros.
   unfold call_regs; intros; red; intros; auto.
 Qed.
@@ -707,7 +707,7 @@ Lemma agree_locs_set_reg:
   agree_locs ls ls0 ->
   mreg_within_bounds b r ->
   agree_locs (Locmap.set (R r) v ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   intros. inv H; constructor; auto; intros.
   rewrite Locmap.gso. auto. red. intuition congruence.
 Qed.
@@ -715,7 +715,7 @@ Qed.
 Lemma caller_save_reg_within_bounds:
   forall r,
   is_callee_save r = false -> mreg_within_bounds b r.
-Proof.
+Proof using.
   intros; red; intros. congruence.
 Qed.
 
@@ -724,7 +724,7 @@ Lemma agree_locs_set_pair:
   agree_locs ls ls0 ->
   forall_rpair (fun r => is_callee_save r = false) p ->
   agree_locs (Locmap.setpair p v ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   intros.
   destruct p; simpl in *.
   apply agree_locs_set_reg; auto. apply caller_save_reg_within_bounds; auto.
@@ -738,7 +738,7 @@ Lemma agree_locs_set_res:
   agree_locs ls ls0 ->
   (forall r, In r (params_of_builtin_res res) -> mreg_within_bounds b r) ->
   agree_locs (Locmap.setres res v ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   induction res; simpl; intros.
 - eapply agree_locs_set_reg; eauto.
 - auto.
@@ -750,7 +750,7 @@ Lemma agree_locs_undef_regs:
   agree_locs ls ls0 ->
   (forall r, In r regs -> mreg_within_bounds b r) ->
   agree_locs (LTL.undef_regs regs ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   induction regs; simpl; intros.
   auto.
   apply agree_locs_set_reg; auto.
@@ -761,7 +761,7 @@ Lemma agree_locs_undef_locs_1:
   agree_locs ls ls0 ->
   (forall r, In r regs -> is_callee_save r = false) ->
   agree_locs (LTL.undef_regs regs ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   intros. eapply agree_locs_undef_regs; eauto.
   intros. apply caller_save_reg_within_bounds. auto.
 Qed.
@@ -771,7 +771,7 @@ Lemma agree_locs_undef_locs:
   agree_locs ls ls0 ->
   existsb is_callee_save regs = false ->
   agree_locs (LTL.undef_regs regs ls) ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   intros. eapply agree_locs_undef_locs_1; eauto.
   intros. destruct (is_callee_save r) eqn:CS; auto.
   assert (existsb is_callee_save regs = true).
@@ -786,7 +786,7 @@ Lemma agree_locs_set_slot:
   agree_locs ls ls0 ->
   slot_writable sl = true ->
   agree_locs (Locmap.set (S sl ofs ty) v ls) ls0.
-Proof.
+Proof using.
   intros. destruct H; constructor; intros.
 - rewrite Locmap.gso; auto. red; auto.
 - rewrite Locmap.gso; auto. red. left. destruct sl; discriminate.
@@ -799,7 +799,7 @@ Lemma agree_locs_return:
   agree_locs ls ls0 ->
   agree_callee_save ls' ls ->
   agree_locs ls' ls0.
-Proof.
+Proof using tprog tge step return_address_offset.
   intros. red in H0. inv H; constructor; auto; intros.
 - rewrite H0; auto. unfold mreg_within_bounds in H. tauto.
 - rewrite <- agree_incoming0 by auto. apply H0. congruence.
@@ -819,47 +819,47 @@ Ltac ByCases :=
 
 Remark destroyed_by_op_caller_save:
   forall op, no_callee_saves (destroyed_by_op op).
-Proof.
+Proof using.
 Local Transparent destroyed_by_op.
   intros; unfold destroyed_by_op; ByCases.
 Qed.
 
 Remark destroyed_by_load_caller_save:
   forall chunk addr, no_callee_saves (destroyed_by_load chunk addr).
-Proof.
+Proof using.
 Local Transparent destroyed_by_load.
   intros; unfold destroyed_by_load; ByCases.
 Qed.
 
 Remark destroyed_by_store_caller_save:
   forall chunk addr, no_callee_saves (destroyed_by_store chunk addr).
-Proof.
+Proof using.
 Local Transparent destroyed_by_store.
   intros; unfold destroyed_by_store; ByCases.
 Qed.
 
 Remark destroyed_by_cond_caller_save:
   forall cond, no_callee_saves (destroyed_by_cond cond).
-Proof.
+Proof using.
 Local Transparent destroyed_by_cond.
   intros; unfold destroyed_by_cond; ByCases.
 Qed.
 
 Remark destroyed_by_jumptable_caller_save:
   no_callee_saves destroyed_by_jumptable.
-Proof.
+Proof using.
   red; reflexivity.
 Qed.
 
 Remark destroyed_by_setstack_caller_save:
   forall ty, no_callee_saves (destroyed_by_setstack ty).
-Proof.
+Proof using.
   unfold no_callee_saves; destruct ty; reflexivity.
 Qed.
 
 Remark destroyed_at_function_entry_caller_save:
   no_callee_saves destroyed_at_function_entry.
-Proof.
+Proof using.
   red; reflexivity.
 Qed.
 
@@ -870,26 +870,26 @@ Hint Resolve destroyed_by_op_caller_save destroyed_by_load_caller_save
 
 Remark destroyed_by_setstack_function_entry:
   forall ty, incl (destroyed_by_setstack ty) destroyed_at_function_entry.
-Proof.
+Proof using tprog tge step return_address_offset.
 Local Transparent destroyed_by_setstack destroyed_at_function_entry.
   unfold incl; destruct ty; simpl; tauto.
 Qed.
 
 Remark transl_destroyed_by_op:
   forall op e, destroyed_by_op (transl_op e op) = destroyed_by_op op.
-Proof.
+Proof using.
   intros; destruct op; reflexivity.
 Qed.
 
 Remark transl_destroyed_by_load:
   forall chunk addr e, destroyed_by_load chunk (transl_addr e addr) = destroyed_by_load chunk addr.
-Proof.
+Proof using.
   intros; destruct chunk; reflexivity.
 Qed.
 
 Remark transl_destroyed_by_store:
   forall chunk addr e, destroyed_by_store chunk (transl_addr e addr) = destroyed_by_store chunk addr.
-Proof.
+Proof using.
   intros; destruct chunk; reflexivity.
 Qed.
 
@@ -925,7 +925,7 @@ Lemma save_callee_save_rec_correct:
   /\ m' |= contains_callee_saves j sp pos l ls ** P
   /\ (forall ofs k p, Mem.perm m sp ofs k p -> Mem.perm m' sp ofs k p)
   /\ agree_regs j ls rs'.
-Proof.
+Proof using wt_ls ls_temp_undef.
 Local Opaque mreg_type.
   induction l as [ | r l]; simpl; intros until P; intros CS SEP AG.
 - exists rs, m.
@@ -970,7 +970,7 @@ End SAVE_CALLEE_SAVE.
 
 Remark LTL_undef_regs_same:
   forall r rl ls, In r rl -> LTL.undef_regs rl ls (R r) = Vundef.
-Proof.
+Proof using tprog tge step return_address_offset.
   induction rl; simpl; intros. contradiction.
   unfold Locmap.set. destruct (Loc.eq (R a) (R r)). auto.
   destruct (Loc.diff_dec (R a) (R r)); auto.
@@ -979,14 +979,14 @@ Qed.
 
 Remark LTL_undef_regs_others:
   forall r rl ls, ~In r rl -> LTL.undef_regs rl ls (R r) = ls (R r).
-Proof.
+Proof using tprog tge step return_address_offset.
   induction rl; simpl; intros. auto.
   rewrite Locmap.gso. apply IHrl. intuition. red. intuition.
 Qed.
 
 Remark LTL_undef_regs_slot:
   forall sl ofs ty rl ls, LTL.undef_regs rl ls (S sl ofs ty) = ls (S sl ofs ty).
-Proof.
+Proof using.
   induction rl; simpl; intros. auto.
   rewrite Locmap.gso. apply IHrl. red; auto.
 Qed.
@@ -994,7 +994,7 @@ Qed.
 Remark undef_regs_type:
   forall ty l rl ls,
   Val.has_type (ls l) ty -> Val.has_type (LTL.undef_regs rl ls l) ty.
-Proof.
+Proof using.
   induction rl; simpl; intros.
 - auto.
 - unfold Locmap.set. destruct (Loc.eq (R a) l). red; auto.
@@ -1016,7 +1016,7 @@ Lemma save_callee_save_correct:
   /\ m' |= contains_callee_saves j sp fe.(fe_ofs_callee_save) b.(used_callee_save) ls0 ** P
   /\ (forall ofs k p, Mem.perm m sp ofs k p -> Mem.perm m' sp ofs k p)
   /\ agree_regs j ls1 rs'.
-Proof.
+Proof using.
   intros until P; intros SEP TY AGCS AG; intros ls1 rs1.
   exploit (save_callee_save_rec_correct j cs fb sp ls1).
 - intros. unfold ls1. apply LTL_undef_regs_same. eapply destroyed_by_setstack_function_entry; eauto.
@@ -1068,7 +1068,7 @@ Lemma function_prologue_correct:
   /\ m5' |= frame_contents j' sp' ls1 ls0 parent ra ** minjection j' m2 ** globalenv_inject ge j' ** P
   /\ j' sp = Some(sp', fe.(fe_stack_data))
   /\ inject_incr j j'.
-Proof.
+Proof using TRANSF_F.
   intros until P; intros AGREGS AGCS AGARGS WTREGS LS1 RS1 ALLOC TYPAR TYRA SEP.
   rewrite unfold_transf_function.
   unfold fn_stacksize, fn_link_ofs, fn_retaddr_ofs.
@@ -1187,7 +1187,7 @@ Lemma restore_callee_save_rec_correct:
   /\ (forall r, In r l -> Val.inject j (ls0 (R r)) (rs' r))
   /\ (forall r, ~(In r l) -> rs' r = rs r)
   /\ agree_unused ls0 rs'.
-Proof.
+Proof using.
 Local Opaque mreg_type.
   induction l as [ | r l]; simpl; intros.
 - (* base case *)
@@ -1233,7 +1233,7 @@ Lemma restore_callee_save_correct:
         is_callee_save r = true -> Val.inject j (ls0 (R r)) (rs' r))
   /\ (forall r,
         is_callee_save r = false -> rs' r = rs r).
-Proof.
+Proof using.
   intros.
   unfold frame_contents, frame_contents_1 in H.
   apply mconj_proj1 in H. rewrite ! sep_assoc in H. apply sep_pick5 in H.
@@ -1271,7 +1271,7 @@ Lemma function_epilogue_correct:
   /\ agree_regs j (return_regs ls0 ls) rs1
   /\ agree_callee_save (return_regs ls0 ls) ls0
   /\ m1' |= minjection j m1 ** P.
-Proof.
+Proof using TRANSF_F.
   intros until fb; intros SEP AGR AGL INJ FREE.
   (* Can free *)
   exploit free_parallel_rule.
@@ -1315,7 +1315,7 @@ End FRAME_PROPERTIES.
 Lemma simplify_load_correct: forall chunk m a v,
   Mem.loadv chunk m a = Some v ->
   exists v', Mem.loadv (simplify_load chunk) m a = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros. destruct a; simpl in *; try discriminate.
   destruct chunk; simpl; try (exists v; auto; fail).
   rewrite Mem.load_bool_int8_unsigned in H.
@@ -1326,7 +1326,7 @@ Qed.
 Lemma simplify_store_correct: forall chunk m a v m',
   Mem.storev chunk m a v = Some m' ->
   Mem.storev (simplify_store chunk) m a v = Some m'.
-Proof.
+Proof using.
   intros. destruct a; simpl in *; try discriminate. rewrite <- H. symmetry.
   destruct chunk; simpl; auto.
 - apply Mem.store_bool_unsigned_8.
@@ -1336,13 +1336,13 @@ Qed.
 
 Lemma simplify_load_destroyed: forall chunk addr,
   destroyed_by_load (simplify_load chunk) addr = destroyed_by_load chunk addr.
-Proof.
+Proof using.
   intros; destruct chunk; reflexivity.
 Qed.
 
 Lemma simplify_store_destroyed: forall chunk addr,
   destroyed_by_store (simplify_store chunk) addr = destroyed_by_store chunk addr.
-Proof.
+Proof using.
   intros; destruct chunk; reflexivity.
 Qed.
 
@@ -1392,7 +1392,7 @@ Lemma stack_contents_change_meminj:
   forall cs cs' P,
   m |= stack_contents j cs cs' ** P ->
   m |= stack_contents j' cs cs' ** P.
-Proof.
+Proof using.
 Local Opaque sepconj.
   induction cs as [ | [] cs]; destruct cs' as [ | [] cs']; simpl; intros; auto.
   destruct sp0; auto.
@@ -1406,7 +1406,7 @@ Lemma match_stacks_change_meminj:
   forall cs cs' sg,
   match_stacks j cs cs' sg ->
   match_stacks j' cs cs' sg.
-Proof.
+Proof using.
   induction 2; intros.
 - constructor; auto.
 - econstructor; eauto.
@@ -1419,7 +1419,7 @@ Lemma match_stacks_change_sig:
   match_stacks j cs cs' sg ->
   tailcall_possible sg1 ->
   match_stacks j cs cs' sg1.
-Proof.
+Proof using.
   induction 1; intros.
   econstructor; eauto.
   econstructor; eauto. intros. elim (H0 _ H1).
@@ -1431,7 +1431,7 @@ Lemma match_stacks_type_sp:
   forall j cs cs' sg,
   match_stacks j cs cs' sg ->
   Val.has_type (parent_sp cs') Tptr.
-Proof.
+Proof using.
   induction 1; unfold parent_sp. apply Val.Vnullptr_has_type. apply Val.Vptr_has_type.
 Qed.
 
@@ -1439,7 +1439,7 @@ Lemma match_stacks_type_retaddr:
   forall j cs cs' sg,
   match_stacks j cs cs' sg ->
   Val.has_type (parent_ra cs') Tptr.
-Proof.
+Proof using.
   induction 1; unfold parent_ra. apply Val.Vnullptr_has_type. auto.
 Qed.
 
@@ -1452,20 +1452,20 @@ Section LABELS.
 Remark find_label_save_callee_save:
   forall lbl l ofs k,
   Mach.find_label lbl (save_callee_save_rec l ofs k) = Mach.find_label lbl k.
-Proof.
+Proof using.
   induction l; simpl; auto.
 Qed.
 
 Remark find_label_restore_callee_save:
   forall lbl l ofs k,
   Mach.find_label lbl (restore_callee_save_rec l ofs k) = Mach.find_label lbl k.
-Proof.
+Proof using.
   induction l; simpl; auto.
 Qed.
 
 Lemma transl_code_eq:
   forall fe i c, transl_code fe (i :: c) = transl_instr fe i (transl_code fe c).
-Proof.
+Proof using.
   unfold transl_code; intros. rewrite list_fold_right_eq. auto.
 Qed.
 
@@ -1473,7 +1473,7 @@ Lemma find_label_transl_code:
   forall fe lbl c,
   Mach.find_label lbl (transl_code fe c) =
     option_map (transl_code fe) (Linear.find_label lbl c).
-Proof.
+Proof using.
   induction c; simpl; intros.
 - auto.
 - rewrite transl_code_eq.
@@ -1491,7 +1491,7 @@ Lemma transl_find_label:
   Linear.find_label lbl f.(Linear.fn_code) = Some c ->
   Mach.find_label lbl tf.(Mach.fn_code) =
     Some (transl_code (make_env (function_bounds f)) c).
-Proof.
+Proof using.
   intros. rewrite (unfold_transf_function _ _ H).  simpl.
   unfold transl_body. unfold save_callee_save. rewrite find_label_save_callee_save.
   rewrite find_label_transl_code. rewrite H0. reflexivity.
@@ -1504,7 +1504,7 @@ End LABELS.
 Lemma find_label_tail:
   forall lbl c c',
   Linear.find_label lbl c = Some c' -> is_tail c' c.
-Proof.
+Proof using.
   induction c; simpl.
   intros; discriminate.
   intro c'. case (Linear.is_label lbl a); intros.
@@ -1517,7 +1517,7 @@ Qed.
 Lemma is_tail_save_callee_save:
   forall l ofs k,
   is_tail k (save_callee_save_rec l ofs k).
-Proof.
+Proof using.
   induction l; intros; simpl. auto with coqlib.
   constructor; auto.
 Qed.
@@ -1525,7 +1525,7 @@ Qed.
 Lemma is_tail_restore_callee_save:
   forall l ofs k,
   is_tail k (restore_callee_save_rec l ofs k).
-Proof.
+Proof using.
   induction l; intros; simpl. auto with coqlib.
   constructor; auto.
 Qed.
@@ -1533,7 +1533,7 @@ Qed.
 Lemma is_tail_transl_instr:
   forall fe i k,
   is_tail k (transl_instr fe i k).
-Proof.
+Proof using.
   intros. destruct i; unfold transl_instr; auto with coqlib.
   destruct s; auto with coqlib.
   destruct s; auto with coqlib.
@@ -1543,7 +1543,7 @@ Qed.
 
 Lemma is_tail_transl_code:
   forall fe c1 c2, is_tail c1 c2 -> is_tail (transl_code fe c1) (transl_code fe c2).
-Proof.
+Proof using.
   induction 1; simpl. auto with coqlib.
   rewrite transl_code_eq.
   eapply is_tail_trans. eauto. apply is_tail_transl_instr.
@@ -1554,7 +1554,7 @@ Lemma is_tail_transf_function:
   transf_function f = OK tf ->
   is_tail c (Linear.fn_code f) ->
   is_tail (transl_code (make_env (function_bounds f)) c) (fn_code tf).
-Proof.
+Proof using.
   intros. rewrite (unfold_transf_function _ _ H). simpl.
   unfold transl_body, save_callee_save.
   eapply is_tail_trans. 2: apply is_tail_save_callee_save.
@@ -1589,7 +1589,7 @@ Proof (Genv.find_funct_ptr_transf_partial TRANSF).
 
 Lemma sig_preserved:
   forall f tf, transf_fundef f = OK tf -> Mach.funsig tf = Linear.funsig f.
-Proof.
+Proof using.
   intros until tf; unfold transf_fundef, transf_partial_fundef.
   destruct f; intros; monadInv H.
   rewrite (unfold_transf_function _ _ EQ). auto.
@@ -1605,7 +1605,7 @@ Lemma find_function_translated:
      find_function_ptr tge ros rs = Some bf
   /\ Genv.find_funct_ptr tge bf = Some tf
   /\ transf_fundef f = OK tf.
-Proof.
+Proof using TRANSF.
   intros until f; intros AG [bound [_ [?????]]] FF.
   destruct ros; simpl in FF.
 - exploit Genv.find_funct_inv; eauto. intros [b EQ]. rewrite EQ in FF.
@@ -1642,7 +1642,7 @@ Lemma transl_external_argument:
   forall l,
   In l (regs_of_rpairs (loc_arguments sg)) ->
   exists v, extcall_arg rs m' (parent_sp cs') l v /\ Val.inject j (ls l) v.
-Proof.
+Proof using tprog tge step return_address_offset cs SEP MS AGR AGCS AGARGS.
   intros.
   assert (loc_argument_acceptable l) by (apply loc_arguments_acceptable_2 with sg; auto).
   destruct l; red in H0.
@@ -1664,7 +1664,7 @@ Lemma transl_external_argument_2:
   forall p,
   In p (loc_arguments sg) ->
   exists v, extcall_arg_pair rs m' (parent_sp cs') p v /\ Val.inject j (Locmap.getpair p ls) v.
-Proof.
+Proof using tprog tge step return_address_offset cs SEP MS AGR AGCS AGARGS.
   intros. destruct p as [l | l1 l2].
 - destruct (transl_external_argument l) as (v & A & B). eapply in_regs_of_rpairs; eauto; simpl; auto.
   exists v; split; auto. constructor; auto.
@@ -1681,7 +1681,7 @@ Lemma transl_external_arguments_rec:
   exists vl,
       list_forall2 (extcall_arg_pair rs m' (parent_sp cs')) locs vl
    /\ Val.inject_list j (map (fun p => Locmap.getpair p ls) locs) vl.
-Proof.
+Proof using tprog tge step return_address_offset cs SEP MS AGR AGCS AGARGS.
   induction locs; simpl; intros.
   exists (@nil val); split. constructor. constructor.
   exploit transl_external_argument_2; eauto with coqlib. intros [v [A B]].
@@ -1693,7 +1693,7 @@ Lemma transl_external_arguments:
   exists vl,
       extcall_arguments rs m' (parent_sp cs') sg vl
    /\ Val.inject_list j (map (fun p => Locmap.getpair p ls) (loc_arguments sg)) vl.
-Proof.
+Proof using tprog tge step return_address_offset cs SEP MS AGR AGCS AGARGS.
   unfold extcall_arguments.
   apply transl_external_arguments_rec.
   auto with coqlib.
@@ -1728,7 +1728,7 @@ Lemma transl_builtin_arg_correct:
   exists v',
      eval_builtin_arg ge rs (Vptr sp' Ptrofs.zero) m' (transl_builtin_arg fe a) v'
   /\ Val.inject j v v'.
-Proof.
+Proof using tprog tge step return_address_offset retaddr parent ls0 SEP INJ AGR.
   assert (SYMB: forall id ofs, Val.inject j (Senv.symbol_address ge id ofs) (Senv.symbol_address ge id ofs)).
   { assert (G: meminj_preserves_globals ge j).
     { eapply globalenv_inject_preserves_globals. eapply sep_proj2. eapply sep_proj2. eexact SEP. }
@@ -1774,7 +1774,7 @@ Lemma transl_builtin_args_correct:
   exists vl',
      eval_builtin_args ge rs (Vptr sp' Ptrofs.zero) m' (List.map (transl_builtin_arg fe) al) vl'
   /\ Val.inject_list j vl vl'.
-Proof.
+Proof using tprog tge step return_address_offset retaddr parent ls0 SEP INJ AGR.
   induction 1; simpl; intros VALID BOUNDS.
 - exists (@nil val); split; constructor.
 - exploit transl_builtin_arg_correct; eauto using in_or_app. intros (v1' & A & B).
@@ -1851,7 +1851,7 @@ Theorem transf_step_correct:
   forall s1 t s2, Linear.step ge s1 t s2 ->
   forall (WTS: wt_state s1) s1' (MS: match_states s1 s1'),
   exists s2', plus step tge s1' t s2' /\ match_states s2 s2'.
-Proof.
+Proof using return_address_offset_exists TRANSF.
   induction 1; intros;
   try inv MS;
   try rewrite transl_code_eq;
@@ -2147,13 +2147,13 @@ Proof.
   apply agree_locs_return with rs0; auto.
   apply frame_contents_exten with rs0 (parent_locset s); auto.
   intros; apply Val.lessdef_same; apply AGCS; red; congruence.
-  intros; rewrite (OUTU ty ofs); auto. 
+  intros; rewrite (OUTU ty ofs); auto.
 Qed.
 
 Lemma transf_initial_states:
   forall st1, Linear.initial_state prog st1 ->
   exists st2, Mach.initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
@@ -2180,7 +2180,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> Linear.final_state st1 r -> Mach.final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STACKS.
   assert (R: exists r, loc_result signature_main = One r).
   { destruct (loc_result signature_main) as [r1 | r1 r2] eqn:LR.
@@ -2194,7 +2194,7 @@ Qed.
 
 Lemma wt_prog:
   forall i fd, In (i, Gfun fd) prog.(prog_defs) -> wt_fundef fd.
-Proof.
+Proof using tprog TRANSF.
   intros.
   exploit list_forall2_in_left. eexact (proj1 TRANSF). eauto.
   intros ([i' g] & P & Q & R). simpl in *. inv R. destruct fd; simpl in *.
@@ -2205,7 +2205,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (Linear.semantics prog) (Mach.semantics return_address_offset tprog).
-Proof.
+Proof using return_address_offset_exists TRANSF.
   set (ms := fun s s' => wt_state s /\ match_states s s').
   eapply forward_simulation_plus with (match_states := ms).
 - apply senv_preserved.

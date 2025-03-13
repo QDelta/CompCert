@@ -27,7 +27,7 @@ Definition match_prog (p: Csharpminor.program) (tp: Cminor.program) :=
 
 Lemma transf_program_match:
   forall p tp, transl_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. apply match_transform_partial_program; auto.
 Qed.
 
@@ -65,7 +65,7 @@ Lemma sig_preserved_body:
   forall f tf cenv size,
   transl_funbody cenv size f = OK tf ->
   tf.(fn_sig) = Csharpminor.fn_sig f.
-Proof.
+Proof using.
   intros. unfold transl_funbody in H. monadInv H; reflexivity.
 Qed.
 
@@ -73,7 +73,7 @@ Lemma sig_preserved:
   forall f tf,
   transl_fundef f = OK tf ->
   Cminor.funsig tf = Csharpminor.funsig f.
-Proof.
+Proof using.
   intros until tf; destruct f; simpl.
   unfold transl_function. destruct (build_compilenv f).
   case (zle z Ptrofs.max_unsigned); simpl bind; try congruence.
@@ -88,7 +88,7 @@ Lemma load_freelist:
   (forall b' lo hi, In (b', lo, hi) fbl -> b' <> b) ->
   Mem.free_list m fbl = Some m' ->
   Mem.load chunk m' b ofs = Mem.load chunk m b ofs.
-Proof.
+Proof using.
   induction fbl; intros.
   simpl in H0. congruence.
   destruct a as [[b' lo] hi].
@@ -104,7 +104,7 @@ Lemma perm_freelist:
   Mem.free_list m fbl = Some m' ->
   Mem.perm m' b ofs k p ->
   Mem.perm m b ofs k p.
-Proof.
+Proof using.
   induction fbl; simpl; intros until p.
   congruence.
   destruct a as [[b' lo] hi]. case_eq (Mem.free m b' lo hi); try congruence.
@@ -115,7 +115,7 @@ Lemma nextblock_freelist:
   forall fbl m m',
   Mem.free_list m fbl = Some m' ->
   Mem.nextblock m' = Mem.nextblock m.
-Proof.
+Proof using.
   induction fbl; intros until m'; simpl.
   congruence.
   destruct a as [[b lo] hi].
@@ -128,7 +128,7 @@ Lemma free_list_freeable:
   Mem.free_list m l = Some m' ->
   forall b lo hi,
   In (b, lo, hi) l -> Mem.range_perm m b lo hi Cur Freeable.
-Proof.
+Proof using.
   induction l; simpl; intros.
   contradiction.
   revert H. destruct a as [[b' lo'] hi'].
@@ -142,7 +142,7 @@ Qed.
 Lemma nextblock_storev:
   forall chunk m addr v m',
   Mem.storev chunk m addr v = Some m' -> Mem.nextblock m' = Mem.nextblock m.
-Proof.
+Proof using.
   unfold Mem.storev; intros. destruct addr; try discriminate.
   eapply Mem.nextblock_store; eauto.
 Qed.
@@ -171,7 +171,7 @@ Lemma match_temps_invariant:
   match_temps f le te ->
   inject_incr f f' ->
   match_temps f' le te.
-Proof.
+Proof using.
   intros; red; intros. destruct (H _ _ H1) as [v' [A B]]. exists v'; eauto.
 Qed.
 
@@ -180,7 +180,7 @@ Lemma match_temps_assign:
   match_temps f le te ->
   Val.inject f v tv ->
   match_temps f (PTree.set id v le) (PTree.set id tv te).
-Proof.
+Proof using.
   intros; red; intros. rewrite PTree.gsspec in *. destruct (peq id0 id).
   inv H1. exists tv; auto.
   eauto.
@@ -242,7 +242,7 @@ Lemma match_env_invariant:
   (forall b delta, f2 b = Some(sp, delta) -> f1 b = Some(sp, delta)) ->
   (forall b, Plt b lo -> f2 b = f1 b) ->
   match_env f2 cenv e sp lo hi.
-Proof.
+Proof using.
   intros. destruct H. constructor; auto.
 (* vars *)
   intros. geninv (me_vars0 id); econstructor; eauto.
@@ -258,7 +258,7 @@ Remark inject_incr_separated_same:
   forall f1 f2 m1 m1',
   inject_incr f1 f2 -> inject_separated f1 f2 m1 m1' ->
   forall b, Mem.valid_block m1 b -> f2 b = f1 b.
-Proof.
+Proof using.
   intros. case_eq (f1 b).
   intros [b' delta] EQ. apply H; auto.
   intros EQ. case_eq (f2 b).
@@ -271,7 +271,7 @@ Remark inject_incr_separated_same':
   inject_incr f1 f2 -> inject_separated f1 f2 m1 m1' ->
   forall b b' delta,
   f2 b = Some(b', delta) -> Mem.valid_block m1' b' -> f1 b = Some(b', delta).
-Proof.
+Proof using.
   intros. case_eq (f1 b).
   intros [b'1 delta1] EQ. exploit H; eauto. congruence.
   intros. exploit H0; eauto. intros [C D]. contradiction.
@@ -284,7 +284,7 @@ Lemma match_env_external_call:
   inject_separated f1 f2 m1 m1' ->
   Ple hi (Mem.nextblock m1) -> Plt sp (Mem.nextblock m1') ->
   match_env f2 cenv e sp lo hi.
-Proof.
+Proof using.
   intros. apply match_env_invariant with f1; auto.
   intros. eapply inject_incr_separated_same'; eauto.
   intros. eapply inject_incr_separated_same; eauto. red. destruct H. extlia.
@@ -302,7 +302,7 @@ Lemma match_env_alloc:
   (forall b', b' <> b -> f2 b' = f1 b') ->
   e!id = None ->
   match_env f2 cenv (PTree.set id (b, sz) e) sp lo (Mem.nextblock m2).
-Proof.
+Proof using.
   intros until f2; intros ME ALLOC CENV INCR SAME OTHER ENV.
   exploit Mem.nextblock_alloc; eauto. intros NEXTBLOCK.
   exploit Mem.alloc_result; eauto. intros RES.
@@ -343,7 +343,7 @@ Lemma match_bounds_invariant:
   (forall id b sz ofs p,
    PTree.get id e = Some(b, sz) -> Mem.perm m2 b ofs Max p -> Mem.perm m1 b ofs Max p) ->
   match_bounds e m2.
-Proof.
+Proof using.
   intros; red; intros. eapply H; eauto.
 Qed.
 
@@ -370,7 +370,7 @@ Lemma padding_freeable_invariant:
   (forall ofs, Mem.perm tm1 sp ofs Cur Freeable -> Mem.perm tm2 sp ofs Cur Freeable) ->
   (forall b, Plt b hi -> f2 b = f1 b) ->
   padding_freeable f2 e tm2 sp sz.
-Proof.
+Proof using.
   intros; red; intros.
   exploit H; eauto. intros [A | A].
   left; auto.
@@ -382,7 +382,7 @@ Qed.
 
 Lemma is_reachable_from_env_dec:
   forall f e sp ofs, is_reachable_from_env f e sp ofs \/ ~is_reachable_from_env f e sp ofs.
-Proof.
+Proof using.
   intros.
   set (pred := fun id_b_sz : ident * (block * Z) =>
                  match id_b_sz with
@@ -433,7 +433,7 @@ Remark inj_preserves_globals:
   forall f hi,
   match_globalenvs f hi ->
   meminj_preserves_globals ge f.
-Proof.
+Proof using.
   intros. inv H.
   split. intros. apply DOMAIN. eapply SYMBOLS. eauto.
   split. intros. apply DOMAIN. eapply VARINFOS. eauto.
@@ -492,7 +492,7 @@ Lemma match_callstack_match_globalenvs:
   forall f m tm cs bound tbound,
   match_callstack f m tm cs bound tbound ->
   exists hi, match_globalenvs f hi.
-Proof.
+Proof using.
   induction 1; eauto.
 Qed.
 
@@ -507,7 +507,7 @@ Lemma match_callstack_invariant:
   (forall b, Plt b bound -> f2 b = f1 b) ->
   (forall b b' delta, f2 b = Some(b', delta) -> Plt b' tbound -> f1 b = Some(b', delta)) ->
   match_callstack f2 m2 tm2 cs bound tbound.
-Proof.
+Proof using.
   induction 1; intros.
   (* base case *)
   econstructor; eauto.
@@ -536,7 +536,7 @@ Lemma match_callstack_incr_bound:
   match_callstack f m tm cs bound tbound ->
   Ple bound bound' -> Ple tbound tbound' ->
   match_callstack f m tm cs bound' tbound'.
-Proof.
+Proof using.
   intros. inv H.
   econstructor; eauto. extlia. extlia.
   constructor; auto. extlia. extlia.
@@ -549,7 +549,7 @@ Lemma match_callstack_set_temp:
   Val.inject f v tv ->
   match_callstack f m tm (Frame cenv tf e le te sp lo hi :: cs) bound tbound ->
   match_callstack f m tm (Frame cenv tf e (PTree.set id v le) (PTree.set id tv te) sp lo hi :: cs) bound tbound.
-Proof.
+Proof using.
   intros. inv H0. constructor; auto.
   eapply match_temps_assign; eauto.
 Qed.
@@ -561,7 +561,7 @@ Qed.
 Lemma in_blocks_of_env:
   forall e id b sz,
   e!id = Some(b, sz) -> In (b, 0, sz) (blocks_of_env e).
-Proof.
+Proof using.
   unfold blocks_of_env; intros.
   change (b, 0, sz) with (block_of_binding (id, (b, sz))).
   apply List.in_map. apply PTree.elements_correct. auto.
@@ -571,7 +571,7 @@ Lemma in_blocks_of_env_inv:
   forall b lo hi e,
   In (b, lo, hi) (blocks_of_env e) ->
   exists id, e!id = Some(b, hi) /\ lo = 0.
-Proof.
+Proof using.
   unfold blocks_of_env; intros.
   exploit list_in_map_inv; eauto. intros [[id [b' sz]] [A B]].
   unfold block_of_binding in A. inv A.
@@ -587,7 +587,7 @@ Lemma match_callstack_freelist:
   Mem.free tm sp 0 tf.(fn_stackspace) = Some tm'
   /\ match_callstack f m' tm' cs (Mem.nextblock m') (Mem.nextblock tm')
   /\ Mem.inject f m' tm'.
-Proof.
+Proof using.
   intros until tm; intros INJ FREELIST MCS. inv MCS. inv MENV.
   assert ({tm' | Mem.free tm sp 0 (fn_stackspace tf) = Some tm'}).
   apply Mem.range_perm_free.
@@ -627,7 +627,7 @@ Lemma match_callstack_external_call:
   match_callstack f1 m1 m1' cs bound tbound ->
   Ple bound (Mem.nextblock m1) -> Ple tbound (Mem.nextblock m1') ->
   match_callstack f2 m2 m2' cs bound tbound.
-Proof.
+Proof using.
   intros until m2'.
   intros UNMAPPED OUTOFREACH INCR SEPARATED MAXPERMS.
   induction 1; intros.
@@ -678,7 +678,7 @@ Lemma match_callstack_alloc_right:
   match_callstack f m tm'
       (Frame cenv tf empty_env le te sp (Mem.nextblock m) (Mem.nextblock m) :: cs)
       (Mem.nextblock m) (Mem.nextblock tm').
-Proof.
+Proof using.
   intros.
   exploit Mem.nextblock_alloc; eauto. intros NEXTBLOCK.
   exploit Mem.alloc_result; eauto. intros RES.
@@ -713,7 +713,7 @@ Lemma match_callstack_alloc_left:
   match_callstack f2 m2 tm
     (Frame cenv tf (PTree.set id (b, sz) e) le te sp lo (Mem.nextblock m2) :: cs)
     (Mem.nextblock m2) (Mem.nextblock tm).
-Proof.
+Proof using.
   intros. inv H.
   exploit Mem.nextblock_alloc; eauto. intros NEXTBLOCK.
   exploit Mem.alloc_result; eauto. intros RES.
@@ -751,7 +751,7 @@ Remark cenv_remove_gso:
   forall id vars cenv,
   ~In id (map fst vars) ->
   PTree.get id (cenv_remove cenv vars) = PTree.get id cenv.
-Proof.
+Proof using.
   induction vars; simpl; intros.
   auto.
   rewrite PTree.gro. apply IHvars. intuition. intuition.
@@ -761,7 +761,7 @@ Remark cenv_remove_gss:
   forall id vars cenv,
   In id (map fst vars) ->
   PTree.get id (cenv_remove cenv vars) = None.
-Proof.
+Proof using.
   induction vars; simpl; intros.
   contradiction.
   rewrite PTree.grspec. destruct (PTree.elt_eq id (fst a)). auto.
@@ -814,7 +814,7 @@ Lemma match_callstack_alloc_variables_rec:
       (Frame cenv tf e2 le te sp lo (Mem.nextblock m2) :: cs)
       (Mem.nextblock m2) (Mem.nextblock tm)
   /\ Mem.inject f2 m2 tm.
-Proof.
+Proof using.
   intros until cs; intros VALID REPRES STKSIZE STKPERMS.
   induction 1; intros f1 NOREPET COMPAT SEP1 SEP2 UNBOUND MCS MINJ.
   (* base case *)
@@ -867,7 +867,7 @@ Lemma match_callstack_alloc_variables:
     match_callstack f2 m2 tm2 (Frame cenv fn e le te sp (Mem.nextblock m1) (Mem.nextblock m2) :: cs)
                     (Mem.nextblock m2) (Mem.nextblock tm2)
   /\ Mem.inject f2 m2 tm2.
-Proof.
+Proof using.
   intros.
   eapply match_callstack_alloc_variables_rec; eauto.
   eapply Mem.valid_new_block; eauto.
@@ -887,7 +887,7 @@ Qed.
 
 Remark block_alignment_pos:
   forall sz, block_alignment sz > 0.
-Proof.
+Proof using.
   unfold block_alignment; intros.
   destruct (zlt sz 2). lia.
   destruct (zlt sz 4). lia.
@@ -897,7 +897,7 @@ Qed.
 Remark assign_variable_incr:
   forall id sz cenv stksz cenv' stksz',
   assign_variable (cenv, stksz) (id, sz) = (cenv', stksz') -> stksz <= stksz'.
-Proof.
+Proof using.
   simpl; intros. inv H.
   generalize (align_le stksz (block_alignment sz) (block_alignment_pos sz)).
   assert (0 <= Z.max 0 sz). apply Zmax_bound_l. lia.
@@ -907,7 +907,7 @@ Qed.
 Remark assign_variables_incr:
   forall vars cenv sz cenv' sz',
   assign_variables (cenv, sz) vars = (cenv', sz') -> sz <= sz'.
-Proof.
+Proof using.
   induction vars; intros until sz'.
   simpl; intros. inv H. lia.
 Opaque assign_variable.
@@ -920,7 +920,7 @@ Qed.
 Remark inj_offset_aligned_block:
   forall stacksize sz,
   Mem.inj_offset_aligned (align stacksize (block_alignment sz)) sz.
-Proof.
+Proof using.
   intros; red; intros.
   apply Z.divide_trans with (block_alignment sz).
   unfold align_chunk.  unfold block_alignment.
@@ -942,7 +942,7 @@ Qed.
 Remark inj_offset_aligned_block':
   forall stacksize sz,
   Mem.inj_offset_aligned (align stacksize (block_alignment sz)) (Z.max 0 sz).
-Proof.
+Proof using.
   intros.
   replace (block_alignment sz) with (block_alignment (Z.max 0 sz)).
   apply inj_offset_aligned_block.
@@ -959,7 +959,7 @@ Lemma assign_variable_sound:
   cenv_separated cenv1 vars ->
   cenv_compat cenv2 (vars ++ (id, sz) :: nil) sz2
   /\ cenv_separated cenv2 (vars ++ (id, sz) :: nil).
-Proof.
+Proof using.
   unfold assign_variable; intros until vars; intros ASV NOREPET POS COMPAT SEP.
   inv ASV.
   assert (LE: sz1 <= align sz1 (block_alignment sz)). apply align_le. apply block_alignment_pos.
@@ -1003,7 +1003,7 @@ Lemma assign_variables_sound:
   cenv_compat cenv1 vars sz1 ->
   cenv_separated cenv1 vars ->
   cenv_compat cenv2 (vars ++ vars') sz2 /\ cenv_separated cenv2 (vars ++ vars').
-Proof.
+Proof using.
   induction vars'; simpl; intros.
   rewrite app_nil_r. inv H; auto.
   destruct a as [id sz].
@@ -1029,7 +1029,7 @@ Qed.
 
 Remark permutation_norepet:
   forall (A: Type) (l l': list A), Permutation l l' -> list_norepet l -> list_norepet l'.
-Proof.
+Proof using.
   induction 1; intros.
   constructor.
   inv H0. constructor; auto. red; intros; elim H3. apply Permutation_in with l'; auto. apply Permutation_sym; auto.
@@ -1042,7 +1042,7 @@ Lemma build_compilenv_sound:
   build_compilenv f = (cenv, sz) ->
   list_norepet (map fst (Csharpminor.fn_vars f)) ->
   cenv_compat cenv (Csharpminor.fn_vars f) sz /\ cenv_separated cenv (Csharpminor.fn_vars f).
-Proof.
+Proof using.
   unfold build_compilenv; intros.
   set (vars1 := Csharpminor.fn_vars f) in *.
   generalize (VarSort.Permuted_sort vars1). intros P.
@@ -1065,7 +1065,7 @@ Lemma assign_variables_domain:
   forall id vars cesz,
   (fst (assign_variables cesz vars))!id <> None ->
   (fst cesz)!id <> None \/ In id (map fst vars).
-Proof.
+Proof using.
   induction vars; simpl; intros.
   auto.
   exploit IHvars; eauto. unfold assign_variable. destruct a as [id1 sz1].
@@ -1077,7 +1077,7 @@ Lemma build_compilenv_domain:
   forall f cenv sz id ofs,
   build_compilenv f = (cenv, sz) ->
   cenv!id = Some ofs -> In id (map fst (Csharpminor.fn_vars f)).
-Proof.
+Proof using.
   unfold build_compilenv; intros.
   set (vars1 := Csharpminor.fn_vars f) in *.
   generalize (VarSort.Permuted_sort vars1). intros P.
@@ -1093,7 +1093,7 @@ Qed.
 
 Lemma create_undef_temps_val:
   forall id v temps, (create_undef_temps temps)!id = Some v -> In id temps /\ v = Vundef.
-Proof.
+Proof using.
   induction temps; simpl; intros.
   rewrite PTree.gempty in H. congruence.
   rewrite PTree.gsspec in H. destruct (peq id a).
@@ -1114,7 +1114,7 @@ Lemma bind_parameters_agree_rec:
   Val.inject_list f vals tvals ->
   match_temps f le1 te ->
   match_temps f le2 (set_params' tvals vars te).
-Proof.
+Proof using.
 Opaque PTree.set.
   induction vars; simpl; intros.
   destruct vals; try discriminate. inv H. auto.
@@ -1127,7 +1127,7 @@ Qed.
 
 Lemma set_params'_outside:
   forall id il vl te, ~In id il -> (set_params' vl il te)!id = te!id.
-Proof.
+Proof using.
   induction il; simpl; intros. auto.
   destruct vl; rewrite IHil.
   apply PTree.gso. intuition. intuition.
@@ -1138,7 +1138,7 @@ Lemma set_params'_inside:
   forall id il vl te1 te2,
   In id il ->
   (set_params' vl il te1)!id = (set_params' vl il te2)!id.
-Proof.
+Proof using.
   induction il; simpl; intros.
   contradiction.
   destruct vl; destruct (List.in_dec peq id il); auto;
@@ -1150,7 +1150,7 @@ Lemma set_params_set_params':
   forall il vl id,
   list_norepet il ->
   (set_params vl il)!id = (set_params' vl il (PTree.empty val))!id.
-Proof.
+Proof using.
   induction il; simpl; intros.
   auto.
   inv H. destruct vl.
@@ -1169,7 +1169,7 @@ Qed.
 Lemma set_locals_outside:
   forall e id il,
   ~In id il -> (set_locals il e)!id = e!id.
-Proof.
+Proof using.
   induction il; simpl; intros.
   auto.
   rewrite PTree.gso. apply IHil. tauto. intuition.
@@ -1178,7 +1178,7 @@ Qed.
 Lemma set_locals_inside:
   forall e id il,
   In id il -> (set_locals il e)!id = Some Vundef.
-Proof.
+Proof using.
   induction il; simpl; intros.
   contradiction.
   destruct H. subst a. apply PTree.gss.
@@ -1191,7 +1191,7 @@ Lemma set_locals_set_params':
   list_disjoint params vars ->
   (set_locals vars (set_params vals params)) ! id =
   (set_params' vals params (set_locals vars (PTree.empty val))) ! id.
-Proof.
+Proof using.
   intros. destruct (in_dec peq id vars).
   assert (~In id params). apply list_disjoint_notin with vars; auto. apply list_disjoint_sym; auto.
   rewrite set_locals_inside; auto. rewrite set_params'_outside; auto. rewrite set_locals_inside; auto.
@@ -1209,7 +1209,7 @@ Lemma bind_parameters_agree:
   list_norepet params ->
   list_disjoint params temps ->
   match_temps f le (set_locals temps (set_params tvals params)).
-Proof.
+Proof using.
   intros; red; intros.
   exploit bind_parameters_agree_rec; eauto.
   instantiate (1 := set_locals temps (PTree.empty val)).
@@ -1240,7 +1240,7 @@ Theorem match_callstack_function_entry:
                      (Frame cenv tf e le te sp (Mem.nextblock m) (Mem.nextblock m') :: cs)
                      (Mem.nextblock m') (Mem.nextblock tm')
   /\ Mem.inject f' m' tm'.
-Proof.
+Proof using.
   intros.
   exploit build_compilenv_sound; eauto. intros [C1 C2].
   eapply match_callstack_alloc_variables; eauto.
@@ -1252,13 +1252,13 @@ Qed.
 
 Remark val_inject_val_of_bool:
   forall f b, Val.inject f (Val.of_bool b) (Val.of_bool b).
-Proof.
+Proof using.
   intros; destruct b; constructor.
 Qed.
 
 Remark val_inject_val_of_optbool:
   forall f ob, Val.inject f (Val.of_optbool ob) (Val.of_optbool ob).
-Proof.
+Proof using.
   intros; destruct ob; simpl. destruct b; constructor. constructor.
 Qed.
 
@@ -1284,7 +1284,7 @@ Lemma eval_unop_compat:
   exists tv,
      eval_unop op tv1 = Some tv
   /\ Val.inject f v tv.
-Proof.
+Proof using.
   destruct op; simpl; intros.
   inv H; inv H0; simpl; TrivialExists.
   inv H; inv H0; simpl; TrivialExists.
@@ -1332,7 +1332,7 @@ Lemma eval_binop_compat:
   exists tv,
      eval_binop op tv1 tv2 tm = Some tv
   /\ Val.inject f v tv.
-Proof.
+Proof using.
   destruct op; simpl; intros; inv H.
 - TrivialExists. apply Val.add_inject; auto.
 - TrivialExists. apply Val.sub_inject; auto.
@@ -1431,7 +1431,7 @@ Lemma var_addr_correct:
   exists tv,
      eval_expr tge (Vptr sp Ptrofs.zero) te tm (var_addr cenv id) tv
   /\ Val.inject f (Vptr b Ptrofs.zero) tv.
-Proof.
+Proof using TRANSL.
   unfold var_addr; intros.
   assert (match_var f sp e!id cenv!id).
     inv H. inv MENV. auto.
@@ -1477,7 +1477,7 @@ Qed.
 Remark bool_of_val_inject:
   forall f v tv b,
   Val.bool_of_val v b -> Val.inject f v tv -> Val.bool_of_val tv b.
-Proof.
+Proof using.
   intros. inv H0; inv H; constructor; auto.
 Qed.
 
@@ -1487,7 +1487,7 @@ Lemma transl_constant_correct:
   exists tv,
      eval_constant tge sp (transl_constant cst) = Some tv
   /\ Val.inject f v tv.
-Proof.
+Proof using.
   destruct cst; simpl; intros; inv H.
   exists (Vint i); auto.
   exists (Vfloat f0); auto.
@@ -1508,7 +1508,7 @@ Lemma transl_expr_correct:
   exists tv,
      eval_expr tge (Vptr sp Ptrofs.zero) te tm ta tv
   /\ Val.inject f v tv.
-Proof.
+Proof using TRANSL.
   induction 3; intros; simpl in TR; try (monadInv TR).
   (* Etempvar *)
   inv MATCH. exploit MTMP; eauto. intros [tv [A B]].
@@ -1546,7 +1546,7 @@ Lemma transl_exprlist_correct:
   exists tv,
      eval_exprlist tge (Vptr sp Ptrofs.zero) te tm ta tv
   /\ Val.inject_list f v tv.
-Proof.
+Proof using TRANSL.
   induction 3; intros; monadInv TR.
   exists (@nil val); split. constructor. constructor.
   exploit transl_expr_correct; eauto. intros [tv1 [EVAL1 VINJ1]].
@@ -1630,7 +1630,7 @@ Remark val_inject_function_pointer:
   match_globalenvs f bound ->
   Val.inject f v tv ->
   tv = v.
-Proof.
+Proof using.
   intros. exploit Genv.find_funct_inv; eauto. intros [b EQ]. subst v.
   rewrite Genv.find_funct_find_funct_ptr in H.
   assert (f b = Some(b, 0)). inv H0. apply DOMAIN. eapply FUNCTIONS; eauto.
@@ -1641,7 +1641,7 @@ Lemma match_call_cont:
   forall k tk cenv xenv cs,
   match_cont k tk cenv xenv cs ->
   match_cont (Csharpminor.call_cont k) (call_cont tk) cenv nil cs.
-Proof.
+Proof using.
   induction 1; simpl; auto; econstructor; eauto.
 Qed.
 
@@ -1654,7 +1654,7 @@ Lemma match_is_call_cont:
                E0 (State tfn Sskip tk' sp te tm)
     /\ is_call_cont tk'
     /\ match_cont k tk' cenv nil cs.
-Proof.
+Proof using.
   induction 1; simpl; intros; try contradiction.
   econstructor; split. apply star_refl. split. exact I. econstructor; eauto.
   exploit IHmatch_cont; eauto.
@@ -1677,7 +1677,7 @@ Lemma switch_table_default:
   exists n,
      lbl_stmt_tail sl n (select_switch_default sl)
   /\ snd (switch_table sl base) = (n + base)%nat.
-Proof.
+Proof using.
   induction sl; simpl; intros.
 - exists O; split. constructor. lia.
 - destruct o.
@@ -1698,7 +1698,7 @@ Lemma switch_table_case:
          lbl_stmt_tail sl n sl'
       /\ switch_target i dfl (fst (switch_table sl base)) = (n + base)%nat
   end.
-Proof.
+Proof using.
   induction sl; simpl; intros.
 - auto.
 - destruct (switch_table sl (S base)) as [tbl1 dfl1] eqn:ST.
@@ -1720,7 +1720,7 @@ Lemma switch_table_select:
   lbl_stmt_tail sl
                 (switch_target i (snd (switch_table sl O)) (fst (switch_table sl O)))
                 (select_switch i sl).
-Proof.
+Proof using.
   unfold select_switch; intros.
   generalize (switch_table_case i sl O (snd (switch_table sl O))).
   destruct (select_switch_case i sl) as [sl'|].
@@ -1745,7 +1745,7 @@ Lemma switch_descent:
   transl_lblstmt_cont cenv xenv ls k k'
   /\ (forall f sp e m,
       plus step tge (State f s k sp e m) E0 (State f body k' sp e m)).
-Proof.
+Proof using.
   induction ls; intros.
 - monadInv H. econstructor; split.
   econstructor.
@@ -1767,7 +1767,7 @@ Lemma switch_ascent:
   star step tge (State f (Sexit n) k1 sp e m)
              E0 (State f (Sexit O) k2 sp e m)
   /\ transl_lblstmt_cont cenv xenv ls' k k2.
-Proof.
+Proof using.
   induction 1; intros.
 - exists k1; split; auto. apply star_refl.
 - inv H0. exploit IHlbl_stmt_tail; eauto. intros (k2 & P & Q).
@@ -1781,7 +1781,7 @@ Lemma switch_match_cont:
   match_cont k tk cenv xenv cs ->
   transl_lblstmt_cont cenv xenv ls tk tk' ->
   match_cont (Csharpminor.Kseq (seq_of_lbl_stmt ls) k) tk' cenv (false :: switch_env ls xenv) cs.
-Proof.
+Proof using.
   induction ls; intros; simpl.
   inv H0. apply match_Kblock2. econstructor; eauto.
   inv H0. apply match_Kblock2. eapply match_Kseq2. auto. eauto.
@@ -1800,7 +1800,7 @@ Lemma switch_match_states:
   exists S,
   plus step tge (State tfn (Sexit O) tk' (Vptr sp Ptrofs.zero) te tm) E0 S
   /\ match_states (Csharpminor.State fn (seq_of_lbl_stmt ls) k e le m) S.
-Proof.
+Proof using.
   intros. inv TK.
 - econstructor; split. eapply plus_two. constructor. constructor. auto.
   eapply match_state; eauto.
@@ -1813,7 +1813,7 @@ Lemma transl_lblstmt_suffix:
   lbl_stmt_tail ls n ls' ->
   forall body ts, transl_lblstmt cenv (switch_env ls xenv) ls body = OK ts ->
   exists body', exists ts', transl_lblstmt cenv (switch_env ls' xenv) ls' body' = OK ts'.
-Proof.
+Proof using.
   induction 1; intros.
 - exists body, ts; auto.
 - monadInv H0. eauto.
@@ -1833,7 +1833,7 @@ Lemma transl_lblstmt_find_label_context:
   transl_lblstmt_cont cenv xenv ls tk1 tk2 ->
   find_label lbl body tk2 = Some (ts', tk') ->
   find_label lbl ts tk1 = Some (ts', tk').
-Proof.
+Proof using.
   induction ls; intros.
 - monadInv H. inv H0. simpl. rewrite H1. auto.
 - monadInv H. inv H0. simpl in H6. eapply IHls; eauto.
@@ -1867,7 +1867,7 @@ with transl_lblstmt_find_label:
      /\ transl_stmt cenv xenv' s' = OK ts'
      /\ match_cont k' tk' cenv xenv' cs
   end.
-Proof.
+Proof using tprog tge.
   intros. destruct s; try (monadInv H); simpl; auto.
   (* seq *)
   exploit (transl_find_label s1). eauto. eapply match_Kseq. eexact EQ1. eauto.
@@ -1922,7 +1922,7 @@ Lemma transl_find_label_body:
      find_label lbl tf.(fn_body) (call_cont tk) = Some(ts', tk')
   /\ transl_stmt cenv xenv' s' = OK ts'
   /\ match_cont k' tk' cenv xenv' cs.
-Proof.
+Proof using tprog tge.
   intros. monadInv H. simpl.
   exploit transl_find_label. eexact EQ. eapply match_call_cont. eexact H0.
   instantiate (1 := lbl). rewrite H1. auto.
@@ -1947,7 +1947,7 @@ Lemma transl_step_correct:
   forall T1, match_states S1 T1 ->
   (exists T2, plus step tge T1 t T2 /\ match_states S2 T2)
   \/ (measure S2 < measure S1 /\ t = E0 /\ match_states S2 T1)%nat.
-Proof.
+Proof using TRANSL.
   induction 1; intros T1 MSTATE; inv MSTATE.
 
 (* skip seq *)
@@ -2206,7 +2206,7 @@ Lemma match_globalenvs_init:
   forall m,
   Genv.init_mem prog = Some m ->
   match_globalenvs (Mem.flat_inj (Mem.nextblock m)) (Mem.nextblock m).
-Proof.
+Proof using.
   intros. constructor.
   intros. unfold Mem.flat_inj. apply pred_dec_true; auto.
   intros. unfold Mem.flat_inj in H0.
@@ -2219,7 +2219,7 @@ Qed.
 Lemma transl_initial_states:
   forall S, Csharpminor.initial_state prog S ->
   exists R, Cminor.initial_state tprog R /\ match_states S R.
-Proof.
+Proof using TRANSL.
   induction 1.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
@@ -2242,13 +2242,13 @@ Qed.
 Lemma transl_final_states:
   forall S R r,
   match_states S R -> Csharpminor.final_state S r -> Cminor.final_state R r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv MK. inv RESINJ. constructor.
 Qed.
 
 Theorem transl_program_correct:
   forward_simulation (Csharpminor.semantics prog) (Cminor.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_star; eauto.
   apply senv_preserved.
   eexact transl_initial_states.

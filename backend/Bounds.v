@@ -159,7 +159,7 @@ Definition outgoing_space (i: instruction) :=
 Lemma max_over_list_pos:
   forall (A: Type) (valu: A -> Z) (l: list A),
   max_over_list valu l >= 0.
-Proof.
+Proof using.
   intros until valu. unfold max_over_list.
   assert (forall l z, fold_left (fun x y => Z.max x (valu y)) l z >= z).
   induction l; simpl; intros.
@@ -169,7 +169,7 @@ Qed.
 
 Lemma max_over_slots_of_funct_pos:
   forall (valu: slot * Z * typ -> Z), max_over_slots_of_funct valu >= 0.
-Proof.
+Proof using.
   intros. unfold max_over_slots_of_funct.
   unfold max_over_instrs. apply max_over_list_pos.
 Qed.
@@ -180,7 +180,7 @@ Remark fold_left_preserves:
   forall (A B: Type) (f: A -> B -> A) (P: A -> Prop),
   (forall a b, P a -> P (f a b)) ->
   forall l a, P a -> P (fold_left f l a).
-Proof.
+Proof using.
   induction l; simpl; auto.
 Qed.
 
@@ -189,7 +189,7 @@ Remark fold_left_ensures:
   (forall a b, P a -> P (f a b)) ->
   (forall a, P (f a b0)) ->
   forall l a, In b0 l -> P (fold_left f l a).
-Proof.
+Proof using.
   induction l; simpl; intros. contradiction.
   destruct H1. subst a. apply fold_left_preserves; auto. apply IHl; auto.
 Qed.
@@ -198,25 +198,25 @@ Definition only_callee_saves (u: RegSet.t) : Prop :=
   forall r, RegSet.In r u -> is_callee_save r = true.
 
 Lemma record_reg_only: forall u r, only_callee_saves u -> only_callee_saves (record_reg u r).
-Proof.
+Proof using.
   unfold only_callee_saves, record_reg; intros.
   destruct (is_callee_save r) eqn:CS; auto.
   destruct (mreg_eq r r0). congruence. apply H; eapply RegSet.add_3; eauto.
 Qed.
 
 Lemma record_regs_only: forall rl u, only_callee_saves u -> only_callee_saves (record_regs u rl).
-Proof.
+Proof using.
   intros. unfold record_regs. apply fold_left_preserves; auto using record_reg_only.
 Qed.
 
 Lemma record_regs_of_instr_only: forall u i, only_callee_saves u -> only_callee_saves (record_regs_of_instr u i).
-Proof.
+Proof using.
   intros. destruct i; simpl; auto using record_reg_only, record_regs_only.
 Qed.
 
 Lemma record_regs_of_function_only:
   only_callee_saves record_regs_of_function.
-Proof.
+Proof using.
   intros. unfold record_regs_of_function.
   apply fold_left_preserves. apply record_regs_of_instr_only.
   red; intros. eelim RegSet.empty_1; eauto.
@@ -252,27 +252,27 @@ Qed.
 (** We now show the correctness of the inferred bounds. *)
 
 Lemma record_reg_incr: forall u r r', RegSet.In r' u -> RegSet.In r' (record_reg u r).
-Proof.
+Proof using.
   unfold record_reg; intros. destruct (is_callee_save r); auto. apply RegSet.add_2; auto.
 Qed.
 
 Lemma record_reg_ok: forall u r, is_callee_save r = true -> RegSet.In r (record_reg u r).
-Proof.
+Proof using.
   unfold record_reg; intros. rewrite H. apply RegSet.add_1; auto.
 Qed.
 
 Lemma record_regs_incr: forall r' rl u, RegSet.In r' u -> RegSet.In r' (record_regs u rl).
-Proof.
+Proof using.
   intros. unfold record_regs. apply fold_left_preserves; auto using record_reg_incr.
 Qed.
 
 Lemma record_regs_ok: forall r rl u, In r rl -> is_callee_save r = true -> RegSet.In r (record_regs u rl).
-Proof.
+Proof using.
   intros. unfold record_regs. eapply fold_left_ensures; eauto using record_reg_incr, record_reg_ok.
 Qed.
 
 Lemma record_regs_of_instr_incr: forall r' u i, RegSet.In r' u -> RegSet.In r' (record_regs_of_instr u i).
-Proof.
+Proof using.
   intros. destruct i; simpl; auto using record_reg_incr, record_regs_incr.
 Qed.
 
@@ -286,14 +286,14 @@ Definition defined_by_instr (r': mreg) (i: instruction) :=
   end.
 
 Lemma record_regs_of_instr_ok: forall r' u i, defined_by_instr r' i -> is_callee_save r' = true -> RegSet.In r' (record_regs_of_instr u i).
-Proof.
+Proof using.
   intros. destruct i; simpl in *; try contradiction; subst; auto using record_reg_ok.
   destruct H; auto using record_regs_incr, record_regs_ok.
 Qed.
 
 Lemma record_regs_of_function_ok:
   forall r i, In i f.(fn_code) -> defined_by_instr r i -> is_callee_save r = true -> RegSet.In r record_regs_of_function.
-Proof.
+Proof using.
   intros. unfold record_regs_of_function.
   eapply fold_left_ensures; eauto using record_regs_of_instr_incr, record_regs_of_instr_ok.
 Qed.
@@ -301,7 +301,7 @@ Qed.
 Lemma max_over_list_bound:
   forall (A: Type) (valu: A -> Z) (l: list A) (x: A),
   In x l -> valu x <= max_over_list valu l.
-Proof.
+Proof using.
   intros until x. unfold max_over_list.
   assert (forall c z,
             let f := fold_left (fun x y => Z.max x (valu y)) c z in
@@ -319,7 +319,7 @@ Qed.
 Lemma max_over_instrs_bound:
   forall (valu: instruction -> Z) i,
   In i f.(fn_code) -> valu i <= max_over_instrs valu.
-Proof.
+Proof using.
   intros. unfold max_over_instrs. apply max_over_list_bound; auto.
 Qed.
 
@@ -327,7 +327,7 @@ Lemma max_over_slots_of_funct_bound:
   forall (valu: slot * Z * typ -> Z) i s,
   In i f.(fn_code) -> In s (slots_of_instr i) ->
   valu s <= max_over_slots_of_funct valu.
-Proof.
+Proof using.
   intros. unfold max_over_slots_of_funct.
   apply Z.le_trans with (max_over_slots_of_instr valu i).
   unfold max_over_slots_of_instr. apply max_over_list_bound. auto.
@@ -338,7 +338,7 @@ Lemma local_slot_bound:
   forall i ofs ty,
   In i f.(fn_code) -> In (Local, ofs, ty) (slots_of_instr i) ->
   ofs + typesize ty <= bound_local function_bounds.
-Proof.
+Proof using.
   intros.
   unfold function_bounds, bound_local.
   change (ofs + typesize ty) with (local_slot (Local, ofs, ty)).
@@ -349,7 +349,7 @@ Lemma outgoing_slot_bound:
   forall i ofs ty,
   In i f.(fn_code) -> In (Outgoing, ofs, ty) (slots_of_instr i) ->
   ofs + typesize ty <= bound_outgoing function_bounds.
-Proof.
+Proof using.
   intros. change (ofs + typesize ty) with (outgoing_slot (Outgoing, ofs, ty)).
   unfold function_bounds, bound_outgoing.
   apply Zmax_bound_r. eapply max_over_slots_of_funct_bound; eauto.
@@ -359,7 +359,7 @@ Lemma size_arguments_bound:
   forall sig ros,
   In (Lcall sig ros) f.(fn_code) ->
   size_arguments sig <= bound_outgoing function_bounds.
-Proof.
+Proof using.
   intros. change (size_arguments sig) with (outgoing_space (Lcall sig ros)).
   unfold function_bounds, bound_outgoing.
   apply Zmax_bound_l. apply max_over_instrs_bound; auto.
@@ -372,7 +372,7 @@ Lemma mreg_is_within_bounds:
   forall i, In i f.(fn_code) ->
   forall r, defined_by_instr r i ->
   mreg_within_bounds function_bounds r.
-Proof.
+Proof using.
   intros. unfold mreg_within_bounds. intros.
   exploit record_regs_of_function_ok; eauto. intros.
   apply RegSet.elements_1 in H2. rewrite InA_alt in H2. destruct H2 as (r' & A & B).
@@ -383,7 +383,7 @@ Lemma slot_is_within_bounds:
   forall i, In i f.(fn_code) ->
   forall sl ty ofs, In (sl, ofs, ty) (slots_of_instr i) ->
   slot_within_bounds function_bounds sl ofs ty.
-Proof.
+Proof using.
   intros. unfold slot_within_bounds.
   destruct sl.
   eapply local_slot_bound; eauto.
@@ -393,7 +393,7 @@ Qed.
 
 Lemma slots_of_locs_charact:
   forall sl ofs ty l, In (sl, ofs, ty) (slots_of_locs l) <-> In (S sl ofs ty) l.
-Proof.
+Proof using.
   induction l; simpl; intros.
   tauto.
   destruct a; simpl; intuition congruence.
@@ -406,7 +406,7 @@ Lemma instr_is_within_bounds:
   forall i,
   In i f.(fn_code) ->
   instr_within_bounds function_bounds i.
-Proof.
+Proof using.
   intros;
   destruct i;
   generalize (mreg_is_within_bounds _ H); generalize (slot_is_within_bounds _ H);
@@ -421,7 +421,7 @@ Qed.
 
 Lemma function_is_within_bounds:
   function_within_bounds f function_bounds.
-Proof.
+Proof using.
   intros; red; intros. apply instr_is_within_bounds; auto.
 Qed.
 
@@ -443,7 +443,7 @@ Definition size_callee_save_area (b: bounds) (ofs: Z) : Z :=
 
 Lemma size_callee_save_area_rec_incr:
   forall l ofs, ofs <= size_callee_save_area_rec l ofs.
-Proof.
+Proof using.
 Local Opaque mreg_type.
   induction l as [ | r l]; intros; simpl.
 - lia.
@@ -456,7 +456,7 @@ Qed.
 
 Lemma size_callee_save_area_incr:
   forall b ofs, ofs <= size_callee_save_area b ofs.
-Proof.
+Proof using.
   intros. apply size_callee_save_area_rec_incr.
 Qed.
 

@@ -107,7 +107,8 @@ ifneq (,$(PROFILING))
 endif
 PROFILE_ZIP ?= true
 
-COQC="$(COQBIN)coqc" -q $(COQINCLUDES) $(COQCOPTS)
+COQC_PATH="$(COQBIN)coqc"
+COQC=$(COQC_PATH) -q $(COQINCLUDES) $(COQCOPTS)
 COQDEP="$(COQBIN)coqdep" $(COQINCLUDES)
 COQDOC="$(COQBIN)coqdoc"
 COQEXEC="$(COQBIN)coqtop" $(COQINCLUDES) $(COQEXTRACTOPTS) -batch -load-vernac-source
@@ -240,6 +241,14 @@ endif
 
 proof: $(FILES:.v=.vo)
 
+vos:
+	@test -f .depend || $(MAKE) depend
+	@$(MAKE) $(FILES:.v=.vos)
+
+vok:
+	@test -f .depend || $(MAKE) depend
+	@$(MAKE) $(FILES:.v=.vok)
+
 extraction: extraction/STAMP
 
 extraction/STAMP: $(FILES:.v=.vo) extraction/extraction.v $(ARCH)/extractionMachdep.v
@@ -270,7 +279,7 @@ runtime:
 
 FORCE:
 
-.PHONY: proof extraction runtime FORCE
+.PHONY: proof vos vok extraction runtime FORCE
 
 documentation: $(FILES)
 	mkdir -p doc/html
@@ -301,6 +310,14 @@ latexdoc:
 	@echo "COQC $*.v"
 	@$(COQC) $*.v
 	@$(PROFILE_ZIP)
+
+%.vos: %.v
+	@echo "COQC -vos $*.v"
+	@$(COQC) -vos $*.v
+
+%.vok: %.v
+	@echo "COQC -vok $*.v"
+	@$(COQC) -vok $*.v
 
 %.v: %.vp tools/ndfun
 	@rm -f $*.v
@@ -356,7 +373,7 @@ depend: $(GENERATED) depend1
 
 depend1: $(FILES)
 	@echo "Analyzing Coq dependencies"
-	@$(COQDEP) $^ > .depend
+	@$(COQDEP) -vos $^ > .depend
 
 install:
 	install -d $(DESTDIR)$(BINDIR)
@@ -385,6 +402,14 @@ ifeq ($(INSTALL_COQDEV),true)
 	@(echo "To use, pass the following to coq_makefile or add the following to _CoqProject:"; echo "-R $(COQDEVDIR) compcert") > $(DESTDIR)$(COQDEVDIR)/README
 endif
 
+cleanvok:
+	rm -f $(patsubst %, %/*.vok, $(DIRS))
+
+cleangen:
+	rm -f $(patsubst %, %/*_context.v, $(DIRS))
+	rm -f $(patsubst %, %/*_generated.v, $(DIRS))
+	rm -f $(patsubst %, %/*_sentences.jsonl, $(DIRS))
+	rm -f $(patsubst %, %/*.log, $(DIRS))
 
 clean:
 	rm -f $(patsubst %, %/*.vo*, $(DIRS))

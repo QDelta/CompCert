@@ -135,14 +135,14 @@ Definition kill_at_call (s: avail) : avail :=
     corresponding lists. *)
 
 Definition eq_arg (a1 a2: builtin_arg loc) : {a1=a2} + {a1<>a2}.
-Proof.
+Proof using.
   generalize Loc.eq ident_eq Int.eq_dec Int64.eq_dec Ptrofs.eq_dec Float.eq_dec Float32.eq_dec chunk_eq;
   decide equality.
 Defined.
 Global Opaque eq_arg.
 
 Definition eq_debuginfo (i1 i2: debuginfo) : {i1=i2} + {i1 <> i2}.
-Proof.
+Proof using.
   destruct (eq_arg (proj1_sig i1) (proj1_sig i2)).
   left. destruct i1, i2; simpl in *. subst x0. f_equal. apply proof_irr.
   right. congruence.
@@ -167,7 +167,7 @@ Fixpoint join (s1: avail) (s2: avail) {struct s1} : avail :=
   end.
 
 Definition eq_state (s1 s2: avail) : {s1=s2} + {s1<>s2}.
-Proof.
+Proof using.
   apply list_eq_dec. decide equality. apply eq_debuginfo. apply ident_eq.
 Defined.
 Global Opaque eq_state.

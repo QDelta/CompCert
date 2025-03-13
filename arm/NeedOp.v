@@ -120,7 +120,7 @@ Lemma needs_of_condition_sound:
   eval_condition cond args m = Some b ->
   vagree_list args args' (needs_of_condition cond) ->
   eval_condition cond args' m' = Some b.
-Proof.
+Proof using.
   intros. unfold needs_of_condition in H0.
   eapply default_needs_of_condition_sound; eauto.
 Qed.
@@ -129,7 +129,7 @@ Lemma needs_of_shift_sound:
   forall v v' s nv,
   vagree v v' (needs_of_shift s nv) ->
   vagree (eval_shift s v) (eval_shift s v') nv.
-Proof.
+Proof using.
   intros. destruct s; simpl in *.
   apply shlimm_sound; auto.
   apply shruimm_sound; auto.
@@ -140,7 +140,7 @@ Qed.
 Lemma val_sub_lessdef:
   forall v1 v1' v2 v2',
   Val.lessdef v1 v1' -> Val.lessdef v2 v2' -> Val.lessdef (Val.sub v1 v2) (Val.sub v1' v2').
-Proof.
+Proof using.
   intros. inv H. inv H0. auto. destruct v1'; simpl; auto. simpl; auto.
 Qed.
 
@@ -152,7 +152,7 @@ Lemma needs_of_operation_sound:
   exists v',
      eval_operation ge (Vptr sp Ptrofs.zero) op args' m' = Some v'
   /\ vagree v v' nv.
-Proof.
+Proof using.
   unfold needs_of_operation; intros; destruct op; try (eapply default_needs_of_operation_sound; eauto; fail);
   simpl in *; FuncInv; InvAgree; TrivialExists.
 - apply sign_ext_sound; auto. compute; auto.
@@ -196,7 +196,7 @@ Lemma operation_is_redundant_sound:
   eval_operation ge (Vptr sp Ptrofs.zero) op (arg1 :: args) m = Some v ->
   vagree_list (arg1 :: args) (arg1' :: args') (needs_of_operation op nv) ->
   vagree v arg1' nv.
-Proof.
+Proof using.
   intros. destruct op; simpl in *; try discriminate; inv H1; FuncInv; subst.
 - apply sign_ext_redundant_sound; auto. lia.
 - apply sign_ext_redundant_sound; auto. lia.

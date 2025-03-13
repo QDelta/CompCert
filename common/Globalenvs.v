@@ -55,7 +55,7 @@ Function store_zeros (m: mem) (b: block) (p: Z) (n: Z) {wf (Zwf 0) n}: option me
     | Some m' => store_zeros m' b (p + 1) (n - 1)
     | None => None
     end.
-Proof.
+Proof using.
   intros. red. lia.
   apply Zwf_well_founded.
 Qed.
@@ -103,7 +103,7 @@ Definition symbol_address (ge: t) (id: ident) (ofs: ptrofs) : val :=
 Theorem shift_symbol_address:
   forall ge id ofs delta,
   symbol_address ge id (Ptrofs.add ofs delta) = Val.offset_ptr (symbol_address ge id ofs) delta.
-Proof.
+Proof using.
   intros. unfold symbol_address, Val.offset_ptr. destruct (find_symbol ge id); auto.
 Qed.
 
@@ -111,7 +111,7 @@ Theorem shift_symbol_address_32:
   forall ge id ofs n,
   Archi.ptr64 = false ->
   symbol_address ge id (Ptrofs.add ofs (Ptrofs.of_int n)) = Val.add (symbol_address ge id ofs) (Vint n).
-Proof.
+Proof using.
   intros. unfold symbol_address. destruct (find_symbol ge id).
 - unfold Val.add. rewrite H. auto.
 - auto.
@@ -121,7 +121,7 @@ Theorem shift_symbol_address_64:
   forall ge id ofs n,
   Archi.ptr64 = true ->
   symbol_address ge id (Ptrofs.add ofs (Ptrofs.of_int64 n)) = Val.addl (symbol_address ge id ofs) (Vlong n).
-Proof.
+Proof using.
   intros. unfold symbol_address. destruct (find_symbol ge id).
 - unfold Val.addl. rewrite H. auto.
 - auto.
@@ -259,7 +259,7 @@ Definition add_globals (ge: t) (gl: list (ident * globdef F V)) : t :=
 Lemma add_globals_app:
   forall gl2 gl1 ge,
   add_globals ge (gl1 ++ gl2) = add_globals (add_globals ge gl1) gl2.
-Proof.
+Proof using.
   intros. apply fold_left_app.
 Qed.
 
@@ -279,7 +279,7 @@ Lemma add_globals_preserves:
   forall gl ge,
   (forall ge id g, P ge -> In (id, g) gl -> P (add_global ge (id, g))) ->
   P ge -> P (add_globals ge gl).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   auto.
   destruct a. apply IHgl; auto.
@@ -290,7 +290,7 @@ Lemma add_globals_ensures:
   (forall ge id g, P ge -> In (id, g) gl -> P (add_global ge (id, g))) ->
   (forall ge, P (add_global ge (id, g))) ->
   In (id, g) gl -> P (add_globals ge gl).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   contradiction.
   destruct H1. subst a. apply add_globals_preserves; auto.
@@ -301,7 +301,7 @@ Lemma add_globals_unique_preserves:
   forall id gl ge,
   (forall ge id1 g, P ge -> In (id1, g) gl -> id1 <> id -> P (add_global ge (id1, g))) ->
   ~In id (map fst gl) -> P ge -> P (add_globals ge gl).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   auto.
   destruct a. apply IHgl; auto.
@@ -312,7 +312,7 @@ Lemma add_globals_unique_ensures:
   (forall ge id1 g1, P ge -> In (id1, g1) gl2 -> id1 <> id -> P (add_global ge (id1, g1))) ->
   (forall ge, P (add_global ge (id, g))) ->
   ~In id (map fst gl2) -> P (add_globals ge (gl1 ++ (id, g) :: gl2)).
-Proof.
+Proof using.
   intros. rewrite add_globals_app. simpl. apply add_globals_unique_preserves with id; auto.
 Qed.
 
@@ -320,7 +320,7 @@ Remark in_norepet_unique:
   forall id g (gl: list (ident * globdef F V)),
   In (id, g) gl -> list_norepet (map fst gl) ->
   exists gl1 gl2, gl = gl1 ++ (id, g) :: gl2 /\ ~In id (map fst gl2).
-Proof.
+Proof using.
   induction gl as [|[id1 g1] gl]; simpl; intros.
   contradiction.
   inv H0. destruct H.
@@ -334,7 +334,7 @@ Lemma add_globals_norepet_ensures:
   (forall ge id1 g1, P ge -> In (id1, g1) gl -> id1 <> id -> P (add_global ge (id1, g1))) ->
   (forall ge, P (add_global ge (id, g))) ->
   In (id, g) gl -> list_norepet (map fst gl) -> P (add_globals ge gl).
-Proof.
+Proof using.
   intros. exploit in_norepet_unique; eauto. intros (gl1 & gl2 & X & Y).
   subst gl. apply add_globals_unique_ensures; auto. intros. eapply H; eauto.
   apply in_or_app; simpl; auto.
@@ -346,7 +346,7 @@ End GLOBALENV_PRINCIPLES.
 
 Theorem public_symbol_exists:
   forall ge id, public_symbol ge id = true -> exists b, find_symbol ge id = Some b.
-Proof.
+Proof using.
   unfold public_symbol; intros. destruct (find_symbol ge id) as [b|].
   exists b; auto.
   discriminate.
@@ -355,7 +355,7 @@ Qed.
 Theorem shift_symbol_address:
   forall ge id ofs delta,
   symbol_address ge id (Ptrofs.add ofs delta) = Val.offset_ptr (symbol_address ge id ofs) delta.
-Proof.
+Proof using.
   intros. unfold symbol_address, Val.offset_ptr. destruct (find_symbol ge id); auto.
 Qed.
 
@@ -363,7 +363,7 @@ Theorem shift_symbol_address_32:
   forall ge id ofs n,
   Archi.ptr64 = false ->
   symbol_address ge id (Ptrofs.add ofs (Ptrofs.of_int n)) = Val.add (symbol_address ge id ofs) (Vint n).
-Proof.
+Proof using.
   intros. unfold symbol_address. destruct (find_symbol ge id).
 - unfold Val.add. rewrite H. auto.
 - auto.
@@ -373,7 +373,7 @@ Theorem shift_symbol_address_64:
   forall ge id ofs n,
   Archi.ptr64 = true ->
   symbol_address ge id (Ptrofs.add ofs (Ptrofs.of_int64 n)) = Val.addl (symbol_address ge id ofs) (Vlong n).
-Proof.
+Proof using.
   intros. unfold symbol_address. destruct (find_symbol ge id).
 - unfold Val.addl. rewrite H. auto.
 - auto.
@@ -382,7 +382,7 @@ Qed.
 Theorem find_funct_inv:
   forall ge v f,
   find_funct ge v = Some f -> exists b, v = Vptr b Ptrofs.zero.
-Proof.
+Proof using.
   intros until f; unfold find_funct.
   destruct v; try congruence.
   destruct (Ptrofs.eq_dec i Ptrofs.zero); try congruence.
@@ -392,26 +392,26 @@ Qed.
 Theorem find_funct_find_funct_ptr:
   forall ge b,
   find_funct ge (Vptr b Ptrofs.zero) = find_funct_ptr ge b.
-Proof.
+Proof using.
   intros; simpl. apply dec_eq_true.
 Qed.
 
 Theorem find_funct_ptr_iff:
   forall ge b f, find_funct_ptr ge b = Some f <-> find_def ge b = Some (Gfun f).
-Proof.
+Proof using.
   intros. unfold find_funct_ptr. destruct (find_def ge b) as [[f1|v1]|]; intuition congruence.
 Qed.
 
 Theorem find_var_info_iff:
   forall ge b v, find_var_info ge b = Some v <-> find_def ge b = Some (Gvar v).
-Proof.
+Proof using.
   intros. unfold find_var_info. destruct (find_def ge b) as [[f1|v1]|]; intuition congruence.
 Qed.
 
 Theorem find_def_symbol:
   forall p id g,
   (prog_defmap p)!id = Some g <-> exists b, find_symbol (globalenv p) id = Some b /\ find_def (globalenv p) b = Some g.
-Proof.
+Proof using.
   intros.
   set (P := fun m ge => m!id = Some g <-> exists b, find_symbol ge id = Some b /\ find_def ge b = Some g).
   assert (REC: forall l m ge,
@@ -441,7 +441,7 @@ Theorem find_symbol_exists:
   forall p id g,
   In (id, g) (prog_defs p) ->
   exists b, find_symbol (globalenv p) id = Some b.
-Proof.
+Proof using.
   intros. unfold globalenv. eapply add_globals_ensures; eauto.
 (* preserves *)
   intros. unfold find_symbol; simpl. rewrite PTree.gsspec. destruct (peq id id0).
@@ -454,7 +454,7 @@ Qed.
 Theorem find_symbol_inversion : forall p x b,
   find_symbol (globalenv p) x = Some b ->
   In x (prog_defs_names p).
-Proof.
+Proof using.
   intros until b; unfold globalenv. eapply add_globals_preserves.
 (* preserves *)
   unfold find_symbol; simpl; intros. rewrite PTree.gsspec in H1.
@@ -468,7 +468,7 @@ Theorem find_def_inversion:
   forall p b g,
   find_def (globalenv p) b = Some g ->
   exists id, In (id, g) (prog_defs p).
-Proof.
+Proof using.
   intros until g. unfold globalenv. apply add_globals_preserves.
 (* preserves *)
   unfold find_def; simpl; intros.
@@ -483,7 +483,7 @@ Corollary find_funct_ptr_inversion:
   forall p b f,
   find_funct_ptr (globalenv p) b = Some f ->
   exists id, In (id, Gfun f) (prog_defs p).
-Proof.
+Proof using.
   intros. apply find_def_inversion with b. apply find_funct_ptr_iff; auto.
 Qed.
 
@@ -491,7 +491,7 @@ Corollary find_funct_inversion:
   forall p v f,
   find_funct (globalenv p) v = Some f ->
   exists id, In (id, Gfun f) (prog_defs p).
-Proof.
+Proof using.
   intros. exploit find_funct_inv; eauto. intros [b EQ]. subst v.
   rewrite find_funct_find_funct_ptr in H.
   eapply find_funct_ptr_inversion; eauto.
@@ -502,7 +502,7 @@ Theorem find_funct_ptr_prop:
   (forall id f, In (id, Gfun f) (prog_defs p) -> P f) ->
   find_funct_ptr (globalenv p) b = Some f ->
   P f.
-Proof.
+Proof using.
   intros. exploit find_funct_ptr_inversion; eauto. intros [id IN]. eauto.
 Qed.
 
@@ -511,7 +511,7 @@ Theorem find_funct_prop:
   (forall id f, In (id, Gfun f) (prog_defs p) -> P f) ->
   find_funct (globalenv p) v = Some f ->
   P f.
-Proof.
+Proof using.
   intros. exploit find_funct_inversion; eauto. intros [id IN]. eauto.
 Qed.
 
@@ -521,14 +521,14 @@ Theorem global_addresses_distinct:
   find_symbol ge id1 = Some b1 ->
   find_symbol ge id2 = Some b2 ->
   b1 <> b2.
-Proof.
+Proof using.
   intros. red; intros; subst. elim H. destruct ge. eauto.
 Qed.
 
 Theorem invert_find_symbol:
   forall ge id b,
   invert_symbol ge b = Some id -> find_symbol ge id = Some b.
-Proof.
+Proof using.
   intros until b; unfold find_symbol, invert_symbol.
   apply PTree_Properties.fold_rec.
   intros. rewrite H in H0; auto.
@@ -542,7 +542,7 @@ Qed.
 Theorem find_invert_symbol:
   forall ge id b,
   find_symbol ge id = Some b -> invert_symbol ge b = Some id.
-Proof.
+Proof using.
   intros until b.
   assert (find_symbol ge id = Some b -> exists id', invert_symbol ge b = Some id').
   unfold find_symbol, invert_symbol.
@@ -564,7 +564,7 @@ Definition advance_next (gl: list (ident * globdef F V)) (x: positive) :=
 Remark genv_next_add_globals:
   forall gl ge,
   genv_next (add_globals ge gl) = advance_next gl (genv_next ge).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   auto.
   rewrite IHgl. auto.
@@ -573,7 +573,7 @@ Qed.
 Remark genv_public_add_globals:
   forall gl ge,
   genv_public (add_globals ge gl) = genv_public ge.
-Proof.
+Proof using.
   induction gl; simpl; intros.
   auto.
   rewrite IHgl; auto.
@@ -581,13 +581,13 @@ Qed.
 
 Theorem globalenv_public:
   forall p, genv_public (globalenv p) = prog_public p.
-Proof.
+Proof using.
   unfold globalenv; intros. rewrite genv_public_add_globals. auto.
 Qed.
 
 Theorem block_is_volatile_below:
   forall ge b, block_is_volatile ge b = true ->  Plt b ge.(genv_next).
-Proof.
+Proof using.
   unfold block_is_volatile; intros. destruct (find_var_info ge b) as [gv|] eqn:FV.
   rewrite find_var_info_iff in FV. eapply genv_defs_range; eauto.
   discriminate.
@@ -680,7 +680,7 @@ Fixpoint alloc_globals (m: mem) (gl: list (ident * globdef F V))
 Lemma alloc_globals_app : forall gl1 gl2 m m1,
   alloc_globals m gl1 = Some m1 ->
   alloc_globals m1 gl2 = alloc_globals m (gl1 ++ gl2).
-Proof.
+Proof using.
   induction gl1.
   simpl. intros.  inversion H; subst. auto.
   simpl. intros. destruct (alloc_global m a); eauto. inversion H.
@@ -690,7 +690,7 @@ Qed.
 
 Remark store_zeros_nextblock:
   forall m b p n m', store_zeros m b p n = Some m' -> Mem.nextblock m' = Mem.nextblock m.
-Proof.
+Proof using.
   intros until n. functional induction (store_zeros m b p n); intros.
   inv H; auto.
   rewrite IHo; eauto with mem.
@@ -701,7 +701,7 @@ Remark store_init_data_list_nextblock:
   forall idl b m p m',
   store_init_data_list m b p idl = Some m' ->
   Mem.nextblock m' = Mem.nextblock m.
-Proof.
+Proof using.
   induction idl; simpl; intros until m'.
   intros. congruence.
   caseEq (store_init_data m b p a); try congruence. intros.
@@ -715,7 +715,7 @@ Remark alloc_global_nextblock:
   forall g m m',
   alloc_global m g = Some m' ->
   Mem.nextblock m' = Pos.succ(Mem.nextblock m).
-Proof.
+Proof using.
   unfold alloc_global. intros.
   destruct g as [id [f|v]].
   (* function *)
@@ -737,7 +737,7 @@ Remark alloc_globals_nextblock:
   forall gl m m',
   alloc_globals m gl = Some m' ->
   Mem.nextblock m' = advance_next gl (Mem.nextblock m).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   congruence.
   destruct (alloc_global m a) as [m1|] eqn:?; try discriminate.
@@ -750,7 +750,7 @@ Remark store_zeros_perm:
   forall k prm b' q m b p n m',
   store_zeros m b p n = Some m' ->
   (Mem.perm m b' q k prm <-> Mem.perm m' b' q k prm).
-Proof.
+Proof using.
   intros until n. functional induction (store_zeros m b p n); intros.
   inv H; tauto.
   destruct (IHo _ H); intros. split; eauto with mem.
@@ -761,7 +761,7 @@ Remark store_init_data_perm:
   forall k prm b' q i b m p m',
   store_init_data m b p i = Some m' ->
   (Mem.perm m b' q k prm <-> Mem.perm m' b' q k prm).
-Proof.
+Proof using.
   intros.
   assert (forall chunk v,
           Mem.store chunk m b p v = Some m' ->
@@ -776,7 +776,7 @@ Remark store_init_data_list_perm:
   forall k prm b' q idl b m p m',
   store_init_data_list m b p idl = Some m' ->
   (Mem.perm m b' q k prm <-> Mem.perm m' b' q k prm).
-Proof.
+Proof using.
   induction idl as [ | i1 idl]; simpl; intros.
 - inv H; tauto.
 - destruct (store_init_data m b p i1) as [m1|] eqn:S1; try discriminate.
@@ -790,7 +790,7 @@ Remark alloc_global_perm:
   alloc_global m idg = Some m' ->
   Mem.valid_block m b' ->
   (Mem.perm m b' q k prm <-> Mem.perm m' b' q k prm).
-Proof.
+Proof using.
   intros. destruct idg as [id [f|v]]; simpl in H.
   (* function *)
   destruct (Mem.alloc m 0 1) as [m1 b] eqn:?.
@@ -821,7 +821,7 @@ Remark alloc_globals_perm:
   alloc_globals m gl = Some m' ->
   Mem.valid_block m b' ->
   (Mem.perm m b' q k prm <-> Mem.perm m' b' q k prm).
-Proof.
+Proof using.
   induction gl.
   simpl; intros. inv H. tauto.
   simpl; intros. destruct (alloc_global m a) as [m1|] eqn:?; try discriminate.
@@ -837,7 +837,7 @@ Remark store_zeros_unchanged:
   store_zeros m b p n = Some m' ->
   (forall i, p <= i < p + n -> ~ P b i) ->
   Mem.unchanged_on P m m'.
-Proof.
+Proof using.
   intros until n. functional induction (store_zeros m b p n); intros.
 - inv H; apply Mem.unchanged_on_refl.
 - apply Mem.unchanged_on_trans with m'.
@@ -851,7 +851,7 @@ Remark store_init_data_unchanged:
   store_init_data m b p i = Some m' ->
   (forall ofs, p <= ofs < p + init_data_size i -> ~ P b ofs) ->
   Mem.unchanged_on P m m'.
-Proof.
+Proof using.
   intros. destruct i; simpl in *;
   try (eapply Mem.store_unchanged_on; eauto; fail).
   inv H; apply Mem.unchanged_on_refl.
@@ -865,7 +865,7 @@ Remark store_init_data_list_unchanged:
   store_init_data_list m b p il = Some m' ->
   (forall ofs, p <= ofs -> ~ P b ofs) ->
   Mem.unchanged_on P m m'.
-Proof.
+Proof using.
   induction il; simpl; intros.
 - inv H. apply Mem.unchanged_on_refl.
 - destruct (store_init_data m b p a) as [m1|] eqn:?; try congruence.
@@ -885,7 +885,7 @@ Lemma store_zeros_loadbytes:
   forall m b p n m',
   store_zeros m b p n = Some m' ->
   readbytes_as_zero m' b p n.
-Proof.
+Proof using.
   intros until n; functional induction (store_zeros m b p n); red; intros.
 - destruct n0. simpl. apply Mem.loadbytes_empty. lia.
   rewrite Nat2Z.inj_succ in H1. extlia.
@@ -926,7 +926,7 @@ Definition bytes_of_init_data (i: init_data): list memval :=
 
 Remark init_data_size_addrof:
   forall id ofs, init_data_size (Init_addrof id ofs) = size_chunk Mptr.
-Proof.
+Proof using.
   intros. unfold Mptr. simpl. destruct Archi.ptr64; auto.
 Qed.
 
@@ -935,7 +935,7 @@ Lemma store_init_data_loadbytes:
   store_init_data m b p i = Some m' ->
   readbytes_as_zero m b p (init_data_size i) ->
   Mem.loadbytes m' b p (init_data_size i) = Some (bytes_of_init_data i).
-Proof.
+Proof using.
   intros; destruct i; simpl in H; try apply (Mem.loadbytes_store_same _ _ _ _ _ _ H).
 - inv H. simpl.
   assert (EQ: Z.of_nat (Z.to_nat z) = Z.max z 0).
@@ -958,7 +958,7 @@ Lemma store_init_data_list_loadbytes:
   store_init_data_list m b p il = Some m' ->
   readbytes_as_zero m b p (init_data_list_size il) ->
   Mem.loadbytes m' b p (init_data_list_size il) = Some (bytes_of_init_data_list il).
-Proof.
+Proof using.
   induction il as [ | i1 il]; simpl; intros.
 - apply Mem.loadbytes_empty. lia.
 - generalize (init_data_size_pos i1) (init_data_list_size_pos il); intros P1 PL.
@@ -1001,7 +1001,7 @@ Remark read_as_zero_unchanged:
   Mem.unchanged_on P m m' ->
   (forall i, ofs <= i < ofs + len -> P b i) ->
   read_as_zero m' b ofs len.
-Proof.
+Proof using.
   intros; red; intros. eapply Mem.load_unchanged_on; eauto.
   intros; apply H1. lia.
 Qed.
@@ -1010,7 +1010,7 @@ Lemma store_zeros_read_as_zero:
   forall m b p n m',
   store_zeros m b p n = Some m' ->
   read_as_zero m' b p n.
-Proof.
+Proof using.
   intros; red; intros.
   transitivity (Some(decode_val chunk (List.repeat (Byte Byte.zero) (size_chunk_nat chunk)))).
   apply Mem.loadbytes_load; auto. rewrite size_chunk_conv.
@@ -1052,7 +1052,7 @@ Lemma store_init_data_list_charact:
   store_init_data_list m b p il = Some m' ->
   read_as_zero m b p (init_data_list_size il) ->
   load_store_init_data m' b p il.
-Proof.
+Proof using.
   assert (A: forall chunk v m b p m1 il m',
     Mem.store chunk m b p v = Some m1 ->
     store_init_data_list m1 b (p + size_chunk chunk) il = Some m' ->
@@ -1102,7 +1102,7 @@ Remark alloc_global_unchanged:
   forall (P: block -> Z -> Prop) m id g m',
   alloc_global m (id, g) = Some m' ->
   Mem.unchanged_on P m m'.
-Proof.
+Proof using.
   intros. destruct g as [f|v]; simpl in H.
 - (* function *)
   destruct (Mem.alloc m 0 1) as [m1 b] eqn:?.
@@ -1134,7 +1134,7 @@ Remark alloc_globals_unchanged:
   forall (P: block -> Z -> Prop) gl m m',
   alloc_globals m gl = Some m' ->
   Mem.unchanged_on P m m'.
-Proof.
+Proof using.
   induction gl; simpl; intros.
 - inv H. apply Mem.unchanged_on_refl.
 - destruct (alloc_global m a) as [m''|] eqn:?; try discriminate.
@@ -1149,7 +1149,7 @@ Remark load_store_init_data_invariant:
   (forall chunk ofs, Mem.load chunk m' b ofs = Mem.load chunk m b ofs) ->
   forall il p,
   load_store_init_data m b p il -> load_store_init_data m' b p il.
-Proof.
+Proof using.
   induction il; intro p; simpl.
   auto.
   rewrite ! H. destruct a; intuition. red; intros; rewrite H; auto.
@@ -1177,7 +1177,7 @@ Lemma alloc_global_initialized:
   globals_initialized g m ->
      globals_initialized (add_global g (id, gd)) m'
   /\ genv_next (add_global g (id, gd)) = Mem.nextblock m'.
-Proof.
+Proof using.
   intros.
   exploit alloc_global_nextblock; eauto. intros NB. split.
 - (* globals-initialized *)
@@ -1242,7 +1242,7 @@ Lemma alloc_globals_initialized:
   genv_next ge = Mem.nextblock m ->
   globals_initialized ge m ->
   globals_initialized (add_globals ge gl) m'.
-Proof.
+Proof using.
   induction gl; simpl; intros.
 - inv H; auto.
 - destruct a as [id g]. destruct (alloc_global m (id, g)) as [m1|] eqn:?; try discriminate.
@@ -1258,7 +1258,7 @@ Definition init_mem (p: program F V) :=
 Lemma init_mem_genv_next: forall p m,
   init_mem p = Some m ->
   genv_next (globalenv p) = Mem.nextblock m.
-Proof.
+Proof using.
   unfold init_mem; intros.
   exploit alloc_globals_nextblock; eauto. rewrite Mem.nextblock_empty. intro.
   generalize (genv_next_add_globals (prog_defs p) (empty_genv (prog_public p))).
@@ -1269,7 +1269,7 @@ Theorem find_symbol_not_fresh:
   forall p id b m,
   init_mem p = Some m ->
   find_symbol (globalenv p) id = Some b -> Mem.valid_block m b.
-Proof.
+Proof using.
   intros. red. erewrite <- init_mem_genv_next; eauto.
   eapply genv_symb_range; eauto.
 Qed.
@@ -1278,7 +1278,7 @@ Theorem find_def_not_fresh:
   forall p b g m,
   init_mem p = Some m ->
   find_def (globalenv p) b = Some g -> Mem.valid_block m b.
-Proof.
+Proof using.
   intros. red. erewrite <- init_mem_genv_next; eauto.
   eapply genv_defs_range; eauto.
 Qed.
@@ -1287,7 +1287,7 @@ Theorem find_funct_ptr_not_fresh:
   forall p b f m,
   init_mem p = Some m ->
   find_funct_ptr (globalenv p) b = Some f -> Mem.valid_block m b.
-Proof.
+Proof using.
   intros. rewrite find_funct_ptr_iff in H0. eapply find_def_not_fresh; eauto.
 Qed.
 
@@ -1295,7 +1295,7 @@ Theorem find_var_info_not_fresh:
   forall p b gv m,
   init_mem p = Some m ->
   find_var_info (globalenv p) b = Some gv -> Mem.valid_block m b.
-Proof.
+Proof using.
   intros. rewrite find_var_info_iff in H0. eapply find_def_not_fresh; eauto.
 Qed.
 
@@ -1303,7 +1303,7 @@ Lemma init_mem_characterization_gen:
   forall p m,
   init_mem p = Some m ->
   globals_initialized (globalenv p) (globalenv p) m.
-Proof.
+Proof using.
   intros. apply alloc_globals_initialized with Mem.empty.
   auto.
   rewrite Mem.nextblock_empty. auto.
@@ -1321,7 +1321,7 @@ Theorem init_mem_characterization:
       load_store_init_data (globalenv p) m b 0 gv.(gvar_init))
   /\ (gv.(gvar_volatile) = false ->
       Mem.loadbytes m b 0 (init_data_list_size gv.(gvar_init)) = Some (bytes_of_init_data_list (globalenv p) gv.(gvar_init))).
-Proof.
+Proof using.
   intros. rewrite find_var_info_iff in H.
   exploit init_mem_characterization_gen; eauto.
 Qed.
@@ -1332,7 +1332,7 @@ Theorem init_mem_characterization_2:
   init_mem p = Some m ->
   Mem.perm m b 0 Cur Nonempty
   /\ (forall ofs k p, Mem.perm m b ofs k p -> ofs = 0 /\ p = Nonempty).
-Proof.
+Proof using.
   intros. rewrite find_funct_ptr_iff in H.
   exploit init_mem_characterization_gen; eauto.
 Qed.
@@ -1351,7 +1351,7 @@ Lemma store_zeros_neutral:
   Plt b thr ->
   store_zeros m b p n = Some m' ->
   Mem.inject_neutral thr m'.
-Proof.
+Proof using.
   intros until n. functional induction (store_zeros m b p n); intros.
   inv H1; auto.
   apply IHo; auto. eapply Mem.store_inject_neutral; eauto. constructor.
@@ -1364,7 +1364,7 @@ Lemma store_init_data_neutral:
   Plt b thr ->
   store_init_data ge m b p id = Some m' ->
   Mem.inject_neutral thr m'.
-Proof.
+Proof using symb_inject.
   intros.
   destruct id; simpl in H1; try (eapply Mem.store_inject_neutral; eauto; fail).
   congruence.
@@ -1380,7 +1380,7 @@ Lemma store_init_data_list_neutral:
   Plt b thr ->
   store_init_data_list ge m b p idl = Some m' ->
   Mem.inject_neutral thr m'.
-Proof.
+Proof using symb_inject.
   induction idl; simpl; intros.
   congruence.
   destruct (store_init_data ge m b p a) as [m1|] eqn:E; try discriminate.
@@ -1393,7 +1393,7 @@ Lemma alloc_global_neutral:
   Mem.inject_neutral thr m ->
   Plt (Mem.nextblock m) thr ->
   Mem.inject_neutral thr m'.
-Proof.
+Proof using symb_inject.
   intros. destruct idg as [id [f|v]]; simpl in H.
   (* function *)
   destruct (Mem.alloc m 0 1) as [m1 b] eqn:?.
@@ -1414,7 +1414,7 @@ Proof.
 Qed.
 
 Remark advance_next_le: forall gl x, Ple x (advance_next gl x).
-Proof.
+Proof using.
   induction gl; simpl; intros.
   apply Ple_refl.
   apply Ple_trans with (Pos.succ x). apply Ple_succ. eauto.
@@ -1426,7 +1426,7 @@ Lemma alloc_globals_neutral:
   Mem.inject_neutral thr m ->
   Ple (Mem.nextblock m') thr ->
   Mem.inject_neutral thr m'.
-Proof.
+Proof using symb_inject.
   induction gl; intros.
   simpl in *. congruence.
   exploit alloc_globals_nextblock; eauto. intros EQ.
@@ -1443,7 +1443,7 @@ Theorem initmem_inject:
   forall p m,
   init_mem p = Some m ->
   Mem.inject (Mem.flat_inj (Mem.nextblock m)) m m.
-Proof.
+Proof using.
   unfold init_mem; intros.
   apply Mem.neutral_inject.
   eapply alloc_globals_neutral; eauto.
@@ -1482,7 +1482,7 @@ Lemma store_init_data_aligned:
   forall m b p i m',
   store_init_data ge m b p i = Some m' ->
   (init_data_alignment i | p).
-Proof.
+Proof using.
   intros.
   assert (DFL: forall chunk v,
     Mem.store chunk m b p v = Some m' ->
@@ -1499,7 +1499,7 @@ Lemma store_init_data_list_aligned:
   forall b il m p m',
   store_init_data_list ge m b p il = Some m' ->
   init_data_list_aligned p il.
-Proof.
+Proof using.
   induction il as [ | i1 il]; simpl; intros.
 - auto.
 - destruct (store_init_data ge m b p i1) as [m1|] eqn:S1; try discriminate.
@@ -1511,7 +1511,7 @@ Lemma store_init_data_list_free_idents:
   store_init_data_list ge m b p il = Some m' ->
   In (Init_addrof i o) il ->
   exists b', find_symbol ge i = Some b'.
-Proof.
+Proof using.
   induction il as [ | i1 il]; simpl; intros.
 - contradiction.
 - destruct (store_init_data ge m b p i1) as [m1|] eqn:S1; try discriminate.
@@ -1528,7 +1528,7 @@ Theorem init_mem_inversion:
   In (id, Gvar v) p.(prog_defs) ->
   init_data_list_aligned 0 v.(gvar_init)
   /\ forall i o, In (Init_addrof i o) v.(gvar_init) -> exists b, find_symbol (globalenv p) i = Some b.
-Proof.
+Proof using.
   intros until v. unfold init_mem. set (ge := globalenv p).
   revert m. generalize Mem.empty. generalize (prog_defs p).
   induction l as [ | idg1 defs ]; simpl; intros m m'; intros.
@@ -1552,7 +1552,7 @@ Lemma store_zeros_exists:
   forall m b p n,
   Mem.range_perm m b p (p + n) Cur Writable ->
   exists m', store_zeros m b p n = Some m'.
-Proof.
+Proof using.
   intros until n. functional induction (store_zeros m b p n); intros PERM.
 - exists m; auto.
 - apply IHo. red; intros. eapply Mem.perm_store_1; eauto. apply PERM. lia.
@@ -1568,7 +1568,7 @@ Lemma store_init_data_exists:
   (init_data_alignment i | p) ->
   (forall id ofs, i = Init_addrof id ofs -> exists b, find_symbol ge id = Some b) ->
   exists m', store_init_data ge m b p i = Some m'.
-Proof.
+Proof using.
   intros.
   assert (DFL: forall chunk v,
           init_data_size i = size_chunk chunk ->
@@ -1590,7 +1590,7 @@ Lemma store_init_data_list_exists:
   init_data_list_aligned p il ->
   (forall id ofs, In (Init_addrof id ofs) il -> exists b, find_symbol ge id = Some b) ->
   exists m', store_init_data_list ge m b p il = Some m'.
-Proof.
+Proof using.
   induction il as [ | i1 il ]; simpl; intros.
 - exists m; auto.
 - destruct H0.
@@ -1610,7 +1610,7 @@ Lemma alloc_global_exists:
      /\ forall i o, In (Init_addrof i o) v.(gvar_init) -> exists b, find_symbol ge i = Some b
   end ->
   exists m', alloc_global ge m idg = Some m'.
-Proof.
+Proof using.
   intros m [id [f|v]]; intros; simpl.
 - destruct (Mem.alloc m 0 1) as [m1 b] eqn:ALLOC.
   destruct (Mem.range_perm_drop_2 m1 b 0 1 Nonempty) as [m2 DROP].
@@ -1642,7 +1642,7 @@ Theorem init_mem_exists:
         init_data_list_aligned 0 v.(gvar_init)
      /\ forall i o, In (Init_addrof i o) v.(gvar_init) -> exists b, find_symbol (globalenv p) i = Some b) ->
   exists m, init_mem p = Some m.
-Proof.
+Proof using.
   intros. set (ge := globalenv p) in *.
   unfold init_mem. revert H. generalize (prog_defs p) Mem.empty.
   induction l as [ | idg l]; simpl; intros.
@@ -1674,7 +1674,7 @@ Lemma add_global_match:
   match_genvs ge1 ge2 ->
   R g1 g2 ->
   match_genvs (add_global ge1 (id, g1)) (add_global ge2 (id, g2)).
-Proof.
+Proof using.
   intros. destruct H. constructor; simpl; intros.
 - congruence.
 - rewrite mge_next0, ! PTree.gsspec. destruct (peq id0 id); auto.
@@ -1688,7 +1688,7 @@ Lemma add_globals_match:
   list_forall2 (fun idg1 idg2 => fst idg1 = fst idg2 /\ R (snd idg1) (snd idg2)) gl1 gl2 ->
   forall ge1 ge2, match_genvs ge1 ge2 ->
   match_genvs (add_globals ge1 gl1) (add_globals ge2 gl2).
-Proof.
+Proof using.
   induction 1; intros; simpl.
   auto.
   destruct a1 as [id1 g1]; destruct b1 as [id2 g2]; simpl in *; destruct H; subst id2.
@@ -1709,7 +1709,7 @@ Hypothesis progmatch: match_program_gen match_fundef match_varinfo ctx p tp.
 
 Lemma globalenvs_match:
   match_genvs (match_globdef match_fundef match_varinfo ctx) (globalenv p) (globalenv tp).
-Proof.
+Proof using progmatch.
   intros. apply add_globals_match. apply progmatch.
   constructor; simpl; intros; auto. rewrite ! PTree.gempty. constructor.
 Qed.
@@ -1724,7 +1724,7 @@ Theorem find_def_match:
   find_def (globalenv p) b = Some g ->
   exists tg,
   find_def (globalenv tp) b = Some tg /\ match_globdef match_fundef match_varinfo ctx g tg.
-Proof.
+Proof using progmatch.
   intros. generalize (find_def_match_2 b). rewrite H; intros R; inv R.
   exists y; auto.
 Qed.
@@ -1734,7 +1734,7 @@ Theorem find_funct_ptr_match:
   find_funct_ptr (globalenv p) b = Some f ->
   exists cunit tf,
   find_funct_ptr (globalenv tp) b = Some tf /\ match_fundef cunit f tf /\ linkorder cunit ctx.
-Proof.
+Proof using progmatch match_varinfo.
   intros. rewrite find_funct_ptr_iff in *. apply find_def_match in H.
   destruct H as (tg & P & Q). inv Q.
   exists ctx', f2; intuition auto. apply find_funct_ptr_iff; auto.
@@ -1745,7 +1745,7 @@ Theorem find_funct_match:
   find_funct (globalenv p) v = Some f ->
   exists cunit tf,
   find_funct (globalenv tp) v = Some tf /\ match_fundef cunit f tf /\ linkorder cunit ctx.
-Proof.
+Proof using progmatch match_varinfo.
   intros. exploit find_funct_inv; eauto. intros [b EQ]. subst v.
   rewrite find_funct_find_funct_ptr in H.
   rewrite find_funct_find_funct_ptr.
@@ -1757,7 +1757,7 @@ Theorem find_var_info_match:
   find_var_info (globalenv p) b = Some v ->
   exists tv,
   find_var_info (globalenv tp) b = Some tv /\ match_globvar match_varinfo v tv.
-Proof.
+Proof using progmatch match_fundef ctx LC C.
   intros. rewrite find_var_info_iff in *. apply find_def_match in H.
   destruct H as (tg & P & Q). inv Q.
   exists v2; split; auto. apply find_var_info_iff; auto.
@@ -1766,13 +1766,13 @@ Qed.
 Theorem find_symbol_match:
   forall (s : ident),
   find_symbol (globalenv tp) s = find_symbol (globalenv p) s.
-Proof.
+Proof using progmatch match_varinfo match_fundef ctx LC C.
   intros. destruct globalenvs_match. apply mge_symb0.
 Qed.
 
 Theorem senv_match:
   Senv.equiv (to_senv (globalenv p)) (to_senv (globalenv tp)).
-Proof.
+Proof using progmatch match_varinfo match_fundef ctx LC C.
   red; simpl. repeat split.
 - apply find_symbol_match.
 - intros. unfold public_symbol. rewrite find_symbol_match.
@@ -1790,7 +1790,7 @@ Lemma store_init_data_list_match:
   forall idl m b ofs m',
   store_init_data_list (globalenv p) m b ofs idl = Some m' ->
   store_init_data_list (globalenv tp) m b ofs idl = Some m'.
-Proof.
+Proof using progmatch match_varinfo match_fundef ctx LC C.
   induction idl; simpl; intros.
 - auto.
 - destruct (store_init_data (globalenv p) m b ofs a) as [m1|] eqn:S; try discriminate.
@@ -1804,7 +1804,7 @@ Lemma alloc_globals_match:
   forall m m',
   alloc_globals (globalenv p) m gl1 = Some m' ->
   alloc_globals (globalenv tp) m gl2 = Some m'.
-Proof.
+Proof using progmatch.
   induction 1; simpl; intros.
 - auto.
 - destruct (alloc_global (globalenv p) m a1) as [m1|] eqn:?; try discriminate.
@@ -1824,7 +1824,7 @@ Qed.
 
 Theorem init_mem_match:
   forall m, init_mem p = Some m -> init_mem tp = Some m.
-Proof.
+Proof using progmatch match_varinfo match_fundef ctx LC C.
   unfold init_mem; intros.
   eapply alloc_globals_match; eauto. apply progmatch.
 Qed.
@@ -1844,7 +1844,7 @@ Theorem find_funct_ptr_transf_partial:
   find_funct_ptr (globalenv p) b = Some f ->
   exists tf,
   find_funct_ptr (globalenv tp) b = Some tf /\ transf f = OK tf.
-Proof.
+Proof using progmatch LV LA.
   intros. exploit (find_funct_ptr_match progmatch); eauto.
   intros (cu & tf & P & Q & R); exists tf; auto.
 Qed.
@@ -1854,7 +1854,7 @@ Theorem find_funct_transf_partial:
   find_funct (globalenv p) v = Some f ->
   exists tf,
   find_funct (globalenv tp) v = Some tf /\ transf f = OK tf.
-Proof.
+Proof using progmatch LV LA.
   intros. exploit (find_funct_match progmatch); eauto.
   intros (cu & tf & P & Q & R); exists tf; auto.
 Qed.
@@ -1862,19 +1862,19 @@ Qed.
 Theorem find_symbol_transf_partial:
   forall (s : ident),
   find_symbol (globalenv tp) s = find_symbol (globalenv p) s.
-Proof.
+Proof using transf progmatch LV LA.
   intros. eapply (find_symbol_match progmatch).
 Qed.
 
 Theorem senv_transf_partial:
   Senv.equiv (to_senv (globalenv p)) (to_senv (globalenv tp)).
-Proof.
+Proof using transf progmatch LV LA.
   intros. eapply (senv_match progmatch).
 Qed.
 
 Theorem init_mem_transf_partial:
   forall m, init_mem p = Some m -> init_mem tp = Some m.
-Proof.
+Proof using transf progmatch LV LA.
   eapply (init_mem_match progmatch).
 Qed.
 
@@ -1892,7 +1892,7 @@ Theorem find_funct_ptr_transf:
   forall b f,
   find_funct_ptr (globalenv p) b = Some f ->
   find_funct_ptr (globalenv tp) b = Some (transf f).
-Proof.
+Proof using progmatch LV LA.
   intros. exploit (find_funct_ptr_match progmatch); eauto.
   intros (cu & tf & P & Q & R). congruence.
 Qed.
@@ -1901,7 +1901,7 @@ Theorem find_funct_transf:
   forall v f,
   find_funct (globalenv p) v = Some f ->
   find_funct (globalenv tp) v = Some (transf f).
-Proof.
+Proof using progmatch LV LA.
   intros. exploit (find_funct_match progmatch); eauto.
   intros (cu & tf & P & Q & R). congruence.
 Qed.
@@ -1909,19 +1909,19 @@ Qed.
 Theorem find_symbol_transf:
   forall (s : ident),
   find_symbol (globalenv tp) s = find_symbol (globalenv p) s.
-Proof.
+Proof using transf progmatch LV LA.
   intros. eapply (find_symbol_match progmatch).
 Qed.
 
 Theorem senv_transf:
   Senv.equiv (to_senv (globalenv p)) (to_senv (globalenv tp)).
-Proof.
+Proof using transf progmatch LV LA.
   intros. eapply (senv_match progmatch).
 Qed.
 
 Theorem init_mem_transf:
   forall m, init_mem p = Some m -> init_mem tp = Some m.
-Proof.
+Proof using transf progmatch LV LA.
   eapply (init_mem_match progmatch).
 Qed.
 

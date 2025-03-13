@@ -73,7 +73,7 @@ Definition is_label (lbl: label) (instr: instruction) : bool :=
 Lemma is_label_correct:
   forall lbl instr,
   if is_label lbl instr then instr = Llabel lbl else instr <> Llabel lbl.
-Proof.
+Proof using.
   intros.  destruct instr; simpl; try discriminate.
   case (peq lbl l); intro; congruence.
 Qed.

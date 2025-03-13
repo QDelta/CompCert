@@ -28,7 +28,7 @@ Definition wf_composites (types: list composite_definition) : Prop :=
 Definition build_composite_env' (types: list composite_definition)
                                 (WF: wf_composites types)
                              : { ce | build_composite_env types  = OK ce }.
-Proof.
+Proof using.
   revert WF. unfold wf_composites. case (build_composite_env types); intros.
 - exists c; reflexivity.
 - contradiction.

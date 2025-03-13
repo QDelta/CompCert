@@ -162,13 +162,13 @@ Definition attr_combine (a1 a2: attr) : attr :=
   |}.
 
 Definition intsize_eq: forall (x y: intsize), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 
 Definition signedness_eq: forall (x y: signedness), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 
 Definition floatsize_eq: forall (x y: floatsize), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 
 Definition callconv_combine (cc1 cc2: calling_convention) : res calling_convention :=
   if option_eq Z.eq_dec cc1.(cc_vararg) cc2.(cc_vararg) then
@@ -944,14 +944,14 @@ Definition typecheck_program (p: program) : res program :=
 
 Lemma check_cast_sound:
   forall t1 t2 x, check_cast t1 t2 = OK x -> wt_cast t1 t2.
-Proof.
+Proof using.
   unfold check_cast, wt_cast; intros.
   destruct (classify_cast t1 t2); congruence.
 Qed.
 
 Lemma check_bool_sound:
   forall t x, check_bool t = OK x -> wt_bool t.
-Proof.
+Proof using.
   unfold check_bool, wt_bool; intros.
   destruct (classify_bool t); congruence.
 Qed.
@@ -960,7 +960,7 @@ Global Hint Resolve check_cast_sound check_bool_sound: ty.
 
 Lemma check_arguments_sound:
   forall el tl x, check_arguments el tl = OK x -> wt_arguments el tl.
-Proof.
+Proof using.
   intros el tl; revert tl el.
   induction tl; destruct el; simpl; intros; try discriminate.
   constructor.
@@ -970,20 +970,20 @@ Qed.
 
 Lemma check_rval_sound:
   forall a x, check_rval a = OK x -> expr_kind a = RV.
-Proof.
+Proof using.
   unfold check_rval; intros. destruct a; reflexivity || discriminate.
 Qed.
 
 Lemma check_lval_sound:
   forall a x, check_lval a = OK x -> expr_kind a = LV.
-Proof.
+Proof using.
   unfold check_lval; intros. destruct a; reflexivity || discriminate.
 Qed.
 
 Lemma binarith_type_cast:
   forall t1 t2 m t,
   binarith_type t1 t2 m = OK t -> wt_cast t1 t /\ wt_cast t2 t.
-Proof.
+Proof using.
 Local Transparent Ctypes.intsize_eq.
   unfold wt_cast, binarith_type, classify_binarith; intros; DestructCases;
   simpl; split; try congruence;
@@ -993,7 +993,7 @@ Qed.
 
 Lemma typeconv_cast:
   forall t1 t2, wt_cast (typeconv t1) t2 -> wt_cast t1 t2.
-Proof.
+Proof using.
   unfold typeconv, wt_cast; intros. destruct t1; auto.
   assert (classify_cast (Tint I32 Signed a) t2 <> cast_case_default ->
           classify_cast (Tint i s a) t2 <> cast_case_default).
@@ -1006,7 +1006,7 @@ Qed.
 
 Lemma wt_bool_cast:
   forall ty, wt_bool ty -> wt_cast ty type_bool.
-Proof.
+Proof using.
   unfold wt_bool, wt_cast; unfold classify_bool; intros.
   destruct ty; simpl in *; try congruence;
   try (destruct Archi.ptr64; congruence).
@@ -1015,7 +1015,7 @@ Qed.
 
 Lemma wt_cast_int:
   forall i1 s1 a1 i2 s2 a2, wt_cast (Tint i1 s1 a1) (Tint i2 s2 a2).
-Proof.
+Proof using.
   intros; red; simpl.
   destruct Archi.ptr64; [ | destruct (Ctypes.intsize_eq i2 I32)].
 - destruct i2; congruence.
@@ -1029,7 +1029,7 @@ Lemma type_combine_cast:
   match t1 with Tarray _ _ _ => False | Tfunction _ _ _ => False | _ => True end ->
   match t2 with Tarray _ _ _ => False | Tfunction _ _ _ => False | _ => True end ->
   wt_cast t1 t /\ wt_cast t2 t.
-Proof.
+Proof using.
   intros.
   unfold wt_cast; destruct t1; try discriminate; destruct t2; simpl in H; inv H.
 - simpl; split; congruence.
@@ -1049,7 +1049,7 @@ Qed.
 Lemma type_conditional_cast:
   forall t1 t2 t,
   type_conditional t1 t2 = OK t -> wt_cast t1 t /\ wt_cast t2 t.
-Proof.
+Proof using.
   intros.
   assert (A: forall x, match typeconv x with Tarray _ _ _ => False | Tfunction _ _ _ => False | _ => True end).
   { destruct x; simpl; auto. destruct i; auto. }
@@ -1078,13 +1078,13 @@ Variable rt: type.
 
 Corollary check_rval_wt:
   forall a x, wt_expr ce e a -> check_rval a = OK x -> wt_rvalue ce e a.
-Proof.
+Proof using.
   unfold wt_expr; intros. erewrite check_rval_sound in H by eauto. auto.
 Qed.
 
 Corollary check_lval_wt:
   forall a x, wt_expr ce e a -> check_lval a = OK x -> wt_lvalue ce e a.
-Proof.
+Proof using.
   unfold wt_expr; intros. erewrite check_lval_sound in H by eauto. auto.
 Qed.
 
@@ -1093,19 +1093,19 @@ Hint Extern 1 (wt_expr _ _ _) => (unfold wt_expr; simpl): ty.
 
 Lemma evar_sound:
   forall x a, evar e x = OK a -> wt_expr ce e a.
-Proof.
+Proof using.
   unfold evar; intros. destruct (e!x) as [ty|] eqn:E; inv H. eauto with ty.
 Qed.
 
 Lemma ederef_sound:
   forall r a, ederef r = OK a -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma efield_sound:
   forall r f a, efield ce r f = OK a -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H.
   destruct (typeof r) eqn:TR; try discriminate;
   destruct (ce!i) as [co|] eqn:CE; monadInv EQ0; eauto with ty.
@@ -1113,135 +1113,135 @@ Qed.
 
 Lemma econst_int_sound:
   forall n sg, wt_expr ce e (econst_int n sg).
-Proof.
+Proof using.
   unfold econst_int; auto with ty.
 Qed.
 
 Lemma econst_ptr_int_sound:
   forall n ty, wt_expr ce e (econst_ptr_int n ty).
-Proof.
+Proof using.
   unfold econst_ptr_int; intros. destruct Archi.ptr64 eqn:SF; auto with ty.
 Qed.
 
 Lemma econst_long_sound:
   forall n sg, wt_expr ce e (econst_long n sg).
-Proof.
+Proof using.
   unfold econst_long; auto with ty.
 Qed.
 
 Lemma econst_ptr_long_sound:
   forall n ty, wt_expr ce e (econst_ptr_long n ty).
-Proof.
+Proof using.
   unfold econst_ptr_long; intros. destruct Archi.ptr64 eqn:SF; auto with ty.
 Qed.
 
 Lemma econst_float_sound:
   forall n, wt_expr ce e (econst_float n).
-Proof.
+Proof using.
   unfold econst_float; auto with ty.
 Qed.
 
 Lemma econst_single_sound:
   forall n, wt_expr ce e (econst_single n).
-Proof.
+Proof using.
   unfold econst_single; auto with ty.
 Qed.
 
 Lemma evalof_sound:
   forall l a, evalof l = OK a -> wt_expr ce e l -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma eaddrof_sound:
   forall l a, eaddrof l = OK a -> wt_expr ce e l -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma eunop_sound:
   forall op r a, eunop op r = OK a -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma ebinop_sound:
   forall op r1 r2 a, ebinop op r1 r2 = OK a -> wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma ecast_sound:
   forall ty r a, ecast ty r = OK a -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma eseqand_sound:
   forall r1 r2 a, eseqand r1 r2 = OK a -> wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma eseqor_sound:
   forall r1 r2 a, eseqor r1 r2 = OK a -> wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma econdition_sound:
   forall r1 r2 r3 a, econdition r1 r2 r3 = OK a ->
   wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e r3 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. apply type_conditional_cast in EQ3. destruct EQ3. eauto 10 with ty.
 Qed.
 
 Lemma econdition'_sound:
   forall r1 r2 r3 ty a, econdition' r1 r2 r3 ty = OK a ->
   wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e r3 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma esizeof_sound:
   forall ty, wt_expr ce e (esizeof ty).
-Proof.
+Proof using.
   unfold esizeof; auto with ty.
 Qed.
 
 Lemma ealignof_sound:
   forall ty, wt_expr ce e (ealignof ty).
-Proof.
+Proof using.
   unfold ealignof; auto with ty.
 Qed.
 
 Lemma eassign_sound:
   forall l r a, eassign l r = OK a -> wt_expr ce e l -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma eassignop_sound:
   forall op l r a, eassignop op l r = OK a -> wt_expr ce e l -> wt_expr ce e r -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma epostincrdecr_sound:
   forall id l a, epostincrdecr id l = OK a -> wt_expr ce e l -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma ecomma_sound:
   forall r1 r2 a, ecomma r1 r2 = OK a -> wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma ecall_sound:
   forall fn args a, ecall fn args = OK a -> wt_expr ce e fn -> wt_exprlist ce e args -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H.
   destruct (classify_fun (typeof fn)) eqn:CF; monadInv EQ2.
   econstructor; eauto with ty. eapply check_arguments_sound; eauto.
@@ -1250,7 +1250,7 @@ Qed.
 Lemma ebuiltin_sound:
   forall ef tyargs args tyres a,
   ebuiltin ef tyargs args tyres = OK a -> wt_exprlist ce e args -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H.
   destruct (type_eq tyres Tvoid); simpl in EQ2; try discriminate.
   destruct (xtype_eq (sig_res (ef_sig ef)) Xvoid); inv EQ2.
@@ -1260,7 +1260,7 @@ Qed.
 Lemma eselection_sound:
   forall r1 r2 r3 a, eselection r1 r2 r3 = OK a ->
   wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e r3 -> wt_expr ce e a.
-Proof.
+Proof using.
   intros. monadInv H. apply type_conditional_cast in EQ3. destruct EQ3.
   eapply wt_Ebuiltin.
   repeat (constructor; eauto with ty).
@@ -1270,28 +1270,28 @@ Qed.
 
 Lemma sdo_sound:
   forall a s, sdo a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma sifthenelse_sound:
   forall a s1 s2 s, sifthenelse a s1 s2 = OK s ->
   wt_expr ce e a -> wt_stmt ce e rt s1 -> wt_stmt ce e rt s2 -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma swhile_sound:
   forall a s1 s, swhile a s1 = OK s ->
   wt_expr ce e a -> wt_stmt ce e rt s1 -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
 Lemma sdowhile_sound:
   forall a s1 s, sdowhile a s1 = OK s ->
   wt_expr ce e a -> wt_stmt ce e rt s1 -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. eauto with ty.
 Qed.
 
@@ -1299,20 +1299,20 @@ Lemma sfor_sound:
   forall s1 a s2 s3 s, sfor s1 a s2 s3 = OK s ->
   wt_stmt ce e rt s1 -> wt_expr ce e a -> wt_stmt ce e rt s2 -> wt_stmt ce e rt s3 ->
   wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. eauto 10 with ty.
 Qed.
 
 Lemma sreturn_sound:
   forall a s, sreturn rt a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H; eauto with ty.
 Qed.
 
 Lemma sswitch_sound:
   forall a sl s, sswitch a sl = OK s ->
   wt_expr ce e a -> wt_lblstmts ce e rt sl -> wt_stmt ce e rt s.
-Proof.
+Proof using.
   intros. monadInv H. destruct (typeof a) eqn:TA; inv EQ0.
   eauto with ty.
   eapply wt_Sswitch with (sz := I32); eauto with ty.
@@ -1322,7 +1322,7 @@ Lemma retype_expr_sound:
   forall a a', retype_expr ce e a = OK a' -> wt_expr ce e a'
 with retype_exprlist_sound:
   forall al al', retype_exprlist ce e al = OK al' -> wt_exprlist ce e al'.
-Proof.
+Proof using.
 - destruct a; simpl; intros a' RT; try (monadInv RT).
 + destruct v; try discriminate.
   destruct ty; inv RT. apply econst_int_sound. apply econst_ptr_int_sound.
@@ -1357,7 +1357,7 @@ Lemma retype_stmt_sound:
   forall s s', retype_stmt ce e rt s = OK s' -> wt_stmt ce e rt s'
 with retype_lblstmts_sound:
   forall sl sl', retype_lblstmts ce e rt sl = OK sl' -> wt_lblstmts ce e rt sl'.
-Proof.
+Proof using.
 - destruct s; simpl; intros s' RT; try (monadInv RT).
 + constructor.
 + eapply sdo_sound; eauto using retype_expr_sound.
@@ -1381,13 +1381,13 @@ End SOUNDNESS_CONSTRUCTORS.
 
 Lemma retype_function_sound:
   forall ce e f f', retype_function ce e f = OK f' -> wt_function ce e f'.
-Proof.
+Proof using.
   intros. monadInv H. constructor; simpl. eapply retype_stmt_sound; eauto.
 Qed.
 
 Lemma retype_fundef_sound:
   forall ce e fd fd', retype_fundef ce e fd = OK fd' -> wt_fundef ce e fd'.
-Proof.
+Proof using.
   intros. destruct fd; monadInv H.
 - constructor; eapply retype_function_sound; eauto.
 - constructor; auto.
@@ -1395,7 +1395,7 @@ Qed.
 
 Theorem typecheck_program_sound:
   forall p p', typecheck_program p = OK p' -> wt_program p'.
-Proof.
+Proof using.
   unfold typecheck_program; intros. monadInv H.
   rename x into tp.
   constructor; simpl.
@@ -1428,7 +1428,7 @@ Qed.
 
 Lemma pres_cast_int_int:
   forall sz sg n, wt_int (cast_int_int sz sg n) sz sg.
-Proof.
+Proof using.
   intros. unfold cast_int_int. destruct sz; simpl.
 - destruct sg. apply Int.sign_ext_idem; lia. apply Int.zero_ext_idem; lia.
 - destruct sg. apply Int.sign_ext_idem; lia. apply Int.zero_ext_idem; lia.
@@ -1438,14 +1438,14 @@ Qed.
 
 Lemma wt_val_casted:
   forall v ty, val_casted v ty -> wt_val v ty.
-Proof.
+Proof using.
   induction 1; constructor; auto. 
 - rewrite <- H; apply pres_cast_int_int.
 Qed.
 
 Lemma pres_sem_cast:
   forall m v2 ty2 v1 ty1, wt_val v1 ty1 -> sem_cast v1 ty1 ty2 m = Some v2 -> wt_val v2 ty2.
-Proof.
+Proof using.
   intros. apply wt_val_casted. eapply cast_val_is_casted; eauto.
 Qed.
 
@@ -1467,7 +1467,7 @@ Lemma pres_sem_binarith:
     sem_binarith sem_int sem_long sem_float sem_single v1 ty1 v2 ty2 m = Some v ->
     binarith_type ty1 ty2 msg = OK ty ->
     wt_val v ty.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   intros. unfold sem_binarith, binarith_type in *.
   set (ty' := Cop.binarith_type (classify_binarith ty1 ty2)) in *.
   destruct (sem_cast v1 ty1 ty' m) as [v1'|] eqn:CAST1...
@@ -1495,7 +1495,7 @@ Lemma pres_sem_binarith_int:
     sem_binarith sem_int sem_long (fun n1 n2 => None) (fun n1 n2 => None) v1 ty1 v2 ty2 m = Some v ->
     binarith_int_type ty1 ty2 msg = OK ty ->
     wt_val v ty.
-Proof.
+Proof using.
   intros. eapply pres_sem_binarith with (msg := msg); eauto.
   simpl; auto. simpl; auto.
   unfold binarith_int_type, binarith_type in *.
@@ -1507,7 +1507,7 @@ Lemma pres_sem_shift:
   shift_op_type ty1 ty2 m = OK ty ->
   sem_shift sem_int sem_long v1 ty1 v2 ty2 = Some v ->
   wt_val v ty.
-Proof.
+Proof using.
   intros. unfold shift_op_type, sem_shift in *. DestructCases; auto with ty.
 Qed.
 
@@ -1516,7 +1516,7 @@ Lemma pres_sem_cmp:
   comparison_type ty1 ty2 msg = OK ty ->
   sem_cmp c v1 ty1 v2 ty2 m = Some v ->
   wt_val v ty.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold comparison_type, sem_cmp; intros.
   assert (X: forall b, wt_val (Val.of_bool b) (Tint I32 Signed noattr)).
   {
@@ -1545,7 +1545,7 @@ Lemma pres_sem_binop:
   sem_binary_operation ce op v1 ty1 v2 ty2 m = Some v ->
   wt_val v1 ty1 -> wt_val v2 ty2 ->
   wt_val v ty.
-Proof.
+Proof using.
   intros until m; intros TY SEM WT1 WT2.
   destruct op; simpl in TY; simpl in SEM.
 - (* add *)
@@ -1592,7 +1592,7 @@ Lemma pres_sem_unop:
   sem_unary_operation op v1 ty1 m = Some v ->
   wt_val v1 ty1 ->
   wt_val v ty.
-Proof.
+Proof using.
   intros until v; intros TY SEM WT1.
   destruct op; simpl in TY; simpl in SEM.
 - (* notbool *)
@@ -1614,7 +1614,7 @@ Lemma wt_load_result:
   forall ty chunk v,
   access_mode ty = By_value chunk ->
   wt_val (Val.load_result chunk v) ty.
-Proof.
+Proof using.
   unfold access_mode, Val.load_result. remember Archi.ptr64 as ptr64. 
   intros until v; intros AC. destruct ty; simpl in AC; try discriminate AC.
 - destruct i; [destruct s|destruct s|idtac|idtac]; inv AC; simpl.
@@ -1634,7 +1634,7 @@ Lemma wt_decode_val:
   forall ty chunk vl,
   access_mode ty = By_value chunk ->
   wt_val (decode_val chunk vl) ty.
-Proof.
+Proof using.
   intros until vl; intros ACC.
   assert (LR: forall v, wt_val (Val.load_result chunk v) ty) by (eauto using wt_load_result).
   destruct ty; simpl in ACC; try discriminate. 
@@ -1662,7 +1662,7 @@ Remark wt_bitfield_normalize: forall sz sg width sg1 n,
   0 < width <= bitsize_intsize sz ->
   sg1 = (if zlt width (bitsize_intsize sz) then Signed else sg) ->
   wt_int (bitfield_normalize sz sg width n) sz sg1.
-Proof.
+Proof using.
   intros. destruct sz; cbn in *.
   + destruct sg.
     * replace sg1 with Signed by (destruct zlt; auto).
@@ -1690,7 +1690,7 @@ Lemma wt_deref_loc:
   forall ge ty m b ofs bf t v,
   deref_loc ge ty m b ofs bf t v ->
   wt_val v ty.
-Proof.
+Proof using.
   induction 1.
 - (* by value, non volatile *)
   simpl in H1. exploit Mem.load_result; eauto. intros EQ; rewrite EQ.
@@ -1719,7 +1719,7 @@ Lemma wt_assign_loc:
   forall ge ty m b ofs bf v t m' v',
   assign_loc ge ty m b ofs bf v t m' v' ->
   wt_val v ty -> wt_val v' ty.
-Proof.
+Proof using.
   induction 1; intros; auto.
 - inv H. constructor.
   apply wt_bitfield_normalize. lia. auto.
@@ -1727,7 +1727,7 @@ Qed.
 
 Lemma wt_cast_self:
   forall t1 t2, wt_cast t1 t2 -> wt_cast t2 t2.
-Proof.
+Proof using.
   unfold wt_cast; intros. destruct t2; simpl in *; try congruence.
 - apply (wt_cast_int i s a i s a).
 - destruct Archi.ptr64; congruence.
@@ -1738,7 +1738,7 @@ Lemma binarith_type_int32s:
   forall ty1 msg ty2,
   binarith_type ty1 type_int32s msg = OK ty2 ->
   ty2 = incrdecr_type ty1.
-Proof.
+Proof using.
   intros. unfold incrdecr_type.
   unfold binarith_type, classify_binarith in H; simpl in H.
   destruct ty1; simpl; try congruence.
@@ -1751,7 +1751,7 @@ Lemma type_add_int32s:
   forall ty1 ty2,
   type_binop Oadd ty1 type_int32s = OK ty2 ->
   ty2 = incrdecr_type ty1.
-Proof.
+Proof using.
   simpl; intros. unfold classify_add in H; destruct ty1; simpl in H;
   try (eapply binarith_type_int32s; eauto; fail).
   destruct i; eapply binarith_type_int32s; eauto.
@@ -1764,7 +1764,7 @@ Lemma type_sub_int32s:
   forall ty1 ty2,
   type_binop Osub ty1 type_int32s = OK ty2 ->
   ty2 = incrdecr_type ty1.
-Proof.
+Proof using.
   simpl; intros. unfold classify_sub in H; destruct ty1; simpl in H;
   try (eapply binarith_type_int32s; eauto; fail).
   destruct i; eapply binarith_type_int32s; eauto.
@@ -1776,7 +1776,7 @@ Qed.
 Lemma has_rettype_wt_val:
   forall v ty,
   Val.has_rettype v (rettype_of_type ty) -> wt_val v ty.
-Proof.
+Proof using.
   unfold rettype_of_type, Val.has_rettype; destruct ty; intros.
 - destruct v; contradiction || constructor.
 - destruct i; [destruct s | destruct s | | ]; destruct v; try contradiction;
@@ -1793,7 +1793,7 @@ Qed.
 Lemma wt_rred:
   forall ge tenv a m t a' m',
   rred ge a m t a' m' -> wt_rvalue ge tenv a -> wt_rvalue ge tenv a'.
-Proof.
+Proof using.
   induction 1; intros WT; inversion WT.
 - (* valof *) simpl in *. constructor. eapply wt_deref_loc; eauto.
 - (* addrof *) constructor; auto with ty.
@@ -1852,21 +1852,21 @@ Qed.
 Lemma wt_lred:
   forall tenv ge e a m a' m',
   lred ge e a m a' m' -> wt_lvalue ge tenv a -> wt_lvalue ge tenv a'.
-Proof.
+Proof using.
   induction 1; intros WT; constructor.
 Qed.
 
 Lemma rred_same_type:
   forall ge a m t a' m',
   rred ge a m t a' m' -> typeof a' = typeof a.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
 Lemma lred_same_type:
   forall ge e a m a' m',
   lred ge e a m a' m' -> typeof a' = typeof a.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
@@ -1887,21 +1887,21 @@ with wt_subexprlist:
   contextlist from C ->
   wt_exprlist cenv tenv (C a) ->
   wt_expr_kind cenv tenv from a.
-Proof.
+Proof using.
 - destruct 1; intros WT; auto; inv WT; eauto.
 - destruct 1; intros WT; inv WT; eauto.
 Qed.
 
 Lemma typeof_context:
   forall from to C, context from to C -> typeof (C a') = typeof (C a).
-Proof.
+Proof using SAMETY.
   induction 1; simpl; auto.
 Qed.
 
 Lemma wt_arguments_context:
   forall k C, contextlist k C ->
   forall tyl, wt_arguments (C a) tyl -> wt_arguments (C a') tyl.
-Proof.
+Proof using SAMETY.
   induction 1; intros.
 - inv H0. constructor; auto. rewrite (typeof_context _ _ _ H); auto.
   constructor; auto.
@@ -1920,7 +1920,7 @@ with wt_contextlist:
   wt_exprlist cenv tenv (C a) ->
   wt_expr_kind cenv tenv from a' ->
   wt_exprlist cenv tenv (C a').
-Proof.
+Proof using SAMETY.
 - induction 1; intros WT BASE;
   auto;
   inv WT;
@@ -1940,7 +1940,7 @@ Section WT_SWITCH.
 Lemma wt_select_switch:
   forall n ce e rt sl,
   wt_lblstmts ce e rt sl -> wt_lblstmts ce e rt (select_switch n sl).
-Proof.
+Proof using.
   unfold select_switch; intros.
   assert (A: wt_lblstmts ce e rt (select_switch_default sl)).
   {
@@ -1960,7 +1960,7 @@ Qed.
 Lemma wt_seq_of_ls:
   forall ce e rt sl,
   wt_lblstmts ce e rt sl -> wt_stmt ce e rt (seq_of_labeled_statement sl).
-Proof.
+Proof using.
   induction 1; simpl.
   constructor.
   constructor; auto.
@@ -2049,19 +2049,19 @@ with wt_call_cont: cont -> type -> Prop :=
 Lemma is_wt_call_cont:
   forall te f k,
   is_call_cont k -> wt_stmt_cont te f k -> wt_call_cont k f.(fn_return).
-Proof.
+Proof using.
   intros. inv H0; simpl in H; try contradiction. constructor. auto.
 Qed.
 
 Lemma wt_call_cont_stmt_cont:
   forall te f k, wt_call_cont k f.(fn_return) -> wt_stmt_cont te f k.
-Proof.
+Proof using.
   intros. inversion H; subst. constructor. constructor; auto.
 Qed.
 
 Lemma call_cont_wt:
   forall e f k, wt_stmt_cont e f k -> wt_call_cont (call_cont k) f.(fn_return).
-Proof.
+Proof using.
   induction 1; simpl; auto.
   constructor.
   congruence.
@@ -2069,7 +2069,7 @@ Qed.
 
 Lemma call_cont_wt':
   forall e f k, wt_stmt_cont e f k -> wt_stmt_cont e f (call_cont k).
-Proof.
+Proof using.
   induction 1; simpl; auto; econstructor; eauto.
 Qed.
 
@@ -2081,7 +2081,7 @@ Definition fundef_return (fd: fundef) : type :=
 
 Lemma wt_find_funct:
   forall v fd, Genv.find_funct ge v = Some fd -> wt_fundef ge gtenv fd.
-Proof.
+Proof using WTPROG.
   intros. apply Genv.find_funct_prop with (p := prog) (v := v); auto.
   intros. inv WTPROG. apply H1 with id; auto.
 Qed.
@@ -2122,7 +2122,7 @@ Lemma wt_find_label:
   find_label lbl s k = Some (s', k') ->
   wt_stmt_cont e f k ->
   wt_stmt ge e f.(fn_return) s' /\ wt_stmt_cont e f k'.
-Proof.
+Proof using.
   intros lbl e f s0 WTS0. pattern s0.
   apply (wt_stmt_ind2 ge e f.(fn_return) _
     (fun ls => wt_lblstmts ge e f.(fn_return) ls ->
@@ -2158,7 +2158,7 @@ End WT_FIND_LABEL.
 
 Lemma preservation_estep:
   forall S t S', estep ge S t S' -> wt_state S -> wt_state S'.
-Proof.
+Proof using WTPROG.
   induction 1; intros WT; inv WT.
 - (* lred *)
   econstructor; eauto. change (wt_expr_kind ge te RV (C a')).
@@ -2190,7 +2190,7 @@ Qed.
 
 Lemma preservation_sstep:
   forall S t S', sstep ge S t S' -> wt_state S -> wt_state S'.
-Proof.
+Proof using.
   induction 1; intros WT; inv WT.
 - inv WTS; eauto with ty.
 - inv WTK; eauto with ty.
@@ -2239,13 +2239,13 @@ Qed.
 
 Theorem preservation:
   forall S t S', step ge S t S' -> wt_state S -> wt_state S'.
-Proof.
+Proof using WTPROG.
   intros. destruct H. eapply preservation_estep; eauto. eapply preservation_sstep; eauto.
 Qed.
 
 Theorem wt_initial_state:
   forall S, initial_state prog S -> wt_state S.
-Proof.
+Proof using WTPROG.
   intros. inv H. econstructor. constructor.
   apply Genv.find_funct_ptr_prop with (p := prog) (b := b); auto.
   intros. inv WTPROG. apply H4 with id; auto.
@@ -2262,7 +2262,7 @@ End PRESERVATION.
 Lemma sem_cast_already_typed: forall v t1 t2 m,
   wt_val v t2 ->
   sem_cast v t1 t2 m = Some v \/ sem_cast v t1 t2 m = None.
-Proof.
+Proof using.
   assert (INT: forall n sz sg, wt_int n sz sg -> cast_int_int sz sg n = n).
   { unfold wt_int; intros.
     destruct sz; [destruct sg | destruct sg | | ];
@@ -2283,6 +2283,6 @@ Qed.
 
 Corollary sem_cast_already_typed_idem: forall v t1 t2 m v',
   sem_cast v t1 t2 m = Some v' -> wt_val v t2 -> v' = v.
-Proof.
+Proof using.
   intros. destruct (sem_cast_already_typed v t1 t2 m H0); congruence.
 Qed.

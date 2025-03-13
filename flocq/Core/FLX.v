@@ -45,7 +45,7 @@ Definition FLX_exp (e : Z) := (e - prec)%Z.
 (** Properties of the FLX format *)
 
 Global Instance FLX_exp_valid : Valid_exp FLX_exp.
-Proof.
+Proof using prec_gt_0_.
 intros k.
 unfold FLX_exp.
 generalize prec_gt_0.
@@ -57,7 +57,7 @@ Theorem FIX_format_FLX :
   (bpow (e - 1) <= Rabs x <= bpow e)%R ->
   FLX_format x ->
   FIX_format beta (e - prec) x.
-Proof.
+Proof using.
 clear prec_gt_0_.
 intros x e Hx [[xm xe] H1 H2].
 rewrite H1, (F2R_prec_normalize beta xm xe e prec).
@@ -68,7 +68,7 @@ Qed.
 
 Theorem FLX_format_generic :
   forall x, generic_format beta FLX_exp x -> FLX_format x.
-Proof.
+Proof using prec_gt_0_.
 intros x H.
 rewrite H.
 eexists ; repeat split.
@@ -94,7 +94,7 @@ Qed.
 
 Theorem generic_format_FLX :
   forall x, FLX_format x -> generic_format beta FLX_exp x.
-Proof.
+Proof using.
 clear prec_gt_0_.
 intros x [[mx ex] H1 H2].
 simpl in H2.
@@ -110,7 +110,7 @@ Qed.
 
 Theorem FLX_format_satisfies_any :
   satisfies_any FLX_format.
-Proof.
+Proof using prec_gt_0_.
 refine (satisfies_any_eq _ _ _ (generic_format_satisfies_any beta FLX_exp)).
 intros x.
 split.
@@ -123,7 +123,7 @@ Theorem FLX_format_FIX :
   (bpow (e - 1) <= Rabs x <= bpow e)%R ->
   FIX_format beta (e - prec) x ->
   FLX_format x.
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 intros x e Hx Fx.
 apply FLX_format_generic.
 apply generic_format_FIX in Fx.
@@ -141,7 +141,7 @@ Inductive FLXN_format (x : R) : Prop :=
 
 Theorem generic_format_FLXN :
   forall x, FLXN_format x -> generic_format beta FLX_exp x.
-Proof.
+Proof using.
 intros x [[xm ex] H1 H2].
 destruct (Req_dec x 0) as [Zx|Zx].
 rewrite Zx.
@@ -155,7 +155,7 @@ Qed.
 
 Theorem FLXN_format_generic :
   forall x, generic_format beta FLX_exp x -> FLXN_format x.
-Proof.
+Proof using prec_gt_0_.
 intros x Hx.
 rewrite Hx.
 simpl.
@@ -200,7 +200,7 @@ Qed.
 
 Theorem FLXN_format_satisfies_any :
   satisfies_any FLXN_format.
-Proof.
+Proof using prec_gt_0_.
 refine (satisfies_any_eq _ _ _ (generic_format_satisfies_any beta FLX_exp)).
 split ; intros H.
 now apply FLXN_format_generic.
@@ -209,7 +209,7 @@ Qed.
 
 Lemma negligible_exp_FLX :
    negligible_exp FLX_exp = None.
-Proof.
+Proof using prec_gt_0_.
 case (negligible_exp_spec FLX_exp).
 intros _; reflexivity.
 intros n H2; contradict H2.
@@ -218,7 +218,7 @@ Qed.
 
 Theorem generic_format_FLX_1 :
   generic_format beta FLX_exp 1.
-Proof.
+Proof using prec_gt_0_.
 unfold generic_format, scaled_mantissa, cexp, F2R; simpl.
 rewrite Rmult_1_l, (mag_unique beta 1 1).
 { unfold FLX_exp.
@@ -232,26 +232,26 @@ assert (H := Zle_bool_imp_le _ _ (radix_prop beta)); lia.
 Qed.
 
 Theorem ulp_FLX_0: (ulp beta FLX_exp 0 = 0)%R.
-Proof.
+Proof using prec_gt_0_.
 unfold ulp; rewrite Req_bool_true; trivial.
 rewrite negligible_exp_FLX; easy.
 Qed.
 
 Lemma ulp_FLX_1 : ulp beta FLX_exp 1 = bpow (-prec + 1).
-Proof.
+Proof using.
 unfold ulp, FLX_exp, cexp; rewrite Req_bool_false; [|apply R1_neq_R0].
 rewrite mag_1; f_equal; ring.
 Qed.
 
 Lemma succ_FLX_1 : (succ beta FLX_exp 1 = 1 + bpow (-prec + 1))%R.
-Proof.
+Proof using.
 now unfold succ; rewrite Rle_bool_true; [|apply Rle_0_1]; rewrite ulp_FLX_1.
 Qed.
 
 Theorem eq_0_round_0_FLX :
    forall rnd {Vr: Valid_rnd rnd} x,
      round beta FLX_exp rnd x = 0%R -> x = 0%R.
-Proof.
+Proof using prec_gt_0_.
 intros rnd Hr x.
 apply eq_0_round_0_negligible_exp; try assumption.
 apply FLX_exp_valid.
@@ -261,7 +261,7 @@ Qed.
 Theorem gt_0_round_gt_0_FLX :
    forall rnd {Vr: Valid_rnd rnd} x,
      (0 < x)%R -> (0 < round beta FLX_exp rnd x)%R.
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 intros rnd Hr x Hx.
 assert (K: (0 <= round beta FLX_exp rnd x)%R).
 rewrite <- (round_0 beta FLX_exp rnd).
@@ -275,7 +275,7 @@ Qed.
 
 Theorem ulp_FLX_le :
   forall x, (ulp beta FLX_exp x <= Rabs x * bpow (1-prec))%R.
-Proof.
+Proof using prec_gt_0_.
 intros x; case (Req_dec x 0); intros Hx.
 rewrite Hx, ulp_FLX_0, Rabs_R0.
 right; ring.
@@ -290,7 +290,7 @@ Qed.
 
 Theorem ulp_FLX_ge :
   forall x, (Rabs x * bpow (-prec) <= ulp beta FLX_exp x)%R.
-Proof.
+Proof using prec_gt_0_.
 intros x; case (Req_dec x 0); intros Hx.
 rewrite Hx, ulp_FLX_0, Rabs_R0.
 right; ring.
@@ -305,7 +305,7 @@ Qed.
 Lemma ulp_FLX_exact_shift :
   forall x e,
   (ulp beta FLX_exp (x * bpow e) = ulp beta FLX_exp x * bpow e)%R.
-Proof.
+Proof using prec_gt_0_.
 intros x e.
 destruct (Req_dec x 0) as [Hx|Hx].
 { unfold ulp.
@@ -320,7 +320,7 @@ Qed.
 Lemma succ_FLX_exact_shift :
   forall x e,
   (succ beta FLX_exp (x * bpow e) = succ beta FLX_exp x * bpow e)%R.
-Proof.
+Proof using prec_gt_0_.
 intros x e.
 destruct (Rle_or_lt 0 x) as [Px|Nx].
 { rewrite succ_eq_pos; [|now apply Rmult_le_pos, bpow_ge_0].
@@ -343,7 +343,7 @@ Qed.
 
 (** FLX is a nice format: it has a monotone exponent... *)
 Global Instance FLX_exp_monotone : Monotone_exp FLX_exp.
-Proof.
+Proof using.
 intros ex ey Hxy.
 now apply Zplus_le_compat_r.
 Qed.
@@ -352,7 +352,7 @@ Qed.
 Hypothesis NE_prop : Z.even beta = false \/ (1 < prec)%Z.
 
 Global Instance exists_NE_FLX : Exists_NE beta FLX_exp.
-Proof.
+Proof using NE_prop.
 destruct NE_prop as [H|H].
 now left.
 right.

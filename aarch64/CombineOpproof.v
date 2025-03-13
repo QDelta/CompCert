@@ -28,7 +28,7 @@ Hypothesis get_sound: forall v rhs, get v = Some rhs -> rhs_eval_to valu ge sp m
 
 Lemma get_op_sound:
   forall v op vl, get v = Some (Op op vl) -> eval_operation ge sp op (map valu vl) m = Some (valu v).
-Proof.
+Proof using.
   intros. exploit get_sound; eauto. intros REV; inv REV; auto.
 Qed.
 
@@ -43,7 +43,7 @@ Lemma combine_compimm_ne_0_sound:
   combine_compimm_ne_0 get x = Some(cond, args) ->
   eval_condition cond (map valu args) m = Val.cmp_bool Cne (valu x) (Vint Int.zero) /\
   eval_condition cond (map valu args) m = Val.cmpu_bool (Mem.valid_pointer m) Cne (valu x) (Vint Int.zero).
-Proof.
+Proof using.
   intros until args. functional induction (combine_compimm_ne_0 get x); intros EQ; inv EQ.
   (* of cmp *)
   UseGetSound. rewrite <- H.
@@ -58,7 +58,7 @@ Lemma combine_compimm_eq_0_sound:
   combine_compimm_eq_0 get x = Some(cond, args) ->
   eval_condition cond (map valu args) m = Val.cmp_bool Ceq (valu x) (Vint Int.zero) /\
   eval_condition cond (map valu args) m = Val.cmpu_bool (Mem.valid_pointer m) Ceq (valu x) (Vint Int.zero).
-Proof.
+Proof using.
   intros until args. functional induction (combine_compimm_eq_0 get x); intros EQ; inv EQ.
   (* of cmp *)
   UseGetSound. rewrite <- H.
@@ -74,7 +74,7 @@ Lemma combine_compimm_eq_1_sound:
   combine_compimm_eq_1 get x = Some(cond, args) ->
   eval_condition cond (map valu args) m = Val.cmp_bool Ceq (valu x) (Vint Int.one) /\
   eval_condition cond (map valu args) m = Val.cmpu_bool (Mem.valid_pointer m) Ceq (valu x) (Vint Int.one).
-Proof.
+Proof using.
   intros until args. functional induction (combine_compimm_eq_1 get x); intros EQ; inv EQ.
   (* of cmp *)
   UseGetSound. rewrite <- H.
@@ -86,7 +86,7 @@ Lemma combine_compimm_ne_1_sound:
   combine_compimm_ne_1 get x = Some(cond, args) ->
   eval_condition cond (map valu args) m = Val.cmp_bool Cne (valu x) (Vint Int.one) /\
   eval_condition cond (map valu args) m = Val.cmpu_bool (Mem.valid_pointer m) Cne (valu x) (Vint Int.one).
-Proof.
+Proof using.
   intros until args. functional induction (combine_compimm_ne_1 get x); intros EQ; inv EQ.
   (* of cmp *)
   UseGetSound. rewrite <- H.
@@ -98,7 +98,7 @@ Theorem combine_cond_sound:
   forall cond args cond' args',
   combine_cond get cond args = Some(cond', args') ->
   eval_condition cond' (map valu args') m = eval_condition cond (map valu args) m.
-Proof.
+Proof using.
   intros. functional inversion H; subst.
   (* compimm ne zero *)
   - simpl; eapply combine_compimm_ne_0_sound; eauto.
@@ -123,7 +123,7 @@ Theorem combine_cond'_sound:
   combine_cond' cond args = Some res' ->
   eval_condition cond (map valu args) m = Some res ->
   res = res'.
-Proof.
+Proof using.
   intros.  unfold combine_cond' in *.
   destruct cond; inv H; destruct args; inv H2; destruct args; inv H1; destruct args; inv H2.
   apply (combine_comparison_cmp_sound valu c v v0 res res'); auto.
@@ -136,7 +136,7 @@ Theorem combine_addr_sound:
   forall addr args addr' args',
   combine_addr get addr args = Some(addr', args') ->
   eval_addressing ge sp addr' (map valu args') = eval_addressing ge sp addr (map valu args).
-Proof.
+Proof using.
   intros. functional inversion H; subst.
 - (* indexed - addimml *)
   UseGetSound. simpl. rewrite <- H0. rewrite Val.addl_assoc. auto. 
@@ -147,7 +147,7 @@ Theorem combine_op_sound:
   combine_op get op args = Some(op', args') ->
   eval_operation ge sp op (map valu args) m = Some r ->
   exists r', eval_operation ge sp op' (map valu args') m = Some r' /\ Val.lessdef r r'.
-Proof.
+Proof using.
   intros. functional inversion H; subst.
   (* addimm - addimm *)
   - UseGetSound. exists r; split; auto.

@@ -24,7 +24,7 @@ Definition match_prog (p tp: program) :=
 
 Lemma transf_program_match:
   forall p, match_prog p (tunnel_program p).
-Proof.
+Proof using.
   intros. eapply match_transform_program; eauto.
 Qed.
 
@@ -58,7 +58,7 @@ Lemma record_branch_correct:
   branch_map_correct_1 (PTree.remove pc c) u f ->
   c!pc = Some b ->
   { f' | branch_map_correct_1 c (record_branch u pc b) f' }.
-Proof.
+Proof using.
   intros c u f pc b BMC GET1.
   assert (PC: U.repr u pc = pc).
   { specialize (BMC pc). rewrite PTree.grs in BMC. auto. }
@@ -84,7 +84,7 @@ Qed.
 
 Lemma record_branches_correct:
   { f | branch_map_correct_1 fn.(fn_code) (record_branches fn) f }.
-Proof.
+Proof using.
   unfold record_branches. apply PTree_Properties.fold_ind.
 - (* base case *)
   intros m EMPTY. exists (fun _ => O). 
@@ -111,7 +111,7 @@ Lemma record_cond_correct:
   c!pc <> None ->
   let '(c1, u1, _) := record_cond (c, u, changed) pc b in
   { f' | branch_map_correct_2 c1 u1 f' }.
-Proof.
+Proof using.
   intros c u changed f pc b BMC GET1 GET2.
   assert (DFL: { f' | branch_map_correct_2 c u f' }).
   { exists f; auto. }
@@ -159,7 +159,7 @@ Lemma record_conds_1_correct:
   code_compat c ->
   let '(c', u', _) := record_conds_1 (c, u) in
   (code_compat c' * { f' | branch_map_correct_2 c' u' f' })%type.
-Proof.
+Proof using.
   intros c0 u0 f0 BMC0 COMPAT0.
   unfold record_conds_1.
   set (x := PTree.fold record_cond c0 (c0, u0, false)).
@@ -210,7 +210,7 @@ Lemma record_conds_correct:
   { f | branch_map_correct_2 (fst cu) (snd cu) f } ->
   code_compat (fst cu) ->
   { f | branch_map_correct (record_conds cu) f }.
-Proof.
+Proof using.
   intros cu0. functional induction (record_conds cu0); intros.
 - destruct cu as [c u], cu' as [c' u'], H as [f BMC]. 
   generalize (record_conds_1_correct c u f BMC H0).
@@ -222,7 +222,7 @@ Qed.
 
 Lemma record_gotos_correct_1:
   { f | branch_map_correct (record_gotos fn) f }.
-Proof.
+Proof using.
   apply record_conds_correct; simpl.
 - destruct record_branches_correct as [f BMC].
   exists f. intros pc. specialize (BMC pc); simpl in *.
@@ -249,7 +249,7 @@ Theorem record_gotos_correct:
   | _ =>
       branch_target pc = pc
   end.
-Proof.
+Proof using.
   intros. unfold count_gotos. destruct record_gotos_correct_1 as [f P]; simpl.
   apply P.
 Qed.
@@ -288,7 +288,7 @@ Proof (Genv.senv_transf TRANSL).
 
 Lemma sig_preserved:
   forall f, funsig (tunnel_fundef f) = funsig f.
-Proof.
+Proof using.
   destruct f; reflexivity.
 Qed.
 
@@ -382,14 +382,14 @@ Inductive match_states: state -> state -> Prop :=
 Lemma reglist_lessdef:
   forall rl ls1 ls2,
   locmap_lessdef ls1 ls2 -> Val.lessdef_list (reglist ls1 rl) (reglist ls2 rl).
-Proof.
+Proof using.
   induction rl; simpl; intros; auto.
 Qed.
 
 Lemma locmap_set_lessdef:
   forall ls1 ls2 v1 v2 l,
   locmap_lessdef ls1 ls2 -> Val.lessdef v1 v2 -> locmap_lessdef (Locmap.set l v1 ls1) (Locmap.set l v2 ls2).
-Proof.
+Proof using.
   intros; red; intros l'. unfold Locmap.set. destruct (Loc.eq l l').
 - destruct l; auto using Val.load_result_lessdef.
 - destruct (Loc.diff_dec l l'); auto.
@@ -398,7 +398,7 @@ Qed.
 Lemma locmap_set_undef_lessdef:
   forall ls1 ls2 l,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (Locmap.set l Vundef ls1) ls2.
-Proof.
+Proof using.
   intros; red; intros l'. unfold Locmap.set. destruct (Loc.eq l l').
 - destruct l; auto. destruct ty; auto. 
 - destruct (Loc.diff_dec l l'); auto.
@@ -407,14 +407,14 @@ Qed.
 Lemma locmap_undef_regs_lessdef:
   forall rl ls1 ls2,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (undef_regs rl ls1) (undef_regs rl ls2).
-Proof.
+Proof using.
   induction rl as [ | r rl]; intros; simpl. auto. apply locmap_set_lessdef; auto. 
 Qed.
 
 Lemma locmap_undef_regs_lessdef_1:
   forall rl ls1 ls2,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (undef_regs rl ls1) ls2.
-Proof.
+Proof using.
   induction rl as [ | r rl]; intros; simpl. auto. apply locmap_set_undef_lessdef; auto. 
 Qed.
 
@@ -422,14 +422,14 @@ Qed.
 Lemma locmap_undef_lessdef:
   forall ll ls1 ls2,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (Locmap.undef ll ls1) (Locmap.undef ll ls2).
-Proof.
+Proof using.
   induction ll as [ | l ll]; intros; simpl. auto. apply IHll. apply locmap_set_lessdef; auto. 
 Qed.
 
 Lemma locmap_undef_lessdef_1:
   forall ll ls1 ls2,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (Locmap.undef ll ls1) ls2.
-Proof.
+Proof using.
   induction ll as [ | l ll]; intros; simpl. auto. apply IHll. apply locmap_set_undef_lessdef; auto. 
 Qed.
 *)
@@ -437,7 +437,7 @@ Qed.
 Lemma locmap_getpair_lessdef:
   forall p ls1 ls2,
   locmap_lessdef ls1 ls2 -> Val.lessdef (Locmap.getpair p ls1) (Locmap.getpair p ls2).
-Proof.
+Proof using.
   intros; destruct p; simpl; auto using Val.longofwords_lessdef.
 Qed.
 
@@ -445,28 +445,28 @@ Lemma locmap_getpairs_lessdef:
   forall pl ls1 ls2,
   locmap_lessdef ls1 ls2 ->
   Val.lessdef_list (map (fun p => Locmap.getpair p ls1) pl) (map (fun p => Locmap.getpair p ls2) pl).
-Proof.
+Proof using.
   intros. induction pl; simpl; auto using locmap_getpair_lessdef.
 Qed.
 
 Lemma locmap_setpair_lessdef:
   forall p ls1 ls2 v1 v2,
   locmap_lessdef ls1 ls2 -> Val.lessdef v1 v2 -> locmap_lessdef (Locmap.setpair p v1 ls1) (Locmap.setpair p v2 ls2).
-Proof.
+Proof using.
   intros; destruct p; simpl; auto using locmap_set_lessdef, Val.loword_lessdef, Val.hiword_lessdef.
 Qed.
 
 Lemma locmap_setres_lessdef:
   forall res ls1 ls2 v1 v2,
   locmap_lessdef ls1 ls2 -> Val.lessdef v1 v2 -> locmap_lessdef (Locmap.setres res v1 ls1) (Locmap.setres res v2 ls2).
-Proof.
+Proof using.
   induction res; intros; simpl; auto using locmap_set_lessdef, Val.loword_lessdef, Val.hiword_lessdef.
 Qed.
 
 Lemma locmap_undef_caller_save_regs_lessdef:
   forall ls1 ls2,
   locmap_lessdef ls1 ls2 -> locmap_lessdef (undef_caller_save_regs ls1) (undef_caller_save_regs ls2).
-Proof.
+Proof using.
   intros; red; intros. unfold undef_caller_save_regs. 
   destruct l.
 - destruct (Conventions1.is_callee_save r); auto.
@@ -478,7 +478,7 @@ Lemma find_function_translated:
   locmap_lessdef ls tls ->
   find_function ge ros ls = Some fd ->
   find_function tge ros tls = Some (tunnel_fundef fd).
-Proof.
+Proof using TRANSL.
   intros. destruct ros; simpl in *.
 - assert (E: tls (R m) = ls (R m)).
   { exploit Genv.find_funct_inv; eauto. intros (b & EQ). 
@@ -490,7 +490,7 @@ Qed.
 
 Lemma call_regs_lessdef:
   forall ls1 ls2, locmap_lessdef ls1 ls2 -> locmap_lessdef (call_regs ls1) (call_regs ls2).
-Proof.
+Proof using.
   intros; red; intros. destruct l as [r | [] ofs ty]; simpl; auto.
 Qed.
 
@@ -499,7 +499,7 @@ Lemma return_regs_lessdef:
   locmap_lessdef caller1 caller2 ->
   locmap_lessdef callee1 callee2 ->
   locmap_lessdef (return_regs caller1 callee1) (return_regs caller2 callee2).
-Proof.
+Proof using.
   intros; red; intros. destruct l; simpl.
 - destruct (Conventions1.is_callee_save r); auto.
 - destruct sl; auto.
@@ -524,7 +524,7 @@ Lemma match_parent_locset:
   forall s ts,
   list_forall2 match_stackframes s ts ->
   locmap_lessdef (parent_locset s) (parent_locset ts).
-Proof.
+Proof using.
   induction 1; simpl.
 - red; auto.
 - inv H; auto.
@@ -535,7 +535,7 @@ Lemma tunnel_step_correct:
   forall st1' (MS: match_states st1 st1'),
   (exists st2', step tge st1' t st2' /\ match_states st2 st2')
   \/ (measure st2 < measure st1 /\ t = E0 /\ match_states st2 st1')%nat.
-Proof.
+Proof using TRANSL.
   induction 1; intros; try inv MS.
 
 - (* entering a block *)
@@ -679,7 +679,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSL.
   intros. inversion H.
   exists (Callstate nil (tunnel_fundef f) (Locmap.init Vundef) m0); split.
   econstructor; eauto.
@@ -694,7 +694,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STK.
   set (p := map_rpair R (Conventions1.loc_result signature_main)) in *.
   generalize (locmap_getpair_lessdef p _ _ LS). rewrite H1; intros LD; inv LD.
@@ -703,7 +703,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (LTL.semantics prog) (LTL.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_opt.
   apply senv_preserved.
   eexact transf_initial_states.

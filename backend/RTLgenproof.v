@@ -38,7 +38,7 @@ Record map_wf (m: mapping) : Prop :=
 
 Lemma init_mapping_wf:
   map_wf init_mapping.
-Proof.
+Proof using.
   unfold init_mapping; split; simpl.
   intros until r. rewrite PTree.gempty. congruence.
   tauto.
@@ -48,7 +48,7 @@ Lemma add_var_wf:
   forall s1 s2 map name r map' i,
   add_var map name s1 = OK (r,map') s2 i ->
   map_wf map -> map_valid map s1 -> map_wf map'.
-Proof.
+Proof using.
   intros. monadInv H.
   apply mk_map_wf; simpl.
   intros until r0. repeat rewrite PTree.gsspec.
@@ -76,7 +76,7 @@ Lemma add_vars_wf:
   forall names s1 s2 map map' rl i,
   add_vars map names s1 = OK (rl,map') s2 i ->
   map_wf map -> map_valid map s1 -> map_wf map'.
-Proof.
+Proof using.
   induction names; simpl; intros; monadInv H.
   auto.
   exploit add_vars_valid; eauto. intros [A B].
@@ -86,7 +86,7 @@ Qed.
 Lemma add_letvar_wf:
   forall map r,
   map_wf map -> ~reg_in_map map r -> map_wf (add_letvar map r).
-Proof.
+Proof using.
   intros. inv H. unfold add_letvar; constructor; simpl.
   auto.
   intros. elim H1; intro. subst r0. elim H0. left; exists id; auto.
@@ -114,7 +114,7 @@ Lemma match_env_find_var:
   e!id = Some v ->
   map.(map_vars)!id = Some r ->
   Val.lessdef v rs#r.
-Proof.
+Proof using.
   intros. exploit me_vars; eauto. intros [r' [EQ' RS]].
   replace r with r'. auto. congruence.
 Qed.
@@ -125,7 +125,7 @@ Lemma match_env_find_letvar:
   List.nth_error le idx = Some v ->
   List.nth_error map.(map_letvars) idx = Some r ->
   Val.lessdef v rs#r.
-Proof.
+Proof using.
   intros. exploit me_letvars; eauto.
   clear H. revert le H0 H1. generalize (map_letvars map). clear map.
   induction idx; simpl; intros.
@@ -142,7 +142,7 @@ Lemma match_env_invariant:
   match_env map e le rs ->
   (forall r, (reg_in_map map r) -> rs'#r = rs#r) ->
   match_env map e le rs'.
-Proof.
+Proof using.
   intros. inversion H. apply mk_match_env.
   intros. exploit me_vars0; eauto. intros [r [A B]].
   exists r; split. auto. rewrite H0; auto. left; exists id; auto.
@@ -159,7 +159,7 @@ Lemma match_env_update_temp:
   match_env map e le rs ->
   ~(reg_in_map map r) ->
   match_env map e le (rs#r <- v).
-Proof.
+Proof using.
   intros. apply match_env_invariant with rs; auto.
   intros. case (Reg.eq r r0); intro.
   subst r0; contradiction.
@@ -179,7 +179,7 @@ Lemma match_env_update_var:
   map.(map_vars)!id = Some r ->
   match_env map e le rs ->
   match_env map (PTree.set id v e) le (rs#r <- tv).
-Proof.
+Proof using.
   intros. inversion H0. inversion H2. apply mk_match_env.
   intros id' v'. rewrite PTree.gsspec. destruct (peq id' id); intros.
   subst id'. inv H3. exists r; split. auto. rewrite PMap.gss. auto.
@@ -200,7 +200,7 @@ Lemma match_env_update_dest:
   reg_map_ok map r dst ->
   match_env map e le rs ->
   match_env map (set_optvar dst v e) le (rs#r <- tv).
-Proof.
+Proof using.
   intros. inv H1; simpl.
   eapply match_env_update_temp; eauto.
   eapply match_env_update_var; eauto.
@@ -217,7 +217,7 @@ Lemma match_env_update_res:
   tr_builtin_res map res tres ->
   match_env map e le rs ->
   match_env map (set_builtin_res res v e) le (regmap_setres tres tv rs).
-Proof.
+Proof using.
   intros. inv H1; simpl.
 - eapply match_env_update_var; eauto.
 - auto.
@@ -231,7 +231,7 @@ Lemma match_env_bind_letvar:
   match_env map e le rs ->
   Val.lessdef v rs#r ->
   match_env (add_letvar map r) e (v :: le) rs.
-Proof.
+Proof using.
   intros. inv H. unfold add_letvar. apply mk_match_env; simpl; auto.
 Qed.
 
@@ -239,7 +239,7 @@ Lemma match_env_unbind_letvar:
   forall map e le rs r v,
   match_env (add_letvar map r) e (v :: le) rs ->
   match_env map e le rs.
-Proof.
+Proof using.
   unfold add_letvar; intros. inv H. simpl in *.
   constructor. auto. inversion me_letvars0. auto.
 Qed.
@@ -250,7 +250,7 @@ Lemma match_env_empty:
   forall map,
   map.(map_letvars) = nil ->
   match_env map (PTree.empty val) nil (Regmap.init Vundef).
-Proof.
+Proof using.
   intros. apply mk_match_env.
   intros. rewrite PTree.gempty in H0. discriminate.
   rewrite H. constructor.
@@ -266,7 +266,7 @@ Lemma match_set_params_init_regs:
   Val.lessdef_list vl tvl ->
   match_env map2 (set_params vl il) nil (init_regs tvl rl)
   /\ (forall r, reg_fresh r s2 -> (init_regs tvl rl)#r = Vundef).
-Proof.
+Proof using.
   induction il; intros.
 
   inv H. split. apply match_env_empty. auto. intros.
@@ -312,7 +312,7 @@ Lemma match_set_locals:
   (forall r, reg_fresh r s1 -> rs#r = Vundef) ->
   add_vars map1 il s1 = OK (rl, map2) s2 i ->
   match_env map2 (set_locals il e) le rs.
-Proof.
+Proof using.
   induction il; simpl in *; intros.
 
   inv H2. auto.
@@ -336,7 +336,7 @@ Lemma match_init_env_init_reg:
   Val.lessdef_list vparams tvparams ->
   match_env map2 (set_locals vars (set_params vparams params))
             nil (init_regs tvparams rparams).
-Proof.
+Proof using.
   intros.
   exploit match_set_params_init_regs; eauto. intros [A B].
   eapply match_set_locals; eauto.
@@ -353,7 +353,7 @@ Definition match_prog (p: CminorSel.program) (tp: RTL.program) :=
 
 Lemma transf_program_match:
   forall p tp, transl_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. apply match_transform_partial_program; auto.
 Qed.
 
@@ -394,7 +394,7 @@ Lemma sig_transl_function:
   forall (f: CminorSel.fundef) (tf: RTL.fundef),
   transl_fundef f = OK tf ->
   RTL.funsig tf = CminorSel.funsig f.
-Proof.
+Proof using.
   intros until tf. unfold transl_fundef, transf_partial_fundef.
   case f; intro.
   unfold transl_function. 
@@ -418,7 +418,7 @@ Lemma tr_move_correct:
   star step tge (State cs f sp ns rs m) E0 (State cs f sp nd rs' m) /\
   rs'#r2 = rs#r1 /\
   (forall r, r <> r2 -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros. inv H.
   exists rs; split. constructor. auto.
   exists (rs#r2 <- (rs#r1)); split.
@@ -518,7 +518,7 @@ Lemma transl_expr_Evar_correct:
   forall (le : letenv) (id : positive) (v: val),
   e ! id = Some v ->
   transl_expr_prop le (Evar id) v.
-Proof.
+Proof using.
   intros; red; intros. inv TE.
   exploit match_env_find_var; eauto. intro EQ.
   exploit tr_move_correct; eauto. intros [rs' [A [B C]]].
@@ -548,7 +548,7 @@ Lemma transl_expr_Eop_correct:
   transl_exprlist_prop le args vargs ->
   eval_operation ge sp op vargs m = Some v ->
   transl_expr_prop le (Eop op args) v.
-Proof.
+Proof using TRANSL.
   intros; red; intros. inv TE.
 (* normal case *)
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RR1 [RO1 EXT1]]]]]].
@@ -577,7 +577,7 @@ Lemma transl_expr_Eload_correct:
   Op.eval_addressing ge sp addr vargs = Some vaddr ->
   Mem.loadv chunk m vaddr = Some v ->
   transl_expr_prop le (Eload chunk addr args) v.
-Proof.
+Proof using TRANSL.
   intros; red; intros. inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RES1 [OTHER1 EXT1]]]]]].
   edestruct eval_addressing_lessdef as [vaddr' []]; eauto.
@@ -606,7 +606,7 @@ Lemma transl_expr_Econdition_correct:
   eval_expr ge sp e m le (if va then ifso else ifnot) v ->
   transl_expr_prop le (if va then ifso else ifnot) v ->
   transl_expr_prop le (Econdition a ifso ifnot) v.
-Proof.
+Proof using.
   intros; red; intros; inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [OTHER1 EXT1]]]]].
   assert (tr_expr f.(fn_code) map pr (if va then ifso else ifnot) (if va then ntrue else nfalse) nd rd dst).
@@ -632,7 +632,7 @@ Lemma transl_expr_Elet_correct:
   eval_expr ge sp e m (v1 :: le) a2 v2 ->
   transl_expr_prop (v1 :: le) a2 v2 ->
   transl_expr_prop le (Elet a1 a2) v2.
-Proof.
+Proof using.
   intros; red; intros; inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RES1 [OTHER1 EXT1]]]]]].
   assert (map_wf (add_letvar map r)).
@@ -656,7 +656,7 @@ Lemma transl_expr_Eletvar_correct:
   forall (le : list val) (n : nat) (v : val),
   nth_error le n = Some v ->
   transl_expr_prop le (Eletvar n) v.
-Proof.
+Proof using.
   intros; red; intros; inv TE.
   exploit tr_move_correct; eauto. intros [rs1 [EX1 [RES1 OTHER1]]].
   exists rs1; exists tm.
@@ -687,7 +687,7 @@ Qed.
 Remark eval_builtin_args_trivial:
   forall (ge: RTL.genv) (rs: regset) sp m rl,
   eval_builtin_args ge (fun r => rs#r) sp m (List.map (@BA reg) rl) rs##rl.
-Proof.
+Proof using.
   induction rl; simpl.
 - constructor.
 - constructor; auto. constructor.
@@ -699,7 +699,7 @@ Lemma transl_expr_Ebuiltin_correct:
   transl_exprlist_prop le al vl ->
   external_call ef ge vl m E0 v m ->
   transl_expr_prop le (Ebuiltin ef al) v.
-Proof.
+Proof using TRANSL.
   intros; red; intros. inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RR1 [RO1 EXT1]]]]]].
   exploit external_call_mem_extends; eauto.
@@ -731,7 +731,7 @@ Lemma transl_expr_Eexternal_correct:
   transl_exprlist_prop le al vl ->
   external_call ef ge vl m E0 v m ->
   transl_expr_prop le (Eexternal id sg al) v.
-Proof.
+Proof using TRANSL.
   intros; red; intros. inv TE.
   exploit H3; eauto. intros [rs1 [tm1 [EX1 [ME1 [RR1 [RO1 EXT1]]]]]].
   exploit external_call_mem_extends; eauto.
@@ -759,7 +759,7 @@ Qed.
 Lemma transl_exprlist_Enil_correct:
   forall (le : letenv),
   transl_exprlist_prop le Enil nil.
-Proof.
+Proof using.
   intros; red; intros; inv TE.
   exists rs; exists tm.
   split. apply star_refl.
@@ -776,7 +776,7 @@ Lemma transl_exprlist_Econs_correct:
   eval_exprlist ge sp e m le al vl ->
   transl_exprlist_prop le al vl ->
   transl_exprlist_prop le (Econs a1 al) (v1 :: vl).
-Proof.
+Proof using.
   intros; red; intros; inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RES1 [OTHER1 EXT1]]]]]].
   exploit H2; eauto. intros [rs2 [tm2 [EX2 [ME2 [RES2 [OTHER2 EXT2]]]]]].
@@ -803,7 +803,7 @@ Lemma transl_condexpr_CEcond_correct:
   transl_exprlist_prop le al vl ->
   eval_condition cond vl m = Some vb ->
   transl_condexpr_prop le (CEcond cond al) vb.
-Proof.
+Proof using.
   intros; red; intros. inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RES1 [OTHER1 EXT1]]]]]].
   exists rs1; exists tm1.
@@ -825,7 +825,7 @@ Lemma transl_condexpr_CEcondition_correct:
   eval_condexpr ge sp e m le (if va then b else c) v ->
   transl_condexpr_prop le (if va then b else c) v ->
   transl_condexpr_prop le (CEcondition a b c) v.
-Proof.
+Proof using.
   intros; red; intros. inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [OTHER1 EXT1]]]]].
   assert (tr_condition (fn_code f) map pr (if va then b else c) (if va then n2 else n3) ntrue nfalse).
@@ -849,7 +849,7 @@ Lemma transl_condexpr_CElet_correct:
   eval_condexpr ge sp e m (v1 :: le) b v2 ->
   transl_condexpr_prop (v1 :: le) b v2 ->
   transl_condexpr_prop le (CElet a b) v2.
-Proof.
+Proof using.
   intros; red; intros. inv TE.
   exploit H0; eauto. intros [rs1 [tm1 [EX1 [ME1 [RES1 [OTHER1 EXT1]]]]]].
   assert (map_wf (add_letvar map r)).
@@ -955,7 +955,7 @@ Theorem transl_exitexpr_correct:
   forall le a x,
   eval_exitexpr ge sp e m le a x ->
   transl_exitexpr_prop le a x.
-Proof.
+Proof using TRANSL.
   induction 1; red; intros; inv TE.
 - (* XEexit *)
   exists ns, rs, tm.
@@ -995,7 +995,7 @@ Lemma eval_exprlist_append:
   eval_exprlist ge sp e m le (exprlist_of_expr_list al1) vl1 ->
   eval_exprlist ge sp e m le (exprlist_of_expr_list al2) vl2 ->
   eval_exprlist ge sp e m le (exprlist_of_expr_list (al1 ++ al2)) (vl1 ++ vl2).
-Proof.
+Proof using.
   induction al1; simpl; intros vl1 al2 vl2 E1 E2; inv E1.
 - auto.
 - simpl. constructor; eauto.
@@ -1008,7 +1008,7 @@ Lemma invert_eval_builtin_arg:
      eval_exprlist ge sp e m nil (exprlist_of_expr_list (params_of_builtin_arg a)) vl
   /\ Events.eval_builtin_arg ge (fun v => v) sp m (fst (convert_builtin_arg a vl)) v
   /\ (forall vl', convert_builtin_arg a (vl ++ vl') = (fst (convert_builtin_arg a vl), vl')).
-Proof.
+Proof using.
   induction 1; simpl. 2-8: try (econstructor; intuition eauto with evalexpr barg; fail).
 - econstructor; split; eauto with evalexpr. split. constructor. auto. 
 - econstructor; split; eauto with evalexpr. split. constructor. auto. 
@@ -1029,7 +1029,7 @@ Lemma invert_eval_builtin_args:
   exists vl',
      eval_exprlist ge sp e m nil (exprlist_of_expr_list (params_of_builtin_args al)) vl'
   /\ Events.eval_builtin_args ge (fun v => v) sp m (convert_builtin_args al vl') vl.
-Proof.
+Proof using.
   induction 1; simpl.
 - exists (@nil val); split; constructor.
 - exploit invert_eval_builtin_arg; eauto. intros (vl1 & A & B & C).
@@ -1047,7 +1047,7 @@ Lemma transl_eval_builtin_arg:
      Events.eval_builtin_arg ge (fun r => rs#r) sp m (fst (convert_builtin_arg a rl)) v'
   /\ Val.lessdef v v'
   /\ Val.lessdef_list (snd (convert_builtin_arg a vl)) rs##(snd (convert_builtin_arg a rl)).
-Proof.
+Proof using.
   induction a; simpl; intros until v; intros LD EV;
   try (now (inv EV; econstructor; eauto with barg)).
 - destruct rl; simpl in LD; inv LD; inv EV; simpl.
@@ -1084,7 +1084,7 @@ Lemma transl_eval_builtin_args:
   exists vl',
      Events.eval_builtin_args ge (fun r => rs#r) sp m (convert_builtin_args al rl) vl'
   /\ Val.lessdef_list vl vl'.
-Proof.
+Proof using.
   induction al; simpl; intros until vl; intros LD EV.
 - inv EV. exists (@nil val); split; constructor.
 - destruct (convert_builtin_arg a vl1) as [a1' vl2] eqn:CV1; simpl in *.
@@ -1137,7 +1137,7 @@ Lemma lt_state_intro:
       /\ size_stmt s1 < size_stmt s2) ->
   lt_state (CminorSel.State f1 s1 k1 sp1 e1 m1)
            (CminorSel.State f2 s2 k2 sp2 e2 m2).
-Proof.
+Proof using.
   intros. unfold lt_state. simpl. destruct H as [A | [A B]].
   left. auto.
   rewrite A. right. auto.
@@ -1148,7 +1148,7 @@ Ltac Lt_state :=
 
 Lemma lt_state_wf:
   well_founded lt_state.
-Proof.
+Proof using.
   unfold lt_state. apply wf_inverse_image with (f := measure_state).
   apply wf_lex_ord. apply lt_wf. apply lt_wf.
 Qed.
@@ -1246,7 +1246,7 @@ Lemma match_stacks_call_cont:
   forall c map k ncont nexits ngoto nret rret cs,
   tr_cont c map k ncont nexits ngoto nret rret cs ->
   match_stacks (call_cont k) cs /\ c!nret = Some(Ireturn rret).
-Proof.
+Proof using.
   induction 1; simpl; auto.
 Qed.
 
@@ -1254,7 +1254,7 @@ Lemma tr_cont_call_cont:
   forall c map k ncont nexits ngoto nret rret cs,
   tr_cont c map k ncont nexits ngoto nret rret cs ->
   tr_cont c map (call_cont k) nret nil ngoto nret rret cs.
-Proof.
+Proof using.
   induction 1; simpl; auto; econstructor; eauto.
 Qed.
 
@@ -1269,7 +1269,7 @@ Lemma tr_find_label:
      c!n = Some(Inop ns2)
   /\ tr_stmt c map s' ns2 nd2 nexits2 ngoto nret rret
   /\ tr_cont c map k' nd2 nexits2 ngoto nret rret cs.
-Proof.
+Proof using.
   induction s; intros until nexits1; simpl; try congruence.
   (* seq *)
   caseEq (find_label lbl s1 (Kseq s2 k)); intros.
@@ -1299,7 +1299,7 @@ Theorem transl_step_correct:
   exists R2,
   (plus RTL.step tge R1 t R2 \/ (star RTL.step tge R1 t R2 /\ lt_state S2 S1))
   /\ match_states S2 R2.
-Proof.
+Proof using TRANSL.
   induction 1; intros R1 MSTATE; inv MSTATE.
 
   (* skip seq *)
@@ -1558,7 +1558,7 @@ Qed.
 Lemma transl_initial_states:
   forall S, CminorSel.initial_state prog S ->
   exists R, RTL.initial_state tprog R /\ match_states S R.
-Proof.
+Proof using TRANSL.
   induction 1.
   exploit function_ptr_translated; eauto. intros [tf [A B]].
   econstructor; split.
@@ -1574,13 +1574,13 @@ Qed.
 Lemma transl_final_states:
   forall S R r,
   match_states S R -> CminorSel.final_state S r -> RTL.final_state R r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv MS. inv LD. constructor.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (CminorSel.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_star_wf with (order := lt_state).
   apply senv_preserved.
   eexact transl_initial_states.

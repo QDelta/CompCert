@@ -287,20 +287,20 @@ Definition wt_program (p: program): Prop :=
 
 Lemma expect_incr: forall te e t1 t2 e',
   expect e t1 t2 = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold expect; intros. destruct (typ_eq t1 t2); inv H; auto.
 Qed.
 Global Hint Resolve expect_incr: ty.
 
 Lemma expect_sound: forall e t1 t2 e',
   expect e t1 t2 = OK e' -> t1 = t2.
-Proof.
+Proof using.
   unfold expect; intros. destruct (typ_eq t1 t2); inv H; auto.
 Qed.
 
 Lemma type_expr_incr: forall te a t e e',
   type_expr e a t = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   induction a; simpl; intros until e'; intros T SAT; try (monadInv T); eauto with ty.
 - destruct (type_unop u) as [targ1 tres]; monadInv T; eauto with ty.
 - destruct (type_binop b) as [[targ1 targ2] tres]; monadInv T; eauto with ty.
@@ -309,7 +309,7 @@ Global Hint Resolve type_expr_incr: ty.
 
 Lemma type_expr_sound: forall te a t e e',
     type_expr e a t = OK e' -> S.satisf te e' -> wt_expr te a t.
-Proof.
+Proof using.
   induction a; simpl; intros until e'; intros T SAT; try (monadInv T).
 - erewrite <- S.set_sound by eauto. constructor.
 - erewrite <- expect_sound by eauto. constructor.
@@ -322,14 +322,14 @@ Qed.
 
 Lemma type_exprlist_incr: forall te al tl e e',
   type_exprlist e al tl = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   induction al; destruct tl; simpl; intros until e'; intros T SAT; monadInv T; eauto with ty.
 Qed.
 Global Hint Resolve type_exprlist_incr: ty.
 
 Lemma type_exprlist_sound: forall te al tl e e',
     type_exprlist e al tl = OK e' -> S.satisf te e' -> list_forall2 (wt_expr te) al tl.
-Proof.
+Proof using.
   induction al; destruct tl; simpl; intros until e'; intros T SAT; monadInv T.
 - constructor.
 - constructor; eauto using type_expr_sound with ty.
@@ -337,7 +337,7 @@ Qed.
 
 Lemma type_assign_incr: forall te id a e e',
     type_assign e id a = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   induction a; simpl; intros until e'; intros T SAT; try (monadInv T); eauto with ty.
 - destruct (type_unop u) as [targ1 tres]; monadInv T; eauto with ty.
 - destruct (type_binop b) as [[targ1 targ2] tres]; monadInv T; eauto with ty.
@@ -346,7 +346,7 @@ Global Hint Resolve type_assign_incr: ty.
 
 Lemma type_assign_sound: forall te id a e e',
     type_assign e id a = OK e' -> S.satisf te e' -> wt_expr te a (te id).
-Proof.
+Proof using.
   induction a; simpl; intros until e'; intros T SAT; try (monadInv T).
 - erewrite S.move_sound by eauto. constructor.
 - erewrite S.set_sound by eauto. constructor.
@@ -359,7 +359,7 @@ Qed.
 
 Lemma opt_set_incr: forall te optid optty e e',
     opt_set e optid optty = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold opt_set; intros. destruct optid, optty; try (monadInv H); eauto with ty.
 Qed.
 Global Hint Resolve opt_set_incr: ty.
@@ -367,7 +367,7 @@ Global Hint Resolve opt_set_incr: ty.
 Lemma opt_set_sound: forall te optid sg e e',
     opt_set e optid (proj_sig_res sg) = OK e' -> S.satisf te e' ->
     wt_opt_assign te optid sg.(sig_res).
-Proof.
+Proof using.
   unfold opt_set; intros; red. destruct optid.
 - erewrite S.set_sound by eauto. auto.
 - inv H. auto.
@@ -375,7 +375,7 @@ Qed.
 
 Lemma type_stmt_incr: forall te tret s e e',
     type_stmt tret e s = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   induction s; simpl; intros e1 e2 T SAT; try (monadInv T); eauto with ty.
 - destruct tret, o; try (monadInv T); eauto with ty.
 Qed.
@@ -383,7 +383,7 @@ Global Hint Resolve type_stmt_incr: ty.
 
 Lemma type_stmt_sound: forall te tret s e e',
     type_stmt tret e s = OK e' -> S.satisf te e' -> wt_stmt te tret s.
-Proof.
+Proof using.
   induction s; simpl; intros e1 e2 T SAT; try (monadInv T).
 - constructor.
 - constructor; eauto using type_assign_sound.
@@ -404,7 +404,7 @@ Qed.
 
 Theorem type_function_sound: forall f env,
   type_function f = OK env -> wt_function env f.
-Proof.
+Proof using.
   intros. generalize H; unfold type_function; intros T; monadInv T.
   assert (S.satisf env x0) by (apply S.solve_sound; auto).
   constructor; eauto using S.set_list_sound, type_stmt_sound with ty.
@@ -461,19 +461,19 @@ Inductive wt_state: state -> Prop :=
 
 Lemma wt_is_call_cont:
   forall env tret k, wt_cont env tret k -> is_call_cont k -> wt_cont_call k tret.
-Proof.
+Proof using.
   destruct 1; intros ICC; contradiction || auto.
 Qed.
 
 Lemma call_cont_wt:
   forall env tret k, wt_cont env tret k -> wt_cont_call (call_cont k) tret.
-Proof.
+Proof using.
   induction 1; simpl; auto. inversion H; subst; auto.
 Qed.
 
 Lemma wt_env_assign: forall env id e v,
   wt_env env e -> Val.has_type v (env id) -> wt_env env (PTree.set id v e).
-Proof.
+Proof using.
   intros; red; intros. rewrite PTree.gsspec in H1; destruct (peq id0 id).
 - congruence.
 - auto.
@@ -481,7 +481,7 @@ Qed.
 
 Lemma def_env_assign: forall f e id v,
   def_env f e -> def_env f (PTree.set id v e).
-Proof.
+Proof using.
   intros; red; intros i IN. rewrite PTree.gsspec. destruct (peq i id).
   exists v; auto.
   auto.
@@ -489,7 +489,7 @@ Qed.
 
 Lemma wt_env_set_params: forall env il vl,
   Val.has_type_list vl (map env il) -> wt_env env (set_params vl il).
-Proof.
+Proof using.
   induction il as [ | i il]; destruct vl as [ | vl]; simpl; intros; try contradiction.
 - red; intros. rewrite PTree.gempty in H0; discriminate.
 - destruct H. apply wt_env_assign; auto.
@@ -497,7 +497,7 @@ Qed.
 
 Lemma def_set_params: forall id il vl,
   In id il -> exists v, PTree.get id (set_params vl il) = Some v.
-Proof.
+Proof using.
   induction il as [ | i il]; simpl; intros.
 - contradiction.
 - destruct vl as [ | v vl]; rewrite PTree.gsspec; destruct (peq id i).
@@ -509,7 +509,7 @@ Qed.
 
 Lemma wt_env_set_locals: forall env il e,
   wt_env env e -> wt_env env (set_locals il e).
-Proof.
+Proof using.
   induction il as [ | i il]; simpl; intros.
 - auto.
 - apply wt_env_assign; auto. exact I.
@@ -518,7 +518,7 @@ Qed.
 Lemma def_set_locals: forall id il e,
   (exists v, PTree.get id e = Some v) \/ In id il ->
   exists v, PTree.get id (set_locals il e) = Some v.
-Proof.
+Proof using.
   induction il as [ | i il]; simpl; intros.
 - tauto.
 - rewrite PTree.gsspec; destruct (peq id i).
@@ -532,7 +532,7 @@ Lemma wt_find_label: forall env tret lbl s k,
   | Some (s', k') => wt_stmt env tret s' /\ wt_cont env tret k'
   | None => True
   end.
-Proof.
+Proof using.
   induction s; intros k WS WK; simpl; auto.
 - inv WS. assert (wt_cont env tret (Kseq s2 k)) by (constructor; auto).
   specialize (IHs1 _ H1 H). destruct (find_label lbl s1 (Kseq s2 k)).
@@ -583,19 +583,19 @@ Ltac VHT' :=
 Lemma type_constant_sound: forall sp cst v,
   eval_constant ge sp cst = Some v ->
   Val.has_type v (type_constant cst).
-Proof.
+Proof using.
   intros until v; intros EV. destruct cst; simpl in *; inv EV; VHT.
 Qed.
 
 Lemma type_unop_sound: forall op v1 v,
   eval_unop op v1 = Some v -> Val.has_type v (snd (type_unop op)).
-Proof.
+Proof using.
   unfold eval_unop; intros op v1 v EV; destruct op; simpl; VHT'.
 Qed.
 
 Lemma type_binop_sound: forall op v1 v2 m v,
   eval_binop op v1 v2 m = Some v -> Val.has_type v (snd (type_binop op)).
-Proof.
+Proof using.
   unfold eval_binop; intros op v1 v2 m v EV; destruct op; simpl; VHT';
   destruct (eq_block b b0); VHT.
 Qed.
@@ -606,7 +606,7 @@ Lemma wt_eval_expr: forall env sp e m a v,
   wt_expr env a t ->
   wt_env env e ->
   Val.has_type v t.
-Proof.
+Proof using.
   induction 1; intros t WT ENV.
 - inv WT. apply ENV; auto.
 - inv WT. eapply type_constant_sound; eauto.
@@ -621,7 +621,7 @@ Lemma wt_eval_exprlist: forall env sp e m al vl,
   list_forall2 (wt_expr env) al tl ->
   wt_env env e ->
   Val.has_type_list vl tl.
-Proof.
+Proof using.
   induction 1; intros tl WT ENV; inv WT; simpl.
 - auto.
 - split. eapply wt_eval_expr; eauto. eauto.
@@ -629,14 +629,14 @@ Qed.
 
 Lemma wt_find_funct: forall v fd,
   Genv.find_funct ge v = Some fd -> wt_fundef fd.
-Proof.
+Proof using wt_p.
   intros. eapply Genv.find_funct_prop; eauto.
 Qed.
 
 Lemma subject_reduction:
   forall st1 t st2, step ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
-Proof.
+Proof using wt_p.
   destruct 1; intros; inv WT.
 - inv WT_CONT. econstructor; eauto. inv H.
 - inv WT_CONT. econstructor; eauto. inv H.
@@ -689,13 +689,13 @@ Qed.
 Lemma subject_reduction_star:
   forall st1 t st2, star step ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
-Proof.
+Proof using wt_p.
   induction 1; eauto using subject_reduction.
 Qed.
 
 Lemma wt_initial_state:
   forall S, initial_state p S -> wt_state S.
-Proof.
+Proof using wt_p.
   intros. inv H. constructor. eapply Genv.find_funct_ptr_prop; eauto.
   rewrite H3; constructor.
   rewrite H3; constructor.
@@ -752,7 +752,7 @@ Fixpoint safe_expr (ki: known_idents) (a: expr) : bool :=
 
 Lemma known_id_sound_1:
   forall f id x, (known_id f)!id = Some x -> In id f.(fn_params) \/ In id f.(fn_vars).
-Proof.
+Proof using.
   unfold known_id.
   set (add := fun (ki: known_idents) (id: ident) => PTree.set id tt ki).
   intros.
@@ -767,7 +767,7 @@ Qed.
 
 Lemma known_id_sound_2:
   forall f id, is_known (known_id f) id = true -> In id f.(fn_params) \/ In id f.(fn_vars).
-Proof.
+Proof using.
   unfold is_known; intros. destruct (known_id f)!id eqn:E; try discriminate.
   eapply known_id_sound_1; eauto.
 Qed.
@@ -779,7 +779,7 @@ Lemma eval_safe_expr:
   def_env f e ->
   safe_expr (known_id f) a = true ->
   exists v, eval_expr ge sp e m a v.
-Proof.
+Proof using.
   induction a; simpl; intros.
   - apply known_id_sound_2 in H0.
     destruct (H i H0) as [v E].

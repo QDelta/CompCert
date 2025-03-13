@@ -58,7 +58,7 @@ Lemma frame_env_separated:
        ** range sp (fe_ofs_retaddr fe) (fe_ofs_retaddr fe + size_chunk Mptr)
        ** range sp (fe_ofs_callee_save fe) (size_callee_save_area b (fe_ofs_callee_save fe))
        ** P.
-Proof.
+Proof using.
 Local Opaque Z.add Z.mul sepconj range.
   intros; simpl.
   set (w := if Archi.ptr64 then 8 else 4).
@@ -101,7 +101,7 @@ Lemma frame_env_range:
   forall b,
   let fe := make_env b in
   0 <= fe_stack_data fe /\ fe_stack_data fe + bound_stack_data b <= fe_size fe.
-Proof.
+Proof using.
   intros; simpl.
   set (w := if Archi.ptr64 then 8 else 4).
   set (olink := align (4 * b.(bound_outgoing)) w).
@@ -129,7 +129,7 @@ Lemma frame_env_aligned:
   /\ (8 | fe_stack_data fe)
   /\ (align_chunk Mptr | fe_ofs_link fe)
   /\ (align_chunk Mptr | fe_ofs_retaddr fe).
-Proof.
+Proof using.
   intros; simpl.
   set (w := if Archi.ptr64 then 8 else 4).
   set (olink := align (4 * b.(bound_outgoing)) w).

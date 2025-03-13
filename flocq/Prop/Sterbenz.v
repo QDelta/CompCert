@@ -38,7 +38,7 @@ Theorem generic_format_plus :
   format x -> format y ->
   (Rabs (x + y) <= bpow (Z.min (mag beta x) (mag beta y)))%R ->
   format (x + y)%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y Fx Fy Hxy.
 destruct (Req_dec (x + y) 0) as [Zxy|Zxy].
 rewrite Zxy.
@@ -99,7 +99,7 @@ Theorem generic_format_plus_weak :
   format x -> format y ->
   (Rabs (x + y) <= Rmin (Rabs x) (Rabs y))%R ->
   format (x + y)%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y Fx Fy Hxy.
 destruct (Req_dec x R0) as [Zx|Zx].
 now rewrite Zx, Rplus_0_l.
@@ -126,7 +126,7 @@ Lemma sterbenz_aux :
   forall x y, format x -> format y ->
   (y <= x <= 2 * y)%R ->
   format (x - y)%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y Hx Hy (Hxy1, Hxy2).
 unfold Rminus.
 apply generic_format_plus_weak.
@@ -155,7 +155,7 @@ Theorem sterbenz :
   forall x y, format x -> format y ->
   (y / 2 <= x <= 2 * y)%R ->
   format (x - y)%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y Hx Hy (Hxy1, Hxy2).
 destruct (Rle_or_lt x y) as [Hxy|Hxy].
 rewrite <- Ropp_minus_distr.

@@ -27,7 +27,7 @@ Definition match_prog (p: Csyntax.program) (tp: Clight.program) :=
 
 Lemma transf_program_match:
   forall p tp, transl_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   unfold transl_program; intros. monadInv H. split; auto.
   unfold program_of_program; simpl. destruct x; simpl.
   eapply match_transform_partial_program2; eauto.
@@ -50,7 +50,7 @@ Let tge := Clight.globalenv tprog.
 
 Lemma comp_env_preserved:
   Clight.genv_cenv tge = Csem.genv_cenv ge.
-Proof.
+Proof using TRANSL.
   simpl. destruct TRANSL. generalize (prog_comp_env_eq tprog) (prog_comp_env_eq prog). 
   congruence.
 Qed.
@@ -80,7 +80,7 @@ Proof (Genv.find_funct_match (proj1 TRANSL)).
 Lemma type_of_fundef_preserved:
   forall cu f tf, tr_fundef cu f tf ->
   type_of_fundef tf = Csyntax.type_of_fundef f.
-Proof.
+Proof using.
   intros. inv H.
   inv H0; simpl. unfold type_of_function, Csyntax.type_of_function. congruence.
   auto.
@@ -89,7 +89,7 @@ Qed.
 Lemma function_return_preserved:
   forall ce f tf, tr_function ce f tf ->
   fn_return tf = Csyntax.fn_return f.
-Proof.
+Proof using.
   intros. inv H; auto.
 Qed.
 
@@ -105,7 +105,7 @@ Lemma eval_Ederef':
   forall ge e le m a t l ofs,
   eval_expr ge e le m a (Vptr l ofs) ->
   eval_lvalue ge e le m (Ederef' a t) l ofs Full.
-Proof.
+Proof using.
   intros. unfold Ederef'; destruct a; auto using eval_Ederef.
   destruct (type_eq t (typeof a)); auto using eval_Ederef.
   inv H.
@@ -115,7 +115,7 @@ Qed.
 
 Lemma typeof_Ederef':
   forall a t, typeof (Ederef' a t) = t.
-Proof.
+Proof using.
   unfold Ederef'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
 Qed.
 
@@ -123,7 +123,7 @@ Lemma eval_Eaddrof':
   forall ge e le m a t l ofs,
   eval_lvalue ge e le m a l ofs Full ->
   eval_expr ge e le m (Eaddrof' a t) (Vptr l ofs).
-Proof.
+Proof using.
   intros. unfold Eaddrof'; destruct a; auto using eval_Eaddrof.
   destruct (type_eq t (typeof a)); auto using eval_Eaddrof.
   inv H; auto.
@@ -131,7 +131,7 @@ Qed.
 
 Lemma typeof_Eaddrof':
   forall a t, typeof (Eaddrof' a t) = t.
-Proof.
+Proof using.
   unfold Eaddrof'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
 Qed.
 
@@ -141,7 +141,7 @@ Lemma eval_make_normalize:
   typeof a = Tint sz sg1 attr ->
   eval_expr ge e le m a (Vint n) ->
   eval_expr ge e le m (make_normalize sz sg width a) (Vint (bitfield_normalize sz sg width n)).
-Proof.
+Proof using.
   intros. unfold make_normalize, bitfield_normalize.
   assert (bitsize_intsize sz <= Int.zwordsize) by (destruct sz; compute; congruence).
   destruct (intsize_eq sz IBool || signedness_eq sg Unsigned).
@@ -175,7 +175,7 @@ Lemma tr_simple_nil:
    dst = For_val \/ dst = For_effects -> simple r = true -> sl = nil)
 /\(forall le rl sl al tmps, tr_exprlist ce le rl sl al tmps ->
    simplelist rl = true -> sl = nil).
-Proof.
+Proof using.
   assert (A: forall dst a, dst = For_val \/ dst = For_effects -> final dst a = nil).
     intros. destruct H; subst dst; auto.
   apply tr_expr_exprlist; intros; simpl in *; try discriminate; auto.
@@ -212,7 +212,7 @@ Remark deref_loc_translated:
   | None => t = E0 /\ Clight.deref_loc ty m b ofs bf v
   | Some chunk => bf = Full /\ volatile_load tge chunk m b ofs t v
   end.
-Proof.
+Proof using TRANSL.
   intros. unfold chunk_for_volatile_type. inv H.
 - (* By_value, not volatile *)
   rewrite H1. split; auto. eapply deref_loc_value; eauto.
@@ -233,7 +233,7 @@ Remark assign_loc_translated:
   | None => t = E0 /\ Clight.assign_loc tge ty m b ofs bf v m'
   | Some chunk => bf = Full /\ volatile_store tge chunk m b ofs v t m'
   end.
-Proof.
+Proof using TRANSL.
   intros. unfold chunk_for_volatile_type. inv H.
 - (* By_value, not volatile *)
   rewrite H1. split; auto. eapply assign_loc_value; eauto.
@@ -252,7 +252,7 @@ Lemma is_bitfield_access_sound: forall e le m a b ofs bf bf',
   eval_lvalue tge e le m a b ofs bf ->
   tr_is_bitfield_access ce a bf' ->
   bf' = bf.
-Proof.
+Proof using prog ge TRANSL LINKORDER.
   assert (A: forall id co co',
              tge.(genv_cenv)!id = Some co -> ce!id = Some co' ->
              co' = co /\ complete_members ce (co_members co) = true).
@@ -282,14 +282,14 @@ Lemma make_assign_value_sound:
   typeof r = ty ->
   eval_expr tge e le m'' r v ->
   eval_expr tge e le m'' (make_assign_value bf r) v'.
-Proof.
+Proof using.
   unfold make_assign_value; destruct 1; intros; auto.
   inv H. eapply eval_make_normalize; eauto; lia.
 Qed.
 
 Lemma typeof_make_assign_value: forall bf r,
   typeof (make_assign_value bf r) = typeof r.
-Proof.
+Proof using.
   intros. destruct bf; simpl; auto. unfold make_normalize.
   destruct (intsize_eq sz IBool || signedness_eq sg Unsigned); auto.
 Qed.
@@ -316,7 +316,7 @@ Lemma tr_simple:
   forall le sl a tmps,
   tr_expr ce le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs bf).
-Proof.
+Proof using TRANSL.
 Opaque makeif.
   intros e m.
   apply (eval_simple_rvalue_lvalue_ind ge e m); intros until tmps; intros TR; inv TR.
@@ -401,7 +401,7 @@ Lemma tr_simple_rvalue:
              /\ Csyntax.typeof r = typeof b
              /\ eval_expr tge e le m b v
   end.
-Proof.
+Proof using TRANSL.
   intros e m. exact (proj1 (tr_simple e m)).
 Qed.
 
@@ -411,7 +411,7 @@ Lemma tr_simple_lvalue:
   forall le sl a tmps,
   tr_expr ce le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs bf.
-Proof.
+Proof using TRANSL.
   intros e m. exact (proj2 (tr_simple e m)).
 Qed.
 
@@ -421,7 +421,7 @@ Lemma tr_simple_exprlist:
   forall e m tyl vl,
   eval_simple_list ge e m rl tyl vl ->
   sl = nil /\ eval_exprlist tge e le m al tyl vl.
-Proof.
+Proof using TRANSL.
   induction 1; intros.
   inv H. split. auto. constructor.
   inv H4.
@@ -436,7 +436,7 @@ Lemma typeof_context:
   forall k1 k2 C, leftcontext k1 k2 C ->
   forall e1 e2, Csyntax.typeof e1 = Csyntax.typeof e2 ->
   Csyntax.typeof (C e1) = Csyntax.typeof (C e2).
-Proof.
+Proof using.
   induction 1; intros; auto.
 Qed.
 
@@ -472,7 +472,7 @@ Lemma tr_expr_leftcontext_rec:
         Csyntax.typeof e' = Csyntax.typeof e ->
         tr_exprlist ce le' (C e') (sl3 ++ sl2) a tmps)
 ).
-Proof.
+Proof using.
 
 Ltac TR :=
   econstructor; econstructor; econstructor; econstructor; econstructor;
@@ -821,7 +821,7 @@ Theorem tr_expr_leftcontext:
         (forall id, ~In id tmp' -> le'!id = le!id) ->
         Csyntax.typeof r' = Csyntax.typeof r ->
         tr_expr ce le' dst (C r') (sl3 ++ sl2) a tmps).
-Proof.
+Proof using.
   intros. eapply (proj1 tr_expr_leftcontext_rec); eauto.
 Qed.
 
@@ -840,7 +840,7 @@ Theorem tr_top_leftcontext:
         (forall id, ~In id tmp' -> le'!id = le!id) ->
         Csyntax.typeof r' = Csyntax.typeof r ->
         tr_top ce tge e le' m' dst (C r') (sl3 ++ sl2) a tmps).
-Proof.
+Proof using.
   induction 1; intros.
 (* val for val *)
   inv H2; inv H1.
@@ -865,7 +865,7 @@ Remark sem_cast_deterministic:
   sem_cast v ty ty' m1 = Some v1 ->
   sem_cast v ty ty' m2 = Some v2 ->
   v1 = v2.
-Proof.
+Proof using.
   unfold sem_cast; intros. destruct (classify_cast ty ty'); try congruence.
 - destruct v; try congruence.
   destruct Archi.ptr64; try discriminate.
@@ -882,7 +882,7 @@ Qed.
 Lemma eval_simpl_expr_sound:
   forall e le m a v, eval_expr tge e le m a v ->
   match eval_simpl_expr a with Some v' => v' = v | None => True end.
-Proof.
+Proof using.
   induction 1; simpl; auto.
   destruct (eval_simpl_expr a); auto. subst.
   destruct (sem_cast v1 (typeof a) ty Mem.empty) as [v'|] eqn:C; auto.
@@ -892,7 +892,7 @@ Qed.
 
 Lemma static_bool_val_sound:
   forall v t m b, bool_val v t Mem.empty = Some b -> bool_val v t m = Some b.
-Proof.
+Proof using.
   intros until b; unfold bool_val.
   destruct (classify_bool t); destruct v; destruct Archi.ptr64 eqn:SF; auto;
   simpl; congruence.
@@ -904,7 +904,7 @@ Lemma step_makeif:
   bool_val v1 (typeof a) m = Some b ->
   star step1 tge (State f (makeif a s1 s2) k e le m)
              E0 (State f (if b then s1 else s2) k e le m).
-Proof.
+Proof using.
   intros. functional induction (makeif a s1 s2).
 - exploit eval_simpl_expr_sound; eauto. rewrite e0. intro EQ; subst v.
   assert (bool_val v1 (typeof a) m = Some true) by (apply static_bool_val_sound; auto).
@@ -923,7 +923,7 @@ Lemma step_make_set:
   typeof a = ty ->
   step1 tge (State f (make_set bf id a) k e le m)
           t (State f Sskip k e (PTree.set id v le) m).
-Proof.
+Proof using TRANSL.
   intros. exploit deref_loc_translated; eauto. rewrite <- H1.
   unfold make_set. destruct (chunk_for_volatile_type (typeof a) bf) as [chunk|].
 (* volatile case *)
@@ -945,7 +945,7 @@ Lemma step_make_assign:
   typeof a1 = ty ->
   step1 tge (State f (make_assign bf a1 a2) k e le m)
           t (State f Sskip k e le m').
-Proof.
+Proof using TRANSL.
   intros. exploit assign_loc_translated; eauto. rewrite <- H3.
   unfold make_assign. destruct (chunk_for_volatile_type (typeof a1) bf) as [chunk|].
 (* volatile case *)
@@ -967,7 +967,7 @@ Fixpoint Kseqlist (sl: list statement) (k: cont) :=
 Remark Kseqlist_app:
   forall sl1 sl2 k,
   Kseqlist (sl1 ++ sl2) k = Kseqlist sl1 (Kseqlist sl2 k).
-Proof.
+Proof using.
   induction sl1; simpl; congruence.
 Qed.
 
@@ -975,7 +975,7 @@ Lemma push_seq:
   forall f sl k e le m,
   star step1 tge (State f (makeseq sl) k e le m)
               E0 (State f Sskip (Kseqlist sl k) e le m).
-Proof.
+Proof using.
   intros. unfold makeseq. generalize Sskip. revert sl k.
   induction sl; simpl; intros.
   apply star_refl.
@@ -994,7 +994,7 @@ Lemma step_tr_rvalof:
   /\ eval_expr tge e le' m a' v
   /\ typeof a' = typeof a
   /\ forall x, ~In x tmp -> le'!x = le!x.
-Proof.
+Proof using TRANSL LINKORDER.
   intros. inv H1.
   (* not volatile *)
   exploit deref_loc_translated; eauto. unfold chunk_for_volatile_type; rewrite H3.
@@ -1109,7 +1109,7 @@ Lemma match_cont_is_call_cont:
   forall ce k tk,
   match_cont ce k tk -> Csem.is_call_cont k ->
   forall ce', match_cont ce' k tk.
-Proof.
+Proof using.
   destruct 1; simpl; intros; try contradiction; econstructor; eauto.
 Qed. 
 
@@ -1117,7 +1117,7 @@ Lemma match_cont_call_cont:
   forall ce k tk,
   match_cont ce k tk ->
   forall ce', match_cont ce' (Csem.call_cont k) (call_cont tk).
-Proof.
+Proof using.
   induction 1; simpl; auto; intros; econstructor; eauto.
 Qed.
 
@@ -1157,7 +1157,7 @@ Lemma tr_select_switch:
   forall ce n ls tls,
   tr_lblstmts ce ls tls ->
   tr_lblstmts ce (Csem.select_switch n ls) (select_switch n tls).
-Proof.
+Proof using.
   intros ce.
   assert (DFL: forall ls tls,
       tr_lblstmts ce ls tls ->
@@ -1186,7 +1186,7 @@ Lemma tr_seq_of_labeled_statement:
   forall ce ls tls,
   tr_lblstmts ce ls tls ->
   tr_stmt ce (Csem.seq_of_labeled_statement ls) (seq_of_labeled_statement tls).
-Proof.
+Proof using.
   induction 1; simpl; constructor; auto.
 Qed.
 
@@ -1208,13 +1208,13 @@ Fixpoint nolabel_list (sl: list statement) : Prop :=
 
 Lemma nolabel_list_app:
   forall sl2 sl1, nolabel_list sl1 -> nolabel_list sl2 -> nolabel_list (sl1 ++ sl2).
-Proof.
+Proof using.
   induction sl1; simpl; intros. auto. tauto.
 Qed.
 
 Lemma makeseq_nolabel:
   forall sl, nolabel_list sl -> nolabel (makeseq sl).
-Proof.
+Proof using.
   assert (forall sl s, nolabel s -> nolabel_list sl -> nolabel (makeseq_rec s sl)).
   induction sl; simpl; intros. auto. destruct H0. apply IHsl; auto.
   red. intros; simpl. rewrite H. apply H0.
@@ -1223,7 +1223,7 @@ Qed.
 
 Lemma makeif_nolabel:
   forall a s1 s2, nolabel s1 -> nolabel s2 -> nolabel (makeif a s1 s2).
-Proof.
+Proof using.
   intros. functional induction (makeif a s1 s2); auto.
   red; simpl; intros. rewrite H; auto.
   red; simpl; intros. rewrite H; auto.
@@ -1231,33 +1231,33 @@ Qed.
 
 Lemma make_set_nolabel:
   forall bf t a, nolabel (make_set bf t a).
-Proof.
+Proof using.
   unfold make_set; intros; red; intros.
   destruct (chunk_for_volatile_type (typeof a) bf); auto.
 Qed.
 
 Lemma make_assign_nolabel:
   forall bf l r, nolabel (make_assign bf l r).
-Proof.
+Proof using.
   unfold make_assign; intros; red; intros.
   destruct (chunk_for_volatile_type (typeof l) bf); auto.
 Qed.
 
 Lemma tr_rvalof_nolabel:
   forall ce ty a sl a' tmp, tr_rvalof ce ty a sl a' tmp -> nolabel_list sl.
-Proof.
+Proof using.
   destruct 1; simpl; intuition. apply make_set_nolabel.
 Qed.
 
 Lemma nolabel_do_set:
   forall sd a, nolabel_list (do_set sd a).
-Proof.
+Proof using.
   induction sd; intros; simpl; split; auto; red; auto.
 Qed.
 
 Lemma nolabel_final:
   forall dst a, nolabel_list (final dst a).
-Proof.
+Proof using.
   destruct dst; simpl; intros. auto. auto. apply nolabel_do_set.
 Qed.
 
@@ -1280,7 +1280,7 @@ Ltac NoLabelTac :=
 Lemma tr_find_label_expr:
   (forall le dst r sl a tmps, tr_expr ce le dst r sl a tmps -> nolabel_list sl)
 /\(forall le rl sl al tmps, tr_exprlist ce le rl sl al tmps -> nolabel_list sl).
-Proof.
+Proof using.
   apply tr_expr_exprlist; intros; NoLabelTac.
   apply nolabel_do_set.
   eapply tr_rvalof_nolabel; eauto.
@@ -1294,14 +1294,14 @@ Qed.
 Lemma tr_find_label_top:
   forall e le m dst r sl a tmps,
   tr_top ce tge e le m dst r sl a tmps -> nolabel_list sl.
-Proof.
+Proof using.
   induction 1; intros; NoLabelTac.
   eapply (proj1 tr_find_label_expr); eauto.
 Qed.
 
 Lemma tr_find_label_expression:
   forall r s a, tr_expression ce r s a -> forall k, find_label lbl s k = None.
-Proof.
+Proof using tprog tge.
   intros. inv H.
   assert (nolabel (makeseq sl)). apply makeseq_nolabel.
   eapply tr_find_label_top with (e := empty_env) (le := PTree.empty val) (m := Mem.empty).
@@ -1310,7 +1310,7 @@ Qed.
 
 Lemma tr_find_label_expr_stmt:
   forall r s, tr_expr_stmt ce r s -> forall k, find_label lbl s k = None.
-Proof.
+Proof using tprog tge.
   intros. inv H.
   assert (nolabel (makeseq sl)). apply makeseq_nolabel.
   eapply tr_find_label_top with (e := empty_env) (le := PTree.empty val) (m := Mem.empty).
@@ -1321,7 +1321,7 @@ Lemma tr_find_label_if:
   forall r s,
   tr_if ce r Sskip Sbreak s ->
   forall k, find_label lbl s k = None.
-Proof.
+Proof using tprog tge.
   intros. inv H.
   assert (nolabel (makeseq (sl ++ makeif a Sskip Sbreak :: nil))).
   apply makeseq_nolabel.
@@ -1358,7 +1358,7 @@ with tr_find_label_ls:
        /\ tr_stmt ce s' ts'
        /\ match_cont ce k' tk'
   end.
-Proof.
+Proof using.
   induction s; intros; inversion TR; subst; clear TR; simpl.
   auto.
   eapply tr_find_label_expr_stmt; eauto.
@@ -1506,7 +1506,7 @@ with leftcontextlist_size:
   forall e1 e2,
   (esize e1 < esize e2)%nat ->
   (esizelist (C e1) < esizelist (C e2))%nat.
-Proof.
+Proof using.
   induction 1; intros; simpl; auto with arith.
   exploit leftcontextlist_size; eauto. auto with arith.
   exploit leftcontextlist_size; eauto. auto with arith.
@@ -1522,7 +1522,7 @@ Lemma tr_val_gen:
       (forall id, In id tmp -> le'!id = le!id) ->
       eval_expr tge e le' m a v) ->
   tr_expr ce le dst (Csyntax.Eval v ty) (final dst a) a tmp.
-Proof.
+Proof using.
   intros. destruct dst; simpl; econstructor; auto.
 Qed.
 
@@ -1533,7 +1533,7 @@ Lemma estep_simulation:
      (plus step1 tge S1' t S2' \/
        (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
-Proof.
+Proof using TRANSL.
 
 Ltac NOTIN :=
   match goal with
@@ -2083,7 +2083,7 @@ Lemma tr_top_val_for_val_inv:
   forall ce e le m v ty sl a tmps,
   tr_top ce tge e le m For_val (Csyntax.Eval v ty) sl a tmps ->
   sl = nil /\ typeof a = ty /\ eval_expr tge e le m a v.
-Proof.
+Proof using.
   intros. inv H. auto. inv H0. auto.
 Qed.
 
@@ -2091,7 +2091,7 @@ Lemma alloc_variables_preserved:
   forall e m params e' m',
   Csem.alloc_variables ge e m params e' m' ->
   alloc_variables tge e m params e' m'.
-Proof.
+Proof using TRANSL.
   induction 1; econstructor; eauto. rewrite comp_env_preserved; auto.
 Qed.
 
@@ -2099,7 +2099,7 @@ Lemma bind_parameters_preserved:
   forall e m params args m',
   Csem.bind_parameters ge e m params args m' ->
   bind_parameters tge e m params args m'.
-Proof.
+Proof using TRANSL.
   induction 1; econstructor; eauto. inv H0.
 - eapply assign_loc_value; eauto.
 - inv H4. eapply assign_loc_value; eauto.
@@ -2108,7 +2108,7 @@ Qed.
 
 Lemma blocks_of_env_preserved:
   forall e, blocks_of_env tge e = Csem.blocks_of_env ge e.
-Proof.
+Proof using TRANSL.
   intros; unfold blocks_of_env, Csem.blocks_of_env.
   unfold block_of_binding, Csem.block_of_binding.
   rewrite comp_env_preserved. auto.
@@ -2121,7 +2121,7 @@ Lemma sstep_simulation:
      (plus step1 tge S1' t S2' \/
        (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
-Proof.
+Proof using TRANSL.
   induction 1; intros; inv MS.
 - (* do 1 *)
   inv TR. inv H0.
@@ -2394,7 +2394,7 @@ Theorem simulation:
      (plus step1 tge S1' t S2' \/
        (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
-Proof.
+Proof using TRANSL.
   intros S1 t S2 STEP. destruct STEP.
   apply estep_simulation; auto.
   apply sstep_simulation; auto.
@@ -2404,7 +2404,7 @@ Lemma transl_initial_states:
   forall S,
   Csem.initial_state prog S ->
   exists S', Clight.initial_state tprog S' /\ match_states S S'.
-Proof.
+Proof using TRANSL.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros (cu & tf & FIND & TR & L).
   econstructor; split.
@@ -2421,13 +2421,13 @@ Qed.
 Lemma transl_final_states:
   forall S S' r,
   match_states S S' -> Csem.final_state S r -> Clight.final_state S' r.
-Proof.
+Proof using.
   intros. inv H0. inv H. specialize (MK (PTree.empty _)). inv MK. constructor.
 Qed.
 
 Theorem transl_program_correct:
   forward_simulation (Cstrategy.semantics prog) (Clight.semantics1 tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_star_wf with (order := ltof _ measure).
   eapply senv_preserved.
   eexact transl_initial_states.
@@ -2441,7 +2441,7 @@ End PRESERVATION.
 (** ** Commutation with linking *)
 
 Global Instance TransfSimplExprLink : TransfLink match_prog.
-Proof.
+Proof using.
   red; intros. eapply Ctypes.link_match_program_gen; eauto. 
 - intros.
 Local Transparent Linker_fundef.

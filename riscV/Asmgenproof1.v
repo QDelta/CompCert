@@ -28,7 +28,7 @@ Lemma make_immed32_sound:
   | Imm32_single imm => n = imm
   | Imm32_pair hi lo => n = Int.add (Int.shl hi (Int.repr 12)) lo
   end.
-Proof.
+Proof using.
   intros; unfold make_immed32. set (lo := Int.sign_ext 12 n).
   predSpec Int.eq Int.eq_spec n lo.
 - auto.
@@ -63,7 +63,7 @@ Lemma make_immed64_sound:
   | Imm64_pair hi lo => n = Int64.add (Int64.sign_ext 32 (Int64.shl hi (Int64.repr 12))) lo
   | Imm64_large imm => n = imm
   end.
-Proof.
+Proof using.
   intros; unfold make_immed64. set (lo := Int64.sign_ext 12 n).
   predSpec Int64.eq Int64.eq_spec n lo.
 - auto.
@@ -78,13 +78,13 @@ Qed.
 
 Lemma ireg_of_not_X31:
   forall m r, ireg_of m = OK r -> IR r <> IR X31.
-Proof.
+Proof using.
   intros. erewrite <- ireg_of_eq; eauto with asmgen.
 Qed.
 
 Lemma ireg_of_not_X31':
   forall m r, ireg_of m = OK r -> r <> X31.
-Proof.
+Proof using.
   intros. apply ireg_of_not_X31 in H. congruence.
 Qed.
 
@@ -116,7 +116,7 @@ Lemma load_hilo32_correct:
      exec_straight ge fn (load_hilo32 rd hi lo k) rs m k rs' m
   /\ rs'#rd = Vint (Int.add (Int.shl hi (Int.repr 12)) lo)
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold load_hilo32; intros. 
   predSpec Int.eq Int.eq_spec lo Int.zero.
 - subst lo. econstructor; split. 
@@ -135,7 +135,7 @@ Lemma loadimm32_correct:
      exec_straight ge fn (loadimm32 rd n k) rs m k rs' m
   /\ rs'#rd = Vint n
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold loadimm32; intros. generalize (make_immed32_sound n); intros E.
   destruct (make_immed32 n). 
 - subst imm. econstructor; split. 
@@ -159,7 +159,7 @@ Lemma opimm32_correct:
      exec_straight ge fn (opimm32 op opi rd r1 n k) rs m k rs' m
   /\ rs'#rd = sem rs##r1 (Vint n)
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold opimm32. generalize (make_immed32_sound n); intros E.
   destruct (make_immed32 n). 
 - subst imm. econstructor; split. 
@@ -182,7 +182,7 @@ Lemma load_hilo64_correct:
      exec_straight ge fn (load_hilo64 rd hi lo k) rs m k rs' m
   /\ rs'#rd = Vlong (Int64.add (Int64.sign_ext 32 (Int64.shl hi (Int64.repr 12))) lo)
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold load_hilo64; intros. 
   predSpec Int64.eq Int64.eq_spec lo Int64.zero.
 - subst lo. econstructor; split. 
@@ -201,7 +201,7 @@ Lemma loadimm64_correct:
      exec_straight ge fn (loadimm64 rd n k) rs m k rs' m
   /\ rs'#rd = Vlong n
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold loadimm64; intros. generalize (make_immed64_sound n); intros E.
   destruct (make_immed64 n). 
 - subst imm. econstructor; split. 
@@ -230,7 +230,7 @@ Lemma opimm64_correct:
      exec_straight ge fn (opimm64 op opi rd r1 n k) rs m k rs' m
   /\ rs'#rd = sem rs##r1 (Vlong n)
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold opimm64. generalize (make_immed64_sound n); intros E.
   destruct (make_immed64 n). 
 - subst imm. econstructor; split. 
@@ -257,7 +257,7 @@ Lemma addptrofs_correct:
      exec_straight ge fn (addptrofs rd r1 n k) rs m k rs' m
   /\ Val.lessdef (Val.offset_ptr rs#r1 n) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold addptrofs; intros.
   destruct (Ptrofs.eq_dec n Ptrofs.zero).
 - subst n. econstructor; split.
@@ -284,7 +284,7 @@ Lemma addptrofs_correct_2:
      exec_straight ge fn (addptrofs rd r1 n k) rs m k rs' m
   /\ rs'#rd = Vptr b (Ptrofs.add ofs n)
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. exploit (addptrofs_correct rd r1 n); eauto. intros (rs' & A & B & C).
   exists rs'; intuition eauto. 
   rewrite H0 in B. inv B. auto.
@@ -297,7 +297,7 @@ Lemma transl_cbranch_int32s_correct:
   Val.cmp_bool cmp rs##r1 rs##r2 = Some b ->
   exec_instr ge fn (transl_cbranch_int32s cmp r1 r2 lbl) rs m =
   eval_branch fn lbl rs m (Some b).
-Proof.
+Proof using.
   intros. destruct cmp; simpl; rewrite ? H.
 - destruct rs##r1; simpl in H; try discriminate. destruct rs##r2; inv H.
   simpl; auto.
@@ -314,7 +314,7 @@ Lemma transl_cbranch_int32u_correct:
   Val.cmpu_bool (Mem.valid_pointer m) cmp rs##r1 rs##r2 = Some b ->
   exec_instr ge fn (transl_cbranch_int32u cmp r1 r2 lbl) rs m =
   eval_branch fn lbl rs m (Some b).
-Proof.
+Proof using.
   intros. destruct cmp; simpl; rewrite ? H; auto.
 - rewrite <- Val.swap_cmpu_bool. simpl. rewrite H; auto.
 - rewrite <- Val.swap_cmpu_bool. simpl. rewrite H; auto.
@@ -325,7 +325,7 @@ Lemma transl_cbranch_int64s_correct:
   Val.cmpl_bool cmp rs###r1 rs###r2 = Some b ->
   exec_instr ge fn (transl_cbranch_int64s cmp r1 r2 lbl) rs m =
   eval_branch fn lbl rs m (Some b).
-Proof.
+Proof using.
   intros. destruct cmp; simpl; rewrite ? H.
 - destruct rs###r1; simpl in H; try discriminate. destruct rs###r2; inv H.
   simpl; auto.
@@ -342,7 +342,7 @@ Lemma transl_cbranch_int64u_correct:
   Val.cmplu_bool (Mem.valid_pointer m) cmp rs###r1 rs###r2 = Some b ->
   exec_instr ge fn (transl_cbranch_int64u cmp r1 r2 lbl) rs m =
   eval_branch fn lbl rs m (Some b).
-Proof.
+Proof using.
   intros. destruct cmp; simpl; rewrite ? H; auto.
 - rewrite <- Val.swap_cmplu_bool. simpl. rewrite H; auto.
 - rewrite <- Val.swap_cmplu_bool. simpl. rewrite H; auto.
@@ -353,7 +353,7 @@ Lemma transl_cond_float_correct:
   transl_cond_float cmp rd r1 r2 = (insn, normal) ->
   v = (if normal then Val.cmpf cmp rs#r1 rs#r2 else Val.notbool (Val.cmpf cmp rs#r1 rs#r2)) ->
   exec_instr ge fn insn rs m = Next (nextinstr (rs#rd <- v)) m.
-Proof.
+Proof using.
   intros. destruct cmp; simpl in H; inv H; auto. 
 - rewrite Val.negate_cmpf_eq. auto.
 - simpl. f_equal. f_equal. f_equal. destruct (rs r2), (rs r1); auto. unfold Val.cmpf, Val.cmpf_bool.
@@ -367,7 +367,7 @@ Lemma transl_cond_single_correct:
   transl_cond_single cmp rd r1 r2 = (insn, normal) ->
   v = (if normal then Val.cmpfs cmp rs#r1 rs#r2 else Val.notbool (Val.cmpfs cmp rs#r1 rs#r2)) ->
   exec_instr ge fn insn rs m = Next (nextinstr (rs#rd <- v)) m.
-Proof.
+Proof using.
   intros. destruct cmp; simpl in H; inv H; auto. 
 - simpl. f_equal. f_equal. f_equal. destruct (rs r2), (rs r1); auto. unfold Val.cmpfs, Val.cmpfs_bool.
   rewrite Float32.cmp_ne_eq. destruct (Float32.cmp Ceq f0 f); auto.
@@ -382,7 +382,7 @@ Remark branch_on_X31:
   rs#X31 = Val.of_bool (eqb normal b) -> 
   exec_instr ge fn (if normal then Pbnew X31 X0 lbl else Pbeqw X31 X0 lbl) rs m =
   eval_branch fn lbl rs m (Some b).
-Proof.
+Proof using.
   intros. destruct normal; simpl; rewrite H; simpl; destruct b; reflexivity. 
 Qed.
 
@@ -410,7 +410,7 @@ Lemma transl_cbranch_correct_1:
      exec_straight_opt ge fn c rs m' (insn :: k) rs' m'
   /\ exec_instr ge fn insn rs' m' = eval_branch fn lbl rs' m' (Some b)
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m'; intros TRANSL EVAL AG MEXT.
   set (vl' := map rs (map preg_of args)). 
   assert (EVAL': eval_condition cond vl' m' = Some b).
@@ -505,7 +505,7 @@ Lemma transl_cbranch_correct_true:
      exec_straight_opt ge fn c rs m' (insn :: k) rs' m'
   /\ exec_instr ge fn insn rs' m' = goto_label fn lbl rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. eapply transl_cbranch_correct_1 with (b := true); eauto.
 Qed. 
 
@@ -518,7 +518,7 @@ Lemma transl_cbranch_correct_false:
   exists rs',
      exec_straight ge fn c rs m' k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. exploit transl_cbranch_correct_1; eauto. simpl. 
   intros (rs' & insn & A & B & C).
   exists (nextinstr rs').
@@ -534,7 +534,7 @@ Lemma transl_cond_int32s_correct:
      exec_straight ge fn (transl_cond_int32s cmp rd r1 r2 k) rs m k rs' m
   /\ Val.lessdef (Val.cmp cmp rs##r1 rs##r2) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r. 
-Proof.
+Proof using.
   intros. destruct cmp; simpl. 
 - econstructor; split. apply exec_straight_one; [simpl; eauto|auto].
   split; intros; Simpl. destruct (rs##r1); auto. destruct (rs##r2); auto.
@@ -561,7 +561,7 @@ Lemma transl_cond_int32u_correct:
      exec_straight ge fn (transl_cond_int32u cmp rd r1 r2 k) rs m k rs' m
   /\ rs'#rd = Val.cmpu (Mem.valid_pointer m) cmp rs##r1 rs##r2
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r. 
-Proof.
+Proof using.
   intros. destruct cmp; simpl. 
 - econstructor; split. apply exec_straight_one; [simpl; eauto|auto].
   split; intros; Simpl.
@@ -588,7 +588,7 @@ Lemma transl_cond_int64s_correct:
      exec_straight ge fn (transl_cond_int64s cmp rd r1 r2 k) rs m k rs' m
   /\ Val.lessdef (Val.maketotal (Val.cmpl cmp rs###r1 rs###r2)) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r. 
-Proof.
+Proof using.
   intros. destruct cmp; simpl. 
 - econstructor; split. apply exec_straight_one; [simpl; eauto|auto].
   split; intros; Simpl. destruct (rs###r1); auto. destruct (rs###r2); auto.
@@ -615,7 +615,7 @@ Lemma transl_cond_int64u_correct:
      exec_straight ge fn (transl_cond_int64u cmp rd r1 r2 k) rs m k rs' m
   /\ rs'#rd = Val.maketotal (Val.cmplu (Mem.valid_pointer m) cmp rs###r1 rs###r2)
   /\ forall r, r <> PC -> r <> rd -> rs'#r = rs#r. 
-Proof.
+Proof using.
   intros. destruct cmp; simpl. 
 - econstructor; split. apply exec_straight_one; [simpl; eauto|auto].
   split; intros; Simpl.
@@ -643,7 +643,7 @@ Lemma transl_condimm_int32s_correct:
      exec_straight ge fn (transl_condimm_int32s cmp rd r1 n k) rs m k rs' m
   /\ Val.lessdef (Val.cmp cmp rs#r1 (Vint n)) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold transl_condimm_int32s.
   predSpec Int.eq Int.eq_spec n Int.zero.
 - subst n. exploit transl_cond_int32s_correct. intros (rs' & A & B & C).
@@ -707,7 +707,7 @@ Lemma transl_condimm_int32u_correct:
      exec_straight ge fn (transl_condimm_int32u cmp rd r1 n k) rs m k rs' m
   /\ Val.lessdef (Val.cmpu (Mem.valid_pointer m) cmp rs#r1 (Vint n)) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold transl_condimm_int32u.
   predSpec Int.eq Int.eq_spec n Int.zero.
 - subst n. exploit transl_cond_int32u_correct. intros (rs' & A & B & C).
@@ -741,7 +741,7 @@ Lemma transl_condimm_int64s_correct:
      exec_straight ge fn (transl_condimm_int64s cmp rd r1 n k) rs m k rs' m
   /\ Val.lessdef (Val.maketotal (Val.cmpl cmp rs#r1 (Vlong n))) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold transl_condimm_int64s.
   predSpec Int64.eq Int64.eq_spec n Int64.zero.
 - subst n. exploit transl_cond_int64s_correct. intros (rs' & A & B & C).
@@ -805,7 +805,7 @@ Lemma transl_condimm_int64u_correct:
      exec_straight ge fn (transl_condimm_int64u cmp rd r1 n k) rs m k rs' m
   /\ Val.lessdef (Val.maketotal (Val.cmplu (Mem.valid_pointer m) cmp rs#r1 (Vlong n))) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. unfold transl_condimm_int64u.
   predSpec Int64.eq Int64.eq_spec n Int64.zero.
 - subst n. exploit transl_cond_int64u_correct. intros (rs' & A & B & C).
@@ -839,7 +839,7 @@ Lemma transl_cond_op_correct:
      exec_straight ge fn c rs m k rs' m
   /\ Val.lessdef (Val.of_optbool (eval_condition cond (map rs (map preg_of args)) m)) rs'#rd
   /\ forall r, r <> PC -> r <> rd -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   assert (MKTOT: forall ob, Val.of_optbool ob = Val.maketotal (option_map Val.of_bool ob)).
   { destruct ob as [[]|]; reflexivity. }
   intros until m; intros TR.
@@ -929,7 +929,7 @@ Qed.
 
 Remark cast32unsigned_from_cast32signed:
   forall i, Int64.repr (Int.unsigned i) = Int64.zero_ext 32 (Int64.repr (Int.signed i)).
-Proof.
+Proof using.
   intros. apply Int64.same_bits_eq; intros. 
   rewrite Int64.bits_zero_ext, !Int64.testbit_repr by tauto.
   rewrite Int.bits_signed by tauto. fold (Int.testbit i i0).
@@ -959,7 +959,7 @@ Lemma transl_op_correct:
      exec_straight ge fn c rs m k rs' m
   /\ Val.lessdef v rs'#(preg_of res)
   /\ forall r, data_preg r = true -> r <> preg_of res -> preg_notin r (destroyed_by_op op) -> rs' r = rs r.
-Proof.
+Proof using.
   assert (SAME: forall v1 v2, v1 = v2 -> Val.lessdef v2 v1). { intros; subst; auto. }
 Opaque Int.eq.
   intros until c; intros TR EV.
@@ -1096,7 +1096,7 @@ Lemma indexed_memory_access_correct:
                        (mk_instr base' ofs' :: k) rs' m
   /\ Val.offset_ptr rs'#base' (eval_offset ge ofs') = Val.offset_ptr rs#base ofs
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold indexed_memory_access; intros.
   destruct Archi.ptr64 eqn:SF.
 - generalize (make_immed64_sound (Ptrofs.to_int64 ofs)); intros EQ.
@@ -1141,7 +1141,7 @@ Lemma indexed_load_access_correct:
      exec_straight ge fn (indexed_memory_access mk_instr base ofs k) rs m k rs' m
   /\ rs'#rd = v
   /\ forall r, r <> PC -> r <> X31 -> r <> rd -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m; intros EXEC; intros until v; intros LOAD NOT31 NOTPC.
   exploit indexed_memory_access_correct; eauto.
   intros (base' & ofs' & rs' & A & B & C).
@@ -1161,7 +1161,7 @@ Lemma indexed_store_access_correct:
   exists rs',
      exec_straight ge fn (indexed_memory_access mk_instr base ofs k) rs m k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m; intros EXEC; intros until m'; intros STORE NOT31 NOT31' NOTPC.
   exploit indexed_memory_access_correct; eauto.
   intros (base' & ofs' & rs' & A & B & C).
@@ -1180,7 +1180,7 @@ Lemma loadind_correct:
      exec_straight ge fn c rs m k rs' m
   /\ rs'#(preg_of dst) = v
   /\ forall r, r <> PC -> r <> X31 -> r <> preg_of dst -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until v; intros TR LOAD NOT31. 
   assert (A: exists mk_instr,
                 c = indexed_memory_access mk_instr base ofs k
@@ -1200,7 +1200,7 @@ Lemma storeind_correct:
   exists rs',
      exec_straight ge fn c rs m k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m'; intros TR STORE NOT31. 
   assert (A: exists mk_instr,
                 c = indexed_memory_access mk_instr base ofs k
@@ -1220,7 +1220,7 @@ Lemma loadind_ptr_correct:
      exec_straight ge fn (loadind_ptr base ofs dst k) rs m k rs' m
   /\ rs'#dst = v
   /\ forall r, r <> PC -> r <> X31 -> r <> dst -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. eapply indexed_load_access_correct; eauto with asmgen.
   intros. unfold Mptr. destruct Archi.ptr64; auto. 
 Qed.
@@ -1232,7 +1232,7 @@ Lemma storeind_ptr_correct:
   exists rs',
      exec_straight ge fn (storeind_ptr src base ofs k) rs m k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. eapply indexed_store_access_correct with (r1 := src); eauto with asmgen.
   intros. unfold Mptr. destruct Archi.ptr64; auto. 
 Qed.
@@ -1245,7 +1245,7 @@ Lemma transl_memory_access_correct:
      exec_straight_opt ge fn c rs m (mk_instr base ofs :: k) rs' m
   /\ Val.offset_ptr rs'#base (eval_offset ge ofs) = v
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until v; intros TR EV. 
   unfold transl_memory_access in TR; destruct addr; ArgsInv.
 - (* indexed *)
@@ -1270,7 +1270,7 @@ Lemma transl_load_access_correct:
      exec_straight ge fn c rs m k rs' m
   /\ rs'#rd = v'
   /\ forall r, r <> PC -> r <> X31 -> r <> rd -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until v'; intros INSTR TR EV LOAD NOTPC. 
   exploit transl_memory_access_correct; eauto.
   intros (base & ofs & rs' & A & B & C).
@@ -1291,7 +1291,7 @@ Lemma transl_store_access_correct:
   exists rs',
      exec_straight ge fn c rs m k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m'; intros INSTR TR EV STORE NOTPC NOT31. 
   exploit transl_memory_access_correct; eauto.
   intros (base & ofs & rs' & A & B & C).
@@ -1310,7 +1310,7 @@ Lemma transl_load_correct:
      exec_straight ge fn c rs m k rs' m
   /\ rs'#(preg_of dst) = v
   /\ forall r, r <> PC -> r <> X31 -> r <> preg_of dst -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until v; intros TR EV LOAD. 
   assert (A: exists mk_instr,
       transl_memory_access mk_instr addr args k = OK c
@@ -1329,7 +1329,7 @@ Lemma transl_store_correct:
   exists rs',
      exec_straight ge fn c rs m k rs' m'
   /\ forall r, r <> PC -> r <> X31 -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros until m'; intros TR EV STORE. 
   assert (A: exists mk_instr,
       transl_memory_access mk_instr addr args k = OK c
@@ -1359,7 +1359,7 @@ Lemma make_epilogue_correct:
   /\ rs'#RA = parent_ra cs
   /\ rs'#SP = parent_sp cs
   /\ (forall r, r <> PC -> r <> RA -> r <> SP -> r <> X31 -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros until tm; intros LP LRA FREE AG MEXT MCS.
   exploit Mem.loadv_extends. eauto. eexact LP. auto. simpl. intros (parent' & LP' & LDP').
   exploit Mem.loadv_extends. eauto. eexact LRA. auto. simpl. intros (ra' & LRA' & LDRA').

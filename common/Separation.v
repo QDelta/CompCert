@@ -65,27 +65,27 @@ Definition massert_eqv (P Q: massert) : Prop :=
   massert_imp P Q /\ massert_imp Q P.
 
 Remark massert_imp_refl: forall p, massert_imp p p.
-Proof.
+Proof using.
   unfold massert_imp; auto.
 Qed.
 
 Remark massert_imp_trans: forall p q r, massert_imp p q -> massert_imp q r -> massert_imp p r.
-Proof.
+Proof using.
   unfold massert_imp; intros; firstorder auto.
 Qed.
 
 Remark massert_eqv_refl: forall p, massert_eqv p p.
-Proof.
+Proof using.
   unfold massert_eqv, massert_imp; intros. tauto.
 Qed.
 
 Remark massert_eqv_sym: forall p q, massert_eqv p q -> massert_eqv q p.
-Proof.
+Proof using.
   unfold massert_eqv, massert_imp; intros. tauto.
 Qed.
 
 Remark massert_eqv_trans: forall p q r, massert_eqv p q -> massert_eqv q r -> massert_eqv p r.
-Proof.
+Proof using.
   unfold massert_eqv, massert_imp; intros. firstorder auto.
 Qed.
 
@@ -104,14 +104,14 @@ as massert_eqv_prel.
 Add Morphism m_pred
   with signature massert_imp ==> eq ==> impl
   as m_pred_morph_1.
-Proof.
+Proof using.
   intros P Q [A B]. auto.
 Qed.
 
 Add Morphism m_pred
   with signature massert_eqv ==> eq ==> iff
   as m_pred_morph_2.
-Proof.
+Proof using.
   intros P Q [[A B] [C D]]. split; auto.
 Qed.
 
@@ -138,7 +138,7 @@ Qed.
 Add Morphism sepconj
   with signature massert_imp ==> massert_imp ==> massert_imp
   as sepconj_morph_1.
-Proof.
+Proof using.
   intros P1 P2 [A B] Q1 Q2 [C D].
   red; simpl; split; intros.
 - intuition auto. red; intros. apply (H2 b ofs); auto.
@@ -148,7 +148,7 @@ Qed.
 Add Morphism sepconj
   with signature massert_eqv ==> massert_eqv ==> massert_eqv
   as sepconj_morph_2.
-Proof.
+Proof using.
   intros. destruct H, H0. split; apply sepconj_morph_1; auto.
 Qed.
 
@@ -159,13 +159,13 @@ Local Open Scope sep_scope.
 Lemma sep_imp:
   forall P P' Q Q' m,
   m |= P ** Q -> massert_imp P P' -> massert_imp Q Q' -> m |= P' ** Q'.
-Proof.
+Proof using.
   intros. rewrite <- H0, <- H1; auto.
 Qed.
 
 Lemma sep_comm_1:
   forall P Q,  massert_imp (P ** Q) (Q ** P).
-Proof.
+Proof using.
   unfold massert_imp; simpl; split; intros.
 - intuition auto. red; intros; eapply H2; eauto.
 - intuition auto.
@@ -173,31 +173,31 @@ Qed.
 
 Lemma sep_comm:
   forall P Q, massert_eqv (P ** Q) (Q ** P).
-Proof.
+Proof using.
   intros; split; apply sep_comm_1.
 Qed.
 
 Lemma sep_assoc_1:
   forall P Q R, massert_imp ((P ** Q) ** R) (P ** (Q ** R)).
-Proof.
+Proof using.
   intros. unfold massert_imp, sepconj, disjoint_footprint; simpl; firstorder auto.
 Qed.
 
 Lemma sep_assoc_2:
   forall P Q R, massert_imp (P ** (Q ** R)) ((P ** Q) ** R).
-Proof.
+Proof using.
   intros. unfold massert_imp, sepconj, disjoint_footprint; simpl; firstorder auto.
 Qed.
 
 Lemma sep_assoc:
   forall P Q R, massert_eqv ((P ** Q) ** R) (P ** (Q ** R)).
-Proof.
+Proof using.
   intros; split. apply sep_assoc_1. apply sep_assoc_2.
 Qed.
 
 Lemma sep_swap:
   forall P Q R, massert_eqv (P ** Q ** R) (Q ** P ** R).
-Proof.
+Proof using.
   intros. rewrite <- sep_assoc. rewrite (sep_comm P). rewrite sep_assoc. reflexivity.
 Qed.
 
@@ -205,19 +205,19 @@ Definition sep_swap12 := sep_swap.
 
 Lemma sep_swap23:
   forall P Q R S, massert_eqv (P ** Q ** R ** S) (P ** R ** Q ** S).
-Proof.
+Proof using.
   intros. rewrite (sep_swap Q). reflexivity.
 Qed.
 
 Lemma sep_swap34:
   forall P Q R S T, massert_eqv (P ** Q ** R ** S ** T) (P ** Q ** S ** R ** T).
-Proof.
+Proof using.
   intros. rewrite (sep_swap R). reflexivity.
 Qed.
 
 Lemma sep_swap45:
   forall P Q R S T U, massert_eqv (P ** Q ** R ** S ** T ** U) (P ** Q ** R ** T ** S ** U).
-Proof.
+Proof using.
   intros. rewrite (sep_swap S). reflexivity.
 Qed.
 
@@ -225,37 +225,37 @@ Definition sep_swap2 := sep_swap.
 
 Lemma sep_swap3:
   forall P Q R S, massert_eqv (P ** Q ** R ** S) (R ** Q ** P ** S).
-Proof.
+Proof using.
   intros. rewrite sep_swap. rewrite (sep_swap P). rewrite sep_swap. reflexivity.
 Qed.
 
 Lemma sep_swap4:
   forall P Q R S T, massert_eqv (P ** Q ** R ** S ** T) (S ** Q ** R ** P ** T).
-Proof.
+Proof using.
   intros. rewrite sep_swap. rewrite (sep_swap3 P). rewrite sep_swap. reflexivity.
 Qed.
 
 Lemma sep_swap5:
   forall P Q R S T U, massert_eqv (P ** Q ** R ** S ** T ** U) (T ** Q ** R ** S ** P ** U).
-Proof.
+Proof using.
   intros. rewrite sep_swap. rewrite (sep_swap4 P). rewrite sep_swap. reflexivity.
 Qed.
 
 Lemma sep_drop:
   forall P Q m, m |= P ** Q -> m |= Q.
-Proof.
+Proof using.
   simpl; intros. tauto.
 Qed.
 
 Lemma sep_drop2:
   forall P Q R m, m |= P ** Q ** R -> m |= P ** R.
-Proof.
+Proof using.
   intros. rewrite sep_swap in H. eapply sep_drop; eauto.
 Qed.
 
 Lemma sep_proj1:
   forall Q P m, m |= P ** Q -> m |= P.
-Proof.
+Proof using.
   intros. destruct H; auto.
 Qed.
 
@@ -267,25 +267,25 @@ Definition sep_pick1 := sep_proj1.
 
 Lemma sep_pick2:
   forall P Q R m, m |= P ** Q ** R -> m |= Q.
-Proof.
+Proof using.
   intros. eapply sep_proj1; eapply sep_proj2; eauto.
 Qed.
 
 Lemma sep_pick3:
   forall P Q R S m, m |= P ** Q ** R ** S -> m |= R.
-Proof.
+Proof using.
   intros. eapply sep_pick2; eapply sep_proj2; eauto.
 Qed.
 
 Lemma sep_pick4:
   forall P Q R S T m, m |= P ** Q ** R ** S ** T -> m |= S.
-Proof.
+Proof using.
   intros. eapply sep_pick3; eapply sep_proj2; eauto.
 Qed.
 
 Lemma sep_pick5:
   forall P Q R S T U m, m |= P ** Q ** R ** S ** T ** U -> m |= T.
-Proof.
+Proof using.
   intros. eapply sep_pick4; eapply sep_proj2; eauto.
 Qed.
 
@@ -295,7 +295,7 @@ Lemma sep_preserved:
   (m |= P -> m' |= P) ->
   (m |= Q -> m' |= Q) ->
   m' |= P ** Q.
-Proof.
+Proof using.
   simpl; intros. intuition auto.
 Qed.
 
@@ -313,7 +313,7 @@ Qed.
 
 Lemma sep_pure:
   forall P Q m, m |= pure P ** Q <-> P /\ m |= Q.
-Proof.
+Proof using.
   simpl; intros. intuition auto. red; simpl; tauto.
 Qed.
 
@@ -338,7 +338,7 @@ Lemma alloc_rule:
   0 <= lo -> hi <= Ptrofs.modulus ->
   m |= P ->
   m' |= range b lo hi ** P.
-Proof.
+Proof using.
   intros; simpl. split; [|split].
 - split; auto. split; auto. intros.
   apply Mem.perm_implies with Freeable; auto with mem.
@@ -353,7 +353,7 @@ Lemma range_split:
   lo <= mid <= hi ->
   m |= range b lo hi ** P ->
   m |= range b lo mid ** range b mid hi ** P.
-Proof.
+Proof using.
   intros. rewrite <- sep_assoc. eapply sep_imp; eauto.
   split; simpl; intros.
 - intuition auto.
@@ -370,7 +370,7 @@ Lemma range_drop_left:
   lo <= mid <= hi ->
   m |= range b lo hi ** P ->
   m |= range b mid hi ** P.
-Proof.
+Proof using.
   intros. apply sep_drop with (range b lo mid). apply range_split; auto.
 Qed.
 
@@ -379,7 +379,7 @@ Lemma range_drop_right:
   lo <= mid <= hi ->
   m |= range b lo hi ** P ->
   m |= range b lo mid ** P.
-Proof.
+Proof using.
   intros. apply sep_drop2 with (range b mid hi). apply range_split; auto.
 Qed.
 
@@ -389,7 +389,7 @@ Lemma range_split_2:
   al > 0 ->
   m |= range b lo hi ** P ->
   m |= range b lo mid ** range b (align mid al) hi ** P.
-Proof.
+Proof using.
   intros. rewrite <- sep_assoc. eapply sep_imp; eauto.
   assert (mid <= align mid al) by (apply align_le; auto).
   split; simpl; intros.
@@ -407,7 +407,7 @@ Lemma range_preserved:
   m |= range b lo hi ->
   (forall i k p, lo <= i < hi -> Mem.perm m b i k p -> Mem.perm m' b i k p) ->
   m' |= range b lo hi.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). simpl; intuition auto.
 Qed.
 
@@ -434,7 +434,7 @@ Lemma contains_no_overflow:
   forall spec m chunk b ofs,
   m |= contains chunk b ofs spec ->
   0 <= ofs <= Ptrofs.max_unsigned.
-Proof.
+Proof using.
   intros. simpl in H. tauto.
 Qed.
 
@@ -442,7 +442,7 @@ Lemma load_rule:
   forall spec m chunk b ofs,
   m |= contains chunk b ofs spec ->
   exists v, Mem.load chunk m b ofs = Some v /\ spec v.
-Proof.
+Proof using.
   intros. destruct H as (D & E & v & F & G).
   exists v; auto.
 Qed.
@@ -451,7 +451,7 @@ Lemma loadv_rule:
   forall spec m chunk b ofs,
   m |= contains chunk b ofs spec ->
   exists v, Mem.loadv chunk m (Vptr b (Ptrofs.repr ofs)) = Some v /\ spec v.
-Proof.
+Proof using.
   intros. exploit load_rule; eauto. intros (v & A & B). exists v; split; auto.
   simpl. rewrite Ptrofs.unsigned_repr; auto. eapply contains_no_overflow; eauto.
 Qed.
@@ -462,7 +462,7 @@ Lemma store_rule:
   spec (Val.load_result chunk v) ->
   exists m',
   Mem.store chunk m b ofs v = Some m' /\ m' |= contains chunk b ofs spec ** P.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). destruct A as (D & E & v0 & F & G).
   assert (H: Mem.valid_access m chunk b ofs Writable) by eauto with mem.
   destruct (Mem.valid_access_store _ _ _ _ v H) as [m' STORE].
@@ -480,7 +480,7 @@ Lemma storev_rule:
   spec (Val.load_result chunk v) ->
   exists m',
   Mem.storev chunk m (Vptr b (Ptrofs.repr ofs)) v = Some m' /\ m' |= contains chunk b ofs spec ** P.
-Proof.
+Proof using.
   intros. exploit store_rule; eauto. intros (m' & A & B). exists m'; split; auto.
   simpl. rewrite Ptrofs.unsigned_repr; auto. eapply contains_no_overflow. eapply sep_pick1; eauto.
 Qed.
@@ -490,7 +490,7 @@ Lemma range_contains:
   m |= range b ofs (ofs + size_chunk chunk) ** P ->
   (align_chunk chunk | ofs) ->
   m |= contains chunk b ofs (fun v => True) ** P.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). destruct A as (D & E & F).
   split; [|split].
 - assert (Mem.valid_access m chunk b ofs Freeable).
@@ -508,7 +508,7 @@ Lemma contains_imp:
   forall (spec1 spec2: val -> Prop) chunk b ofs,
   (forall v, spec1 v -> spec2 v) ->
   massert_imp (contains chunk b ofs spec1) (contains chunk b ofs spec2).
-Proof.
+Proof using.
   intros; split; simpl; intros.
 - intuition auto. destruct H4 as (v & A & B). exists v; auto.
 - auto.
@@ -524,7 +524,7 @@ Lemma store_rule':
   m |= contains chunk b ofs spec1 ** P ->
   exists m',
   Mem.store chunk m b ofs v = Some m' /\ m' |= hasvalue chunk b ofs (Val.load_result chunk v) ** P.
-Proof.
+Proof using.
   intros. eapply store_rule; eauto.
 Qed.
 
@@ -533,7 +533,7 @@ Lemma storev_rule':
   m |= contains chunk b ofs spec1 ** P ->
   exists m',
   Mem.storev chunk m (Vptr b (Ptrofs.repr ofs)) v = Some m' /\ m' |= hasvalue chunk b ofs (Val.load_result chunk v) ** P.
-Proof.
+Proof using.
   intros. eapply storev_rule; eauto.
 Qed.
 
@@ -555,7 +555,7 @@ Qed.
 Lemma mconj_intro:
   forall P Q R m,
   m |= P ** R -> m |= Q ** R -> m |= mconj P Q ** R.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). destruct H0 as (D & E & F).
   split; [|split].
 - simpl; auto.
@@ -565,7 +565,7 @@ Qed.
 
 Lemma mconj_proj1:
   forall P Q R m, m |= mconj P Q ** R -> m |= P ** R.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C); simpl in A.
   simpl. intuition auto.
   red; intros; eapply C; eauto; simpl; auto.
@@ -573,7 +573,7 @@ Qed.
 
 Lemma mconj_proj2:
   forall P Q R m, m |= mconj P Q ** R -> m |= Q ** R.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C); simpl in A.
   simpl. intuition auto.
   red; intros; eapply C; eauto; simpl; auto.
@@ -585,7 +585,7 @@ Lemma frame_mconj:
   m' |= P' ** R ->
   m' |= Q ->
   m' |= mconj P' Q ** R.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C); simpl in A.
   destruct H0 as (D & E & F).
   simpl. intuition auto.
@@ -595,7 +595,7 @@ Qed.
 Add Morphism mconj
   with signature massert_imp ==> massert_imp ==> massert_imp
   as mconj_morph_1.
-Proof.
+Proof using.
   intros P1 P2 [A B] Q1 Q2 [C D].
   red; simpl; intuition auto.
 Qed.
@@ -603,7 +603,7 @@ Qed.
 Add Morphism mconj
   with signature massert_eqv ==> massert_eqv ==> massert_eqv
   as mconj_morph_2.
-Proof.
+Proof using.
   intros. destruct H, H0. split; apply mconj_morph_1; auto.
 Qed.
 
@@ -643,7 +643,7 @@ Lemma loadv_parallel_rule:
   Mem.loadv chunk m1 addr1 = Some v1 ->
   Val.inject j addr1 addr2 ->
   exists v2, Mem.loadv chunk m2 addr2 = Some v2 /\ Val.inject j v1 v2.
-Proof.
+Proof using.
   intros. simpl in H. eapply Mem.loadv_inject; eauto.
 Qed.
 
@@ -654,7 +654,7 @@ Lemma storev_parallel_rule:
   Val.inject j addr1 addr2 ->
   Val.inject j v1 v2 ->
   exists m2', Mem.storev chunk m2 addr2 v2 = Some m2' /\ m2' |= minjection j m1' ** P.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). simpl in A.
   exploit Mem.storev_mapped_inject; eauto. intros (m2' & STORE & INJ).
   inv H1; simpl in STORE; try discriminate.
@@ -690,7 +690,7 @@ Lemma alloc_parallel_rule:
   /\ inject_incr j j'
   /\ j' b1 = Some(b2, delta)
   /\ (forall b, b <> b1 -> j' b = j b).
-Proof.
+Proof using.
   intros until delta; intros SEP ALLOC1 ALLOC2 ALIGN LO HI RANGE1 RANGE2 RANGE3.
   assert (RANGE4: lo <= hi) by extlia.
   assert (FRESH1: ~Mem.valid_block m1 b1) by (eapply Mem.fresh_block_alloc; eauto).
@@ -746,7 +746,7 @@ Lemma free_parallel_rule:
   exists m2',
      Mem.free m2 b2 0 sz2 = Some m2'
   /\ m2' |= minjection j m1' ** P.
-Proof.
+Proof using.
   intros. rewrite <- ! sep_assoc in H.
   destruct H as (A & B & C).
   destruct A as (D & E & F).
@@ -821,7 +821,7 @@ Lemma globalenv_inject_preserves_globals:
   forall (F V: Type) (ge: Genv.t F V) j m,
   m |= globalenv_inject ge j ->
   meminj_preserves_globals ge j.
-Proof.
+Proof using.
   intros. destruct H as (bound & A & B). destruct B.
   split; [|split]; intros.
 - eauto.
@@ -835,7 +835,7 @@ Lemma globalenv_inject_incr:
   inject_separated j j' m0 m ->
   m |= globalenv_inject ge j ** P ->
   m |= globalenv_inject ge j' ** P.
-Proof.
+Proof using.
   intros. destruct H1 as (A & B & C). destruct A as (bound & D & E).
   split; [|split]; auto.
   exists bound; split; auto.
@@ -860,7 +860,7 @@ Lemma external_call_parallel_rule:
   /\ m2' |= minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
   /\ inject_separated j j' m1 m2.
-Proof.
+Proof using.
   intros until vargs2; intros CALL SEP ARGS.
   destruct SEP as (A & B & C). simpl in A.
   exploit external_call_mem_inject; eauto.
@@ -899,7 +899,7 @@ Lemma alloc_parallel_rule_2:
      m2' |= range b2 0 lo ** range b2 hi sz2 ** minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
   /\ j' b1 = Some(b2, delta).
-Proof.
+Proof using.
   intros.
   set (j1 := fun b => if eq_block b b1 then Some(b2, delta) else j b).
   assert (X: inject_incr j j1).

@@ -40,7 +40,7 @@ Lemma round_repr_same_exp :
   forall m e,
   exists m',
   round beta fexp rnd (F2R (Float beta m e)) = F2R (Float beta m' e).
-Proof with auto with typeclass_instances.
+Proof using valid_rnd with auto with typeclass_instances.
 intros m e.
 set (e' := cexp beta fexp (F2R (Float beta m e))).
 unfold round, scaled_mantissa. fold e'.
@@ -79,7 +79,7 @@ Lemma plus_error_aux :
   (cexp beta fexp x <= cexp beta fexp y)%Z ->
   format x -> format y ->
   format (round beta fexp (Znearest choice) (x + y) - (x + y))%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y.
 set (ex := cexp beta fexp x).
 set (ey := cexp beta fexp y).
@@ -120,7 +120,7 @@ Theorem plus_error :
   forall x y,
   format x -> format y ->
   format (round beta fexp (Znearest choice) (x + y) - (x + y))%R.
-Proof.
+Proof using valid_exp monotone_exp.
 intros x y Hx Hy.
 destruct (Zle_or_lt (cexp beta fexp x) (cexp beta fexp y)).
 now apply plus_error_aux.
@@ -152,7 +152,7 @@ Lemma round_plus_neq_0_aux :
   format x -> format y ->
   (0 < x + y)%R ->
   round beta fexp rnd (x + y) <> 0%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp exp_not_FTZ) with auto with typeclass_instances.
 intros x y He Hx Hy Hxy.
 destruct (mag beta (x + y)) as (exy, Hexy).
 simpl.
@@ -197,7 +197,7 @@ Theorem round_plus_neq_0 :
   format x -> format y ->
   (x + y <> 0)%R ->
   round beta fexp rnd (x + y) <> 0%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp exp_not_FTZ) with auto with typeclass_instances.
 intros x y Hx Hy Hxy.
 destruct (Rle_or_lt 0 (x + y)) as [H1|H1].
 (* . *)
@@ -226,7 +226,7 @@ Theorem round_plus_eq_0 :
   format x -> format y ->
   round beta fexp rnd (x + y) = 0%R ->
   (x + y = 0)%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp exp_not_FTZ) with auto with typeclass_instances.
 intros x y Fx Fy H.
 destruct (Req_dec (x + y) 0) as [H'|H'].
 exact H'.
@@ -249,7 +249,7 @@ Theorem FLT_format_plus_small: forall x y,
   generic_format beta (FLT_exp emin prec) y ->
    (Rabs (x+y) <= bpow (prec+emin))%R ->
     generic_format beta (FLT_exp emin prec) (x+y).
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 intros x y Fx Fy H.
 apply generic_format_FLT_FIX...
 rewrite Zplus_comm; assumption.
@@ -274,7 +274,7 @@ Lemma FLT_plus_error_N_ex : forall x y,
   (Rabs eps <= u_ro beta prec / (1 + u_ro beta prec))%R /\
   round beta (FLT_exp emin prec) (Znearest choice) (x + y)
   = ((x + y) * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_.
 intros x y Fx Fy.
 assert (Pb := u_rod1pu_ro_pos beta prec).
 destruct (Rle_or_lt (bpow (emin + prec - 1)) (Rabs (x + y))) as [M|M].
@@ -294,7 +294,7 @@ Lemma FLT_plus_error_N_round_ex : forall x y,
   (Rabs eps <= u_ro beta prec)%R /\
   (x + y
    = round beta (FLT_exp emin prec) (Znearest choice) (x + y) * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_.
 intros x y Fx Fy.
 now apply relative_error_N_round_ex_derive, FLT_plus_error_N_ex.
 Qed.
@@ -318,7 +318,7 @@ Notation cexp := (cexp beta fexp).
 Lemma ex_shift :
   forall x e, format x -> (e <= cexp x)%Z ->
   exists m, (x = IZR m * bpow e)%R.
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros x e Fx He.
 exists (Ztrunc (scaled_mantissa beta fexp x)*Zpower beta (cexp x -e))%Z.
 rewrite Fx at 1; unfold F2R; simpl.
@@ -331,7 +331,7 @@ Qed.
 Lemma mag_minus1 :
   forall z, z <> 0%R ->
   (mag beta z - 1)%Z = mag beta (z / IZR beta).
-Proof.
+Proof using.
 intros z Hz.
 unfold Zminus.
 rewrite <- mag_mult_bpow by easy.
@@ -342,7 +342,7 @@ Theorem round_plus_F2R :
   forall x y, format x -> format y -> (x <> 0)%R ->
   exists m,
   round beta fexp rnd (x+y) = F2R (Float beta m (cexp (x / IZR beta))).
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp monotone_exp) with auto with typeclass_instances.
 intros x y Fx Fy Zx.
 case (Zle_or_lt (mag beta (x/IZR beta)) (mag beta y)); intros H1.
 pose (e:=cexp (x / IZR beta)).
@@ -438,7 +438,7 @@ Theorem round_plus_ge_ulp :
   forall x y, format x -> format y ->
   round beta fexp rnd (x+y) <> 0%R ->
   (ulp beta fexp (x/IZR beta) <= Rabs (round beta fexp rnd (x+y)))%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp monotone_exp exp_not_FTZ) with auto with typeclass_instances.
 intros x y Fx Fy KK.
 case (Req_dec x 0); intros Zx.
 (* *)
@@ -503,7 +503,7 @@ Theorem round_FLT_plus_ge :
   (bpow (e + prec) <= Rabs x)%R ->
   round beta (FLT_exp emin prec) rnd (x + y) <> 0%R ->
   (bpow e <= Rabs (round beta (FLT_exp emin prec) rnd (x + y)))%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd prec_gt_0_) with auto with typeclass_instances.
 intros x y e Fx Fy He KK.
 assert (Zx: x <> 0%R).
   contradict He.
@@ -534,7 +534,7 @@ Lemma round_FLT_plus_ge' :
   (x = 0%R -> y <> 0%R -> (bpow e <= Rabs y)%R) ->
   round beta (FLT_exp emin prec) rnd (x+y) <> 0%R ->
   (bpow e <= Rabs (round beta (FLT_exp emin prec) rnd (x+y)))%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd prec_gt_0_) with auto with typeclass_instances.
 intros x y e Fx Fy H1 H2 H3.
 case (Req_dec x 0); intros H4.
 case (Req_dec y 0); intros H5.
@@ -552,7 +552,7 @@ Theorem round_FLX_plus_ge :
   (bpow (e+prec) <= Rabs x)%R ->
   (round beta (FLX_exp prec) rnd (x+y) <> 0)%R ->
   (bpow e <= Rabs (round beta (FLX_exp prec) rnd (x+y)))%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd prec_gt_0_) with auto with typeclass_instances.
 intros x y e Fx Fy He KK.
 assert (Zx: x <> 0%R).
   contradict He.
@@ -588,7 +588,7 @@ Lemma plus_error_le_l :
   forall x y,
   generic_format beta fexp x -> generic_format beta fexp y ->
   (Rabs (round beta fexp (Znearest choice) (x + y) - (x + y)) <= Rabs x)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy.
 apply (Rle_trans _ (Rabs (y - (x + y)))); [now apply round_N_pt|].
 rewrite Rabs_minus_sym; right; f_equal; ring.
@@ -598,6 +598,6 @@ Lemma plus_error_le_r :
   forall x y,
   generic_format beta fexp x -> generic_format beta fexp y ->
   (Rabs (round beta fexp (Znearest choice) (x + y) - (x + y)) <= Rabs y)%R.
-Proof. now intros x y Fx Fy; rewrite Rplus_comm; apply plus_error_le_l. Qed.
+Proof using valid_exp. now intros x y Fx Fy; rewrite Rplus_comm; apply plus_error_le_l. Qed.
 
 End Fprop_plus_le_ops.

@@ -299,7 +299,7 @@ Inductive outcome_state_match
 
 Lemma is_call_cont_call_cont:
   forall k, is_call_cont k -> call_cont k = k.
-Proof.
+Proof using.
   destruct k; simpl; intros; contradiction || auto.
 Qed.
 
@@ -321,7 +321,7 @@ Lemma exec_stmt_eval_funcall_steps:
    forall k,
    is_call_cont k ->
    star step_fe ge (Callstate fd args k m) t (Returnstate res k m')).
-Proof.
+Proof using.
   apply exec_stmt_funcall_ind; intros.
 
 (* skip *)
@@ -509,7 +509,7 @@ Lemma evalinf_funcall_forever:
   forall m fd args T k,
   evalinf_funcall ge m fd args T ->
   forever_N step_fe order ge tt (Callstate fd args k m) T.
-Proof.
+Proof using.
   cofix CIH_FUN.
   assert (forall e le m s T f k,
           execinf_stmt ge e le m s T ->
@@ -579,7 +579,7 @@ Qed.
 
 Theorem bigstep_semantics_sound:
   bigstep_sound (bigstep_semantics prog) (semantics_fe prog).
-Proof.
+Proof using.
   constructor; simpl; intros.
 (* termination *)
   inv H. econstructor; econstructor.

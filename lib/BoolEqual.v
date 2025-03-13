@@ -108,7 +108,7 @@ Ltac bool_eq :=
 Lemma proj_sumbool_is_true:
   forall (A: Type) (f: forall (x y: A), {x=y} + {x<>y}) (x: A),
   proj_sumbool (f x x) = true.
-Proof.
+Proof using.
   intros. unfold proj_sumbool. destruct (f x x). auto. elim n; auto.
 Qed.
 
@@ -126,14 +126,14 @@ Ltac bool_eq_refl :=
 
 Lemma false_not_true:
   forall (P: Prop), false = true -> P.
-Proof.
+Proof using.
   intros. discriminate.
 Qed.
 
 Lemma proj_sumbool_true:
   forall (A: Type) (x y: A) (a: {x=y} + {x<>y}),
   proj_sumbool a = true -> x = y.
-Proof.
+Proof using.
   intros. destruct a. auto. discriminate.
 Qed.
 
@@ -159,7 +159,7 @@ Lemma dec_eq_from_bool_eq:
   forall (A: Type) (f: A -> A -> bool)
      (f_refl: forall x, f x x = true) (f_sound: forall x y, f x y = true -> x = y),
   forall (x y: A), {x=y} + {x<>y}.
-Proof.
+Proof using.
   intros. destruct (f x y) eqn:E.
   left. apply f_sound. auto.
   right; red; intros. subst y. rewrite f_refl in E. discriminate.

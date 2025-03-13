@@ -219,7 +219,7 @@ Lemma leftcontext_context:
   forall k1 k2 C, leftcontext k1 k2 C -> context k1 k2 C
 with leftcontextlist_contextlist:
   forall k C, leftcontextlist k C -> contextlist k C.
-Proof.
+Proof using.
   induction 1; constructor; auto.
   induction 1; constructor; auto.
 Qed.
@@ -394,7 +394,7 @@ with contextlist_compose:
   forall k2 C2, contextlist k2 C2 ->
   forall k1 C1, context k1 k2 C1 ->
   contextlist k1 (fun x => C2(C1 x)).
-Proof.
+Proof using.
   induction 1; intros; try (constructor; eauto).
   replace (fun x => C1 x) with C1. auto. apply extensionality; auto.
   induction 1; intros; constructor; eauto.
@@ -415,7 +415,7 @@ Definition safe (s: Csem.state) : Prop :=
 Lemma safe_steps:
   forall s s',
   safe s -> star Csem.step ge s E0 s' -> safe s'.
-Proof.
+Proof using.
   intros; red; intros.
   eapply H. eapply star_trans; eauto.
 Qed.
@@ -424,7 +424,7 @@ Lemma star_safe:
   forall s1 s2 t s3,
   safe s1 -> star Csem.step ge s1 E0 s2 -> (safe s2 -> star Csem.step ge s2 t s3) ->
   star Csem.step ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply star_trans; eauto. apply H1. eapply safe_steps; eauto. auto.
 Qed.
 
@@ -432,7 +432,7 @@ Lemma plus_safe:
   forall s1 s2 t s3,
   safe s1 -> star Csem.step ge s1 E0 s2 -> (safe s2 -> plus Csem.step ge s2 t s3) ->
   plus Csem.step ge s1 t s3.
-Proof.
+Proof using.
   intros. eapply star_plus_trans; eauto. apply H1. eapply safe_steps; eauto. auto.
 Qed.
 
@@ -441,7 +441,7 @@ Lemma safe_imm_safe:
   safe (ExprState f (C a) k e m) ->
   context K RV C ->
   imm_safe ge e K a m.
-Proof.
+Proof using.
   intros. destruct (classic (imm_safe ge e K a m)); auto.
   destruct (H Stuckstate).
   apply star_one. left. econstructor; eauto.
@@ -462,31 +462,31 @@ Definition expr_kind (a: expr) : kind :=
 
 Lemma lred_kind:
   forall e a m a' m', lred ge e a m a' m' -> expr_kind a = LV.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
 Lemma rred_kind:
   forall a m t a' m', rred ge a m t a' m' -> expr_kind a = RV.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
 Lemma callred_kind:
   forall a m fd args ty, callred ge a m fd args ty -> expr_kind a = RV.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
 Lemma context_kind:
   forall a from to C, context from to C -> expr_kind a = from -> expr_kind (C a) = to.
-Proof.
+Proof using.
   induction 1; intros; simpl; auto.
 Qed.
 
 Lemma imm_safe_kind:
   forall e k a m, imm_safe ge e k a m -> expr_kind a = k.
-Proof.
+Proof using.
   induction 1.
   auto.
   auto.
@@ -500,7 +500,7 @@ Lemma safe_expr_kind:
   context from RV C ->
   safe (ExprState f (C a) k e m) ->
   expr_kind a = from.
-Proof.
+Proof using.
   intros. eapply imm_safe_kind. eapply safe_imm_safe; eauto.
 Qed.
 
@@ -582,7 +582,7 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
 
 Lemma lred_invert:
   forall l m l' m', lred ge e l m l' m' -> invert_expr_prop l m.
-Proof.
+Proof using.
   induction 1; red; auto.
   exists b; auto.
   exists b; auto.
@@ -593,7 +593,7 @@ Qed.
 
 Lemma rred_invert:
   forall r m t r' m', rred ge r m t r' m' -> invert_expr_prop r m.
-Proof.
+Proof using.
   induction 1; red; auto.
   split; auto; exists t; exists v; auto.
   exists v; auto.
@@ -613,7 +613,7 @@ Lemma callred_invert:
   forall r fd args ty m,
   callred ge r m fd args ty ->
   invert_expr_prop r m.
-Proof.
+Proof using.
   intros. inv H. simpl.
   intros. exists tyargs, tyres, cconv, fd, args; auto.
 Qed.
@@ -631,7 +631,7 @@ Lemma invert_expr_context:
   forall a m,
   invert_expr_prop a m ->
   ~exprlist_all_values (C a)).
-Proof.
+Proof using.
   apply context_contextlist_ind; intros; try (exploit H0; [eauto|intros]); simpl.
   auto.
   destruct (C a); auto; contradiction.
@@ -667,7 +667,7 @@ Lemma imm_safe_inv:
   | Eval _ _ => True
   | _ => invert_expr_prop a m
   end.
-Proof.
+Proof using.
   destruct invert_expr_context as [A B].
   intros. inv H.
   auto.
@@ -692,7 +692,7 @@ Lemma safe_inv:
   | Eval _ _ => True
   | _ => invert_expr_prop a m
   end.
-Proof.
+Proof using.
   intros. eapply imm_safe_inv; eauto. eapply safe_imm_safe; eauto.
 Qed.
 
@@ -716,7 +716,7 @@ Lemma eval_simple_steps:
     forall C, context LV RV C ->
     star Csem.step ge (ExprState f (C a) k e m)
                    E0 (ExprState f (C (Eloc b ofs bf (typeof a))) k e m)).
-Proof.
+Proof using.
 
 Ltac Steps REC C' := eapply star_trans; [apply (REC C'); eauto | idtac | simpl; reflexivity].
 Ltac FinishR := apply star_one; left; apply step_rred; eauto; simpl; try (econstructor; eauto; fail).
@@ -774,7 +774,7 @@ Corollary eval_simple_rvalue_safe:
   eval_simple_rvalue e m a v ->
   context RV RV C -> safe (ExprState f (C a) k e m) ->
   safe (ExprState f (C (Eval v (typeof a))) k e m).
-Proof.
+Proof using.
   intros. eapply safe_steps; eauto. eapply eval_simple_rvalue_steps; eauto.
 Qed.
 
@@ -783,7 +783,7 @@ Corollary eval_simple_lvalue_safe:
   eval_simple_lvalue e m a b ofs bf ->
   context LV RV C -> safe (ExprState f (C a) k e m) ->
   safe (ExprState f (C (Eloc b ofs bf (typeof a))) k e m).
-Proof.
+Proof using.
   intros. eapply safe_steps; eauto. eapply eval_simple_lvalue_steps; eauto.
 Qed.
 
@@ -794,7 +794,7 @@ Lemma simple_can_eval:
   | LV => exists b ofs bf, eval_simple_lvalue e m a b ofs bf
   | RV => exists v, eval_simple_rvalue e m a v
   end.
-Proof.
+Proof using.
 Ltac StepL REC C' a :=
   let b := fresh "b" in let ofs := fresh "ofs" in let bf := fresh "bf" in
   let E := fresh "E" in let S := fresh "SAFE" in
@@ -865,7 +865,7 @@ Lemma simple_can_eval_rval:
   simple r = true -> context RV RV C -> safe (ExprState f (C r) k e m) ->
   exists v, eval_simple_rvalue e m r v
         /\ safe (ExprState f (C (Eval v (typeof r))) k e m).
-Proof.
+Proof using.
   intros. exploit (simple_can_eval r RV); eauto. intros [v A].
   exists v; split; auto. eapply eval_simple_rvalue_safe; eauto.
 Qed.
@@ -875,7 +875,7 @@ Lemma simple_can_eval_lval:
   simple l = true -> context LV RV C -> safe (ExprState f (C l) k e m) ->
   exists b ofs bf, eval_simple_lvalue e m l b ofs bf
          /\ safe (ExprState f (C (Eloc b ofs bf (typeof l))) k e m).
-Proof.
+Proof using.
   intros. exploit (simple_can_eval l LV); eauto. intros (b & ofs & bf & A).
   exists b, ofs, bf; split; auto. eapply eval_simple_lvalue_safe; eauto.
 Qed.
@@ -898,7 +898,7 @@ Lemma eval_simple_list_implies:
   forall rl tyl vl,
   eval_simple_list e m rl tyl vl ->
   exists vl', cast_arguments m (rval_list vl' rl) tyl vl /\ eval_simple_list' rl vl'.
-Proof.
+Proof using.
   induction 1.
   exists (@nil val); split. constructor. constructor.
   destruct IHeval_simple_list as [vl' [A B]].
@@ -911,7 +911,7 @@ Lemma can_eval_simple_list:
   forall tyl vl',
   cast_arguments m (rval_list vl rl) tyl vl' ->
   eval_simple_list e m rl tyl vl'.
-Proof.
+Proof using.
   induction 1; simpl; intros.
   inv H. constructor.
   inv H1. econstructor; eauto.
@@ -927,7 +927,7 @@ Lemma exprlist_app_assoc:
   forall rl2 rl3 rl1,
   exprlist_app (exprlist_app rl1 rl2) rl3 =
   exprlist_app rl1 (exprlist_app rl2 rl3).
-Proof.
+Proof using.
   induction rl1; auto. simpl. congruence.
 Qed.
 
@@ -942,7 +942,7 @@ Inductive contextlist' : (exprlist -> expr) -> Prop :=
 Lemma exprlist_app_context:
   forall rl1 rl2,
   contextlist RV (fun x => exprlist_app rl1 (Econs x rl2)).
-Proof.
+Proof using.
   induction rl1; simpl; intros.
   apply ctx_list_head. constructor.
   apply ctx_list_tail. auto.
@@ -952,7 +952,7 @@ Lemma contextlist'_head:
   forall rl C,
   contextlist' C ->
   context RV RV (fun x => C (Econs x rl)).
-Proof.
+Proof using.
   intros. inv H.
   set (C' := fun x => Ecall r1 (exprlist_app rl0 (Econs x rl)) ty).
   assert (context RV RV C'). constructor. apply exprlist_app_context.
@@ -968,7 +968,7 @@ Lemma contextlist'_tail:
   forall r1 C,
   contextlist' C ->
   contextlist' (fun x => C (Econs r1 x)).
-Proof.
+Proof using.
   intros. inv H.
   replace (fun x => C0 (Ecall r0 (exprlist_app rl0 (Econs r1 x)) ty))
      with (fun x => C0 (Ecall r0 (exprlist_app (exprlist_app rl0 (Econs r1 Enil)) x) ty)).
@@ -987,7 +987,7 @@ Lemma eval_simple_list_steps:
   forall C, contextlist' C ->
   star Csem.step ge (ExprState f (C rl) k e m)
                 E0 (ExprState f (C (rval_list vl rl)) k e m).
-Proof.
+Proof using.
   induction 1; intros.
 (* nil *)
   apply star_refl.
@@ -1004,7 +1004,7 @@ Lemma simple_list_can_eval:
   contextlist' C ->
   safe (ExprState f (C rl) k e m) ->
   exists vl, eval_simple_list' rl vl.
-Proof.
+Proof using.
   induction rl; intros.
   econstructor; constructor.
   simpl in H. destruct (andb_prop _ _ H).
@@ -1018,7 +1018,7 @@ Qed.
 
 Lemma rval_list_all_values:
   forall vl rl, exprlist_all_values (rval_list vl rl).
-Proof.
+Proof using.
   induction vl; simpl; intros. auto.
   destruct rl; simpl; auto.
 Qed.
@@ -1065,7 +1065,7 @@ Lemma decompose_expr:
    contextlist' C -> safe (ExprState f (C rl) k e m) ->
        simplelist rl = true
     \/ exists C', exists a', rl = C' a' /\ simple_side_effect a' /\ leftcontextlist RV C').
-Proof.
+Proof using.
   apply expr_expr_list_ind; intros; simpl; auto.
 
 Ltac Kind :=
@@ -1137,7 +1137,7 @@ Lemma decompose_topexpr:
   safe (ExprState f a k e m) ->
        simple a = true
     \/ exists C, exists a', a = C a' /\ simple_side_effect a' /\ leftcontext RV RV C.
-Proof.
+Proof using.
   intros. eapply (proj1 decompose_expr). apply ctx_top. auto.
 Qed.
 
@@ -1148,7 +1148,7 @@ End DECOMPOSITION.
 Lemma estep_simulation:
   forall S t S',
   estep S t S' -> plus Csem.step ge S t S'.
-Proof.
+Proof using.
   intros. inv H.
 (* simple *)
   exploit eval_simple_rvalue_steps; eauto. simpl; intros STEPS.
@@ -1285,7 +1285,7 @@ Lemma can_estep:
   safe (ExprState f a k e m) ->
   match a with Eval _ _ => False | _ => True end ->
   exists t, exists S, estep (ExprState f a k e m) t S.
-Proof.
+Proof using.
   intros. destruct (decompose_topexpr f k e m a H) as [A | [C [b [P [Q R]]]]].
 (* simple expr *)
   exploit (simple_can_eval f k e m a RV (fun x => x)); auto. intros [v P].
@@ -1401,7 +1401,7 @@ Qed.
 Theorem step_simulation:
   forall S1 t S2,
   step S1 t S2 -> plus Csem.step ge S1 t S2.
-Proof.
+Proof using.
   intros. inv H.
   apply estep_simulation; auto.
   apply plus_one. right. auto.
@@ -1410,7 +1410,7 @@ Qed.
 Theorem progress:
   forall S,
   safe S -> (exists r, final_state S r) \/ (exists t, exists S', step S t S').
-Proof.
+Proof using.
   intros. exploit H. apply star_refl. intros [FIN | [t [S' STEP]]].
   (* 1. Finished. *)
   auto.
@@ -1447,7 +1447,7 @@ Remark deref_loc_trace:
   forall ge ty m b ofs bf t v,
   deref_loc ge ty m b ofs bf t v ->
   match t with nil => True | ev :: nil => True | _ => False end.
-Proof.
+Proof using.
   intros. inv H; simpl; auto. inv H2; simpl; auto.
 Qed.
 
@@ -1456,7 +1456,7 @@ Remark deref_loc_receptive:
   deref_loc ge ty m b ofs bf (ev1 :: t1) v ->
   match_traces ge (ev1 :: nil) (ev2 :: nil) ->
   t1 = nil /\ exists v', deref_loc ge ty m b ofs bf (ev2 :: nil) v'.
-Proof.
+Proof using.
   intros.
   assert (t1 = nil). exploit deref_loc_trace; eauto. destruct t1; simpl; tauto.
   inv H. exploit volatile_load_receptive; eauto. intros [v' A].
@@ -1467,7 +1467,7 @@ Remark assign_loc_trace:
   forall ge ty m b ofs bf t v m' v',
   assign_loc ge ty m b ofs bf v t m' v' ->
   match t with nil => True | ev :: nil => output_event ev | _ => False end.
-Proof.
+Proof using.
   intros. inv H; simpl; auto. inv H2; simpl; auto.
 Qed.
 
@@ -1476,7 +1476,7 @@ Remark assign_loc_receptive:
   assign_loc ge ty m b ofs bf v (ev1 :: t1) m' v' ->
   match_traces ge (ev1 :: nil) (ev2 :: nil) ->
   ev1 :: t1 = ev2 :: nil.
-Proof.
+Proof using.
   intros.
   assert (t1 = nil). exploit assign_loc_trace; eauto. destruct t1; simpl; tauto.
   inv H. eapply volatile_store_receptive; eauto.
@@ -1484,7 +1484,7 @@ Qed.
 
 Lemma semantics_strongly_receptive:
   forall p, strongly_receptive (semantics p).
-Proof.
+Proof using.
   intros. constructor; simpl; intros.
 (* receptiveness *)
   set (ge := globalenv p) in *.
@@ -1597,7 +1597,7 @@ Qed.
 
 Theorem strategy_simulation:
   forall p, backward_simulation (Csem.semantics p) (semantics p).
-Proof.
+Proof using.
   intros.
   apply backward_simulation_plus with (match_states := fun (S1 S2: state) => S1 = S2); simpl.
 (* symbols *)
@@ -2150,7 +2150,7 @@ Inductive outcome_state_match
 
 Lemma is_call_cont_call_cont:
   forall k, is_call_cont k -> call_cont k = k.
-Proof.
+Proof using.
   destruct k; simpl; intros; contradiction || auto.
 Qed.
 
@@ -2162,7 +2162,7 @@ with leftcontextlist_compose:
   forall k2 C2, leftcontextlist k2 C2 ->
   forall k1 C1, leftcontext k1 k2 C1 ->
   leftcontextlist k1 (fun x => C2(C1 x)).
-Proof.
+Proof using.
   induction 1; intros; try (constructor; eauto).
   replace (fun x => C1 x) with C1. auto. apply extensionality; auto.
   induction 1; intros; constructor; eauto.
@@ -2171,7 +2171,7 @@ Qed.
 Lemma exprlist_app_leftcontext:
   forall rl1 rl2,
   simplelist rl1 = true -> leftcontextlist RV (fun x => exprlist_app rl1 (Econs x rl2)).
-Proof.
+Proof using.
   induction rl1; simpl; intros.
   apply lctx_list_head. constructor.
   destruct (andb_prop _ _ H). apply lctx_list_tail. auto. auto.
@@ -2180,7 +2180,7 @@ Qed.
 Lemma exprlist_app_simple:
   forall rl1 rl2,
   simplelist (exprlist_app rl1 rl2) = simplelist rl1 && simplelist rl2.
-Proof.
+Proof using.
   induction rl1; intros; simpl. auto. rewrite IHrl1. apply andb_assoc.
 Qed.
 
@@ -2210,7 +2210,7 @@ Lemma bigstep_to_steps:
    forall k,
    is_call_cont k ->
    star step ge (Callstate fd args k m) t (Returnstate res k m')).
-Proof.
+Proof using.
   apply bigstep_induction; intros.
 (* expression, general *)
   exploit (H0 (fun x => x) f k). constructor. intros [A [B C]].
@@ -2702,7 +2702,7 @@ with leftcontextlist_size:
   forall e1 e2,
   (esize e1 < esize e2)%nat ->
   (esizelist (C e1) < esizelist (C e2))%nat.
-Proof.
+Proof using.
   induction 1; intros; simpl; auto with arith.
   exploit leftcontextlist_size; eauto. auto with arith.
   exploit leftcontextlist_size; eauto. auto with arith.
@@ -2714,7 +2714,7 @@ Lemma evalinf_funcall_steps:
   forall m fd args t k,
   evalinf_funcall m fd args t ->
   forever_N step lt ge O (Callstate fd args k m) t.
-Proof.
+Proof using.
   cofix COF.
 
   assert (COS:
@@ -3051,7 +3051,7 @@ Definition bigstep_semantics (p: program) :=
 
 Theorem bigstep_semantics_sound:
   forall p, bigstep_sound (bigstep_semantics p) (semantics p).
-Proof.
+Proof using.
   intros; constructor; intros.
 (* termination *)
   inv H. econstructor; econstructor.

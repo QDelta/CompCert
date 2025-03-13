@@ -35,7 +35,7 @@ Definition match_prog (p: Clight.program) (tp: Csharpminor.program) : Prop :=
 
 Lemma transf_program_match:
   forall p tp, transl_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   unfold transl_program; intros.
   eapply match_transform_partial_program2.
   eexact H.
@@ -53,7 +53,7 @@ Lemma transl_fundef_sig1:
   match_fundef ce f tf ->
   classify_fun (type_of_fundef f) = fun_case_f args res cc ->
   funsig tf = signature_of_type args res cc.
-Proof.
+Proof using.
   intros. inv H.
 - monadInv H1. simpl. inversion H0. reflexivity.
 - simpl in H0. unfold funsig. congruence.
@@ -64,7 +64,7 @@ Lemma transl_fundef_sig2:
   match_fundef ce f tf ->
   type_of_fundef f = Tfunction args res cc ->
   funsig tf = signature_of_type args res cc.
-Proof.
+Proof using.
   intros. eapply transl_fundef_sig1; eauto.
   rewrite H0; reflexivity.
 Qed.
@@ -74,7 +74,7 @@ Lemma transl_sizeof:
   linkorder cunit prog ->
   sizeof cunit.(prog_comp_env) t = OK sz ->
   sz = Ctypes.sizeof prog.(prog_comp_env) t.
-Proof.
+Proof using.
   intros. destruct H.
   unfold sizeof in H0. destruct (complete_type (prog_comp_env cunit) t) eqn:C; inv H0.
   symmetry. apply Ctypes.sizeof_stable; auto.
@@ -85,7 +85,7 @@ Lemma transl_alignof:
   linkorder cunit prog ->
   alignof cunit.(prog_comp_env) t = OK al ->
   al = Ctypes.alignof prog.(prog_comp_env) t.
-Proof.
+Proof using.
   intros. destruct H.
   unfold alignof in H0. destruct (complete_type (prog_comp_env cunit) t) eqn:C; inv H0.
   symmetry. apply Ctypes.alignof_stable; auto.
@@ -97,7 +97,7 @@ Lemma transl_alignof_blockcopy:
   sizeof cunit.(prog_comp_env) t = OK sz ->
   sz = Ctypes.sizeof prog.(prog_comp_env) t /\
   alignof_blockcopy cunit.(prog_comp_env) t = alignof_blockcopy prog.(prog_comp_env) t.
-Proof.
+Proof using.
   intros. destruct H.
   unfold sizeof in H0. destruct (complete_type (prog_comp_env cunit) t) eqn:C; inv H0.
   split.
@@ -112,7 +112,7 @@ Lemma union_field_offset_stable:
   cunit.(prog_comp_env)!id = Some co ->
   prog.(prog_comp_env)!id = Some co /\
   union_field_offset prog.(prog_comp_env) f (co_members co) = union_field_offset cunit.(prog_comp_env) f (co_members co).
-Proof.
+Proof using.
   intros.
   assert (C: composite_consistent cunit.(prog_comp_env) co).
   { apply build_composite_env_consistent with cunit.(prog_types) id; auto.
@@ -127,7 +127,7 @@ Lemma field_offset_stable:
   cunit.(prog_comp_env)!id = Some co ->
   prog.(prog_comp_env)!id = Some co /\
   field_offset prog.(prog_comp_env) f (co_members co) = field_offset cunit.(prog_comp_env) f (co_members co).
-Proof.
+Proof using.
   intros.
   assert (C: composite_consistent cunit.(prog_comp_env) co).
   { apply build_composite_env_consistent with cunit.(prog_types) id; auto.
@@ -144,7 +144,7 @@ Lemma transl_lbl_stmt_1:
   forall ce tyret nbrk ncnt n sl tsl,
   transl_lbl_stmt ce tyret nbrk ncnt sl = OK tsl ->
   transl_lbl_stmt ce tyret nbrk ncnt (Clight.select_switch n sl) = OK (select_switch n tsl).
-Proof.
+Proof using.
   intros until n.
   assert (DFL: forall sl tsl,
     transl_lbl_stmt ce tyret nbrk ncnt sl = OK tsl ->
@@ -182,7 +182,7 @@ Lemma transl_lbl_stmt_2:
   forall ce tyret nbrk ncnt sl tsl,
   transl_lbl_stmt ce tyret nbrk ncnt sl = OK tsl ->
   transl_statement ce tyret nbrk ncnt (seq_of_labeled_statement sl) = OK (seq_of_lbl_stmt tsl).
-Proof.
+Proof using.
   induction sl; intros.
   monadInv H. auto.
   monadInv H. simpl. rewrite EQ; simpl. rewrite (IHsl _ EQ1). simpl. auto.
@@ -199,35 +199,35 @@ Variable ge: genv.
 Lemma make_intconst_correct:
   forall n e le m,
   eval_expr ge e le m (make_intconst n) (Vint n).
-Proof.
+Proof using.
   intros. unfold make_intconst. econstructor. reflexivity.
 Qed.
 
 Lemma make_floatconst_correct:
   forall n e le m,
   eval_expr ge e le m (make_floatconst n) (Vfloat n).
-Proof.
+Proof using.
   intros. unfold make_floatconst. econstructor. reflexivity.
 Qed.
 
 Lemma make_singleconst_correct:
   forall n e le m,
   eval_expr ge e le m (make_singleconst n) (Vsingle n).
-Proof.
+Proof using.
   intros. unfold make_singleconst. econstructor. reflexivity.
 Qed.
 
 Lemma make_longconst_correct:
   forall n e le m,
   eval_expr ge e le m (make_longconst n) (Vlong n).
-Proof.
+Proof using.
   intros. unfold make_floatconst. econstructor. reflexivity.
 Qed.
 
 Lemma make_ptrofsconst_correct:
   forall n e le m,
   eval_expr ge e le m (make_ptrofsconst n) (Vptrofs (Ptrofs.repr n)).
-Proof.
+Proof using.
   intros. unfold Vptrofs, make_ptrofsconst. destruct Archi.ptr64 eqn:SF.
 - replace (Ptrofs.to_int64 (Ptrofs.repr n)) with (Int64.repr n).
   apply make_longconst_correct.
@@ -241,7 +241,7 @@ Lemma make_singleoffloat_correct:
   forall a n e le m,
   eval_expr ge e le m a (Vfloat n) ->
   eval_expr ge e le m (make_singleoffloat a) (Vsingle (Float.to_single n)).
-Proof.
+Proof using.
   intros. econstructor. eauto. auto.
 Qed.
 
@@ -249,7 +249,7 @@ Lemma make_floatofsingle_correct:
   forall a n e le m,
   eval_expr ge e le m a (Vsingle n) ->
   eval_expr ge e le m (make_floatofsingle a) (Vfloat (Float.of_single n)).
-Proof.
+Proof using.
   intros. econstructor. eauto. auto.
 Qed.
 
@@ -257,7 +257,7 @@ Lemma make_floatofint_correct:
   forall a n sg e le m,
   eval_expr ge e le m a (Vint n) ->
   eval_expr ge e le m (make_floatofint a sg) (Vfloat(cast_int_float sg n)).
-Proof.
+Proof using.
   intros. unfold make_floatofint, cast_int_float.
   destruct sg; econstructor; eauto.
 Qed.
@@ -272,7 +272,7 @@ Lemma make_cmpu_ne_zero_correct:
   forall e le m a n,
   eval_expr ge e le m a (Vint n) ->
   eval_expr ge e le m (make_cmpu_ne_zero a) (Vint (if Int.eq n Int.zero then Int.zero else Int.one)).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: eval_expr ge e le m (Ebinop (Ocmpu Cne) a (make_intconst Int.zero))
                                        (Vint (if Int.eq n Int.zero then Int.zero else Int.one))).
@@ -307,7 +307,7 @@ Lemma make_cmpu_ne_zero_correct_ptr:
   Archi.ptr64 = false ->
   Mem.weak_valid_pointer m b (Ptrofs.unsigned i) = true ->
   eval_expr ge e le m (make_cmpu_ne_zero a) Vone.
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: eval_expr ge e le m (Ebinop (Ocmpu Cne) a (make_intconst Int.zero)) Vone).
   { econstructor; eauto with cshm. simpl. unfold Val.cmpu, Val.cmpu_bool.
@@ -330,7 +330,7 @@ Lemma make_cast_int_correct:
   forall e le m a n sz si,
   eval_expr ge e le m a (Vint n) ->
   eval_expr ge e le m (make_cast_int a sz si) (Vint (cast_int_int sz si n)).
-Proof.
+Proof using.
   intros. unfold make_cast_int, cast_int_int.
   destruct sz.
   destruct si; eauto with cshm.
@@ -343,7 +343,7 @@ Lemma make_longofint_correct:
   forall e le m a n si,
   eval_expr ge e le m a (Vint n) ->
   eval_expr ge e le m (make_longofint a si) (Vlong (cast_int_long si n)).
-Proof.
+Proof using.
   intros. unfold make_longofint, cast_int_long. destruct si; eauto with cshm.
 Qed.
 
@@ -364,7 +364,7 @@ Lemma make_cast_correct:
   eval_expr ge e le m a v ->
   sem_cast v ty1 ty2 m = Some v' ->
   eval_expr ge e le m b v'.
-Proof.
+Proof using.
   intros. unfold make_cast, sem_cast in *;
   destruct (classify_cast ty1 ty2); inv H; destruct v; InvEval; eauto with cshm.
 - (* single -> int *)
@@ -420,7 +420,7 @@ Lemma make_boolean_correct:
   exists vb,
     eval_expr ge e le m (make_boolean a ty) vb
     /\ Val.bool_of_val vb b.
-Proof.
+Proof using.
   intros. unfold make_boolean. unfold bool_val in H0.
   destruct (classify_bool ty); destruct v; InvEval.
 - (* int *)
@@ -452,7 +452,7 @@ Lemma make_neg_correct:
   make_neg a tya = OK c ->
   eval_expr ge e le m a va ->
   eval_expr ge e le m c v.
-Proof.
+Proof using.
   unfold sem_neg, make_neg; intros until m; intros SEM MAKE EV1;
   destruct (classify_neg tya); inv MAKE; destruct va; inv SEM; eauto with cshm.
 Qed.
@@ -463,7 +463,7 @@ Lemma make_absfloat_correct:
   make_absfloat a tya = OK c ->
   eval_expr ge e le m a va ->
   eval_expr ge e le m c v.
-Proof.
+Proof using.
   unfold sem_absfloat, make_absfloat; intros until m; intros SEM MAKE EV1;
   destruct (classify_neg tya); inv MAKE; destruct va; inv SEM; eauto with cshm.
   unfold make_floatoflong, cast_long_float. destruct s.
@@ -477,7 +477,7 @@ Lemma make_notbool_correct:
   make_notbool a tya = OK c ->
   eval_expr ge e le m a va ->
   eval_expr ge e le m c v.
-Proof.
+Proof using.
   unfold sem_notbool, bool_val, make_notbool; intros until m; intros SEM MAKE EV1.
   destruct (classify_bool tya); inv MAKE; destruct va; simpl in SEM; InvEval.
 - econstructor; eauto with cshm. simpl. unfold Val.cmpu, Val.cmpu_bool, Int.cmpu.
@@ -504,7 +504,7 @@ Lemma make_notint_correct:
   make_notint a tya = OK c ->
   eval_expr ge e le m a va ->
   eval_expr ge e le m c v.
-Proof.
+Proof using.
   unfold sem_notint, make_notint; intros until m; intros SEM MAKE EV1;
   destruct (classify_notint tya); inv MAKE; destruct va; inv SEM; eauto with cshm.
 Qed.
@@ -554,7 +554,7 @@ Lemma make_binarith_correct:
   binary_constructor_correct
     (make_binarith iop iopu fop sop lop lopu)
     (sem_binarith sem_int sem_long sem_float sem_single).
-Proof.
+Proof using sop_ok lopu_ok lop_ok iopu_ok iop_ok fop_ok.
   red; unfold make_binarith, sem_binarith;
   intros until m; intros SEM MAKE EV1 EV2.
   set (cls := classify_binarith tya tyb) in *.
@@ -577,7 +577,7 @@ Lemma make_binarith_int_correct:
   binary_constructor_correct
     (make_binarith_int iop iopu lop lopu)
     (sem_binarith sem_int sem_long (fun x y => None) (fun x y => None)).
-Proof.
+Proof using lopu_ok lop_ok iopu_ok iop_ok.
   red; unfold make_binarith_int, sem_binarith;
   intros until m; intros SEM MAKE EV1 EV2.
   set (cls := classify_binarith tya tyb) in *.
@@ -599,7 +599,7 @@ End MAKE_BIN.
 Hint Extern 2 (@eq (option val) _ _) => (simpl; reflexivity) : cshm.
 
 Lemma make_add_correct: binary_constructor_correct (make_add cunit.(prog_comp_env)) (sem_add prog.(prog_comp_env)).
-Proof.
+Proof using LINK.
   assert (A: forall ty si a b c e le m va vb v,
              make_add_ptr_int cunit.(prog_comp_env) ty si a b = OK c ->
              eval_expr ge e le m a va -> eval_expr ge e le m b vb ->
@@ -646,7 +646,7 @@ Proof.
 Qed.
 
 Lemma make_sub_correct: binary_constructor_correct (make_sub cunit.(prog_comp_env)) (sem_sub prog.(prog_comp_env)).
-Proof.
+Proof using LINK.
   red; unfold make_sub, sem_sub;
   intros until m; intros SEM MAKE EV1 EV2;
   destruct (classify_sub tya tyb); try (monadInv MAKE).
@@ -709,32 +709,32 @@ Proof.
 Qed.
 
 Lemma make_mul_correct: binary_constructor_correct make_mul sem_mul.
-Proof.
+Proof using.
   apply make_binarith_correct; intros; auto.
 Qed.
 
 Lemma make_div_correct: binary_constructor_correct make_div sem_div.
-Proof.
+Proof using.
   apply make_binarith_correct; intros; auto.
 Qed.
 
 Lemma make_mod_correct: binary_constructor_correct make_mod sem_mod.
-Proof.
+Proof using.
   apply make_binarith_int_correct; intros; auto.
 Qed.
 
 Lemma make_and_correct: binary_constructor_correct make_and sem_and.
-Proof.
+Proof using.
   apply make_binarith_int_correct; intros; auto.
 Qed.
 
 Lemma make_or_correct: binary_constructor_correct make_or sem_or.
-Proof.
+Proof using.
   apply make_binarith_int_correct; intros; auto.
 Qed.
 
 Lemma make_xor_correct: binary_constructor_correct make_xor sem_xor.
-Proof.
+Proof using.
   apply make_binarith_int_correct; intros; auto.
 Qed.
 
@@ -746,7 +746,7 @@ Remark small_shift_amount_1:
   Int64.ltu i Int64.iwordsize = true ->
   Int.ltu (Int64.loword i) Int64.iwordsize' = true
   /\ Int64.unsigned i = Int.unsigned (Int64.loword i).
-Proof.
+Proof using.
   intros. apply Int64.ltu_inv in H. comput (Int64.unsigned Int64.iwordsize).
   assert (Int64.unsigned i = Int.unsigned (Int64.loword i)).
   {
@@ -760,7 +760,7 @@ Remark small_shift_amount_2:
   forall i,
   Int64.ltu i (Int64.repr 32) = true ->
   Int.ltu (Int64.loword i) Int.iwordsize = true.
-Proof.
+Proof using.
   intros. apply Int64.ltu_inv in H. comput (Int64.unsigned (Int64.repr 32)).
   assert (Int64.unsigned i = Int.unsigned (Int64.loword i)).
   {
@@ -774,13 +774,13 @@ Lemma small_shift_amount_3:
   forall i,
   Int.ltu i Int64.iwordsize' = true ->
   Int64.unsigned (Int64.repr (Int.unsigned i)) = Int.unsigned i.
-Proof.
+Proof using.
   intros. apply Int.ltu_inv in H. comput (Int.unsigned Int64.iwordsize').
   apply Int64.unsigned_repr. comput Int64.max_unsigned; lia.
 Qed.
 
 Lemma make_shl_correct: shift_constructor_correct make_shl sem_shl.
-Proof.
+Proof using.
   red; unfold make_shl, sem_shl, sem_shift;
   intros until m; intros SEM MAKE EV1 EV2;
   destruct (classify_shift tya tyb); inv MAKE;
@@ -799,7 +799,7 @@ Proof.
 Qed.
 
 Lemma make_shr_correct: shift_constructor_correct make_shr sem_shr.
-Proof.
+Proof using.
   red; unfold make_shr, sem_shr, sem_shift;
   intros until m; intros SEM MAKE EV1 EV2;
   destruct (classify_shift tya tyb); inv MAKE;
@@ -826,7 +826,7 @@ Lemma make_cmp_ptr_correct:
   eval_expr ge e le m a va ->
   eval_expr ge e le m b vb ->
   eval_expr ge e le m (make_cmp_ptr cmp a b) v.
-Proof.
+Proof using.
   unfold cmp_ptr, make_cmp_ptr; intros.
   destruct Archi.ptr64.
 - econstructor; eauto.
@@ -838,7 +838,7 @@ Remark make_ptrofs_of_int_correct:
   forall e le m a i si,
   eval_expr ge e le m a (Vint i) ->
   eval_expr ge e le m (if Archi.ptr64 then make_longofint a si else a) (Vptrofs (ptrofs_of_int si i)).
-Proof.
+Proof using.
   intros. unfold Vptrofs, ptrofs_of_int. destruct Archi.ptr64 eqn:SF.
 - unfold make_longofint. destruct si.
 + replace (Ptrofs.to_int64 (Ptrofs.of_ints i)) with (Int64.repr (Int.signed i)).
@@ -858,7 +858,7 @@ Remark make_ptrofs_of_int64_correct:
   forall e le m a i,
   eval_expr ge e le m a (Vlong i) ->
   eval_expr ge e le m (if Archi.ptr64 then a else Eunop Ointoflong a) (Vptrofs (Ptrofs.of_int64 i)).
-Proof.
+Proof using.
   intros. unfold Vptrofs. destruct Archi.ptr64 eqn:SF.
 - replace (Ptrofs.to_int64 (Ptrofs.of_int64 i)) with i. auto.
   symmetry. auto with ptrofs.
@@ -867,7 +867,7 @@ Proof.
 Qed.
 
 Lemma make_cmp_correct: forall cmp, binary_constructor_correct (make_cmp cmp) (sem_cmp cmp).
-Proof.
+Proof using.
   red; unfold sem_cmp, make_cmp; intros until m; intros SEM MAKE EV1 EV2;
   destruct (classify_cmp tya tyb).
 - inv MAKE. eapply make_cmp_ptr_correct; eauto.
@@ -884,7 +884,7 @@ Lemma transl_unop_correct:
   sem_unary_operation op va tya m = Some v ->
   eval_expr ge e le m a va ->
   eval_expr ge e le m c v.
-Proof.
+Proof using.
   intros. destruct op; simpl in *.
   eapply make_notbool_correct; eauto.
   eapply make_notint_correct; eauto.
@@ -899,7 +899,7 @@ Lemma transl_binop_correct:
   eval_expr ge e le m a va ->
   eval_expr ge e le m b vb ->
   eval_expr ge e le m c v.
-Proof.
+Proof using LINK.
   intros. destruct op; simpl in *.
   eapply make_add_correct; eauto.
   eapply make_sub_correct; eauto.
@@ -921,7 +921,7 @@ Qed.
 
 Remark int_ltu_true:
   forall x, 0 <= x < Int.zwordsize -> Int.ltu (Int.repr x) Int.iwordsize = true.
-Proof.
+Proof using.
   intros. unfold Int.ltu. rewrite Int.unsigned_repr_wordsize, Int.unsigned_repr, zlt_true by (generalize Int.wordsize_max_unsigned; lia).
   auto.
 Qed.
@@ -930,7 +930,7 @@ Remark first_bit_range: forall sz pos width,
   0 <= pos -> 0 < width -> pos + width <= bitsize_carrier sz ->
      0 <= first_bit sz pos width < Int.zwordsize
   /\ 0 <= Int.zwordsize - first_bit sz pos width - width < Int.zwordsize.
-Proof.
+Proof using.
   intros.
   assert (bitsize_carrier sz <= Int.zwordsize) by (destruct sz; compute; congruence).
   unfold first_bit; destruct Archi.big_endian; lia.
@@ -942,7 +942,7 @@ Lemma make_load_correct:
   eval_expr ge e le m addr (Vptr b ofs) ->
   deref_loc ty m b ofs bf v ->
   eval_expr ge e le m code v.
-Proof.
+Proof using.
   unfold make_load; intros until m; intros MKLOAD EVEXP DEREF.
   inv DEREF.
 - (* scalar *)
@@ -979,7 +979,7 @@ Lemma make_store_bitfield_correct:
   assign_loc prog.(prog_comp_env) ty m b ofs (Bits sz sg pos width) v m' ->
   make_store_bitfield sz sg pos width dst src = OK s ->
   step ge (State f s k e le m) E0 (State f Sskip k e le m').
-Proof.
+Proof using.
   intros until s; intros DST SRC ASG MK.
   inv ASG. inv H5. unfold make_store_bitfield in MK.
   destruct (zle 0 pos && zlt 0 width && zle (pos + width) (bitsize_carrier sz)); inv MK.
@@ -999,7 +999,7 @@ Lemma make_memcpy_correct:
   access_mode ty = By_copy ->
   make_memcpy cunit.(prog_comp_env) dst src ty = OK s ->
   step ge (State f s k e le m) E0 (State f Sskip k e le m').
-Proof.
+Proof using LINK.
   intros. inv H1; try congruence.
   monadInv H3.
   exploit transl_alignof_blockcopy. eexact LINK. eauto. intros [A B]. rewrite A, B.
@@ -1019,7 +1019,7 @@ Lemma make_store_correct:
   eval_expr ge e le m rhs v ->
   assign_loc prog.(prog_comp_env) ty m b ofs bf v m' ->
   step ge (State f code k e le m) E0 (State f Sskip k e le m').
-Proof.
+Proof using LINK.
   unfold make_store. intros until k; intros MKSTORE EV1 EV2 ASSIGN.
   inversion ASSIGN; subst.
 - (* nonvolatile scalar *)
@@ -1037,7 +1037,7 @@ Lemma make_normalization_correct:
   eval_expr ge e le m a v ->
   wt_val v t ->
   eval_expr ge e le m (make_normalization t a) v.
-Proof.
+Proof using.
   intros. destruct t; simpl; auto. inv H0.
 - destruct i; simpl in H3.
   + destruct s; econstructor; eauto; simpl; congruence.
@@ -1105,7 +1105,7 @@ Lemma match_env_globals:
   match_env e te ->
   e!id = None ->
   te!id = None.
-Proof.
+Proof using.
   intros. destruct (te!id) as [[b sz] | ] eqn:?; auto.
   exploit me_local_inv; eauto. intros [ty EQ]. congruence.
 Qed.
@@ -1114,7 +1114,7 @@ Lemma match_env_same_blocks:
   forall e te,
   match_env e te ->
   blocks_of_env te = Clight.blocks_of_env ge e.
-Proof.
+Proof using.
   intros.
   set (R := fun (x: (block * type)) (y: (block * Z)) =>
          match x, y with
@@ -1142,13 +1142,13 @@ Lemma match_env_free_blocks:
   match_env e te ->
   Mem.free_list m (Clight.blocks_of_env ge e) = Some m' ->
   Mem.free_list m (blocks_of_env te) = Some m'.
-Proof.
+Proof using.
   intros. rewrite (match_env_same_blocks _ _ H). auto.
 Qed.
 
 Lemma match_env_empty:
   match_env Clight.empty_env Csharpminor.empty_env.
-Proof.
+Proof using.
   unfold Clight.empty_env, Csharpminor.empty_env.
   constructor.
   intros until ty. repeat rewrite PTree.gempty. congruence.
@@ -1168,7 +1168,7 @@ Lemma match_env_alloc_variables:
   exists te2,
   Csharpminor.alloc_variables te1 m1 tvars te2 m2
   /\ match_env e2 te2.
-Proof.
+Proof using.
   induction 2; simpl; intros.
 - inv H0. exists te1; split. constructor. auto.
 - monadInv H2. monadInv EQ. simpl in *.
@@ -1189,7 +1189,7 @@ Qed.
 Lemma create_undef_temps_match:
   forall temps,
   create_undef_temps (map fst temps) = Clight.create_undef_temps temps.
-Proof.
+Proof using.
   induction temps; simpl. auto.
   destruct a as [id ty]. simpl. decEq. auto.
 Qed.
@@ -1198,7 +1198,7 @@ Lemma bind_parameter_temps_match:
   forall vars vals le1 le2,
   Clight.bind_parameter_temps vars vals le1 = Some le2 ->
   bind_parameters (map fst vars) vals le1 = Some le2.
-Proof.
+Proof using.
   induction vars; simpl; intros.
   destruct vals; inv H. auto.
   destruct a as [id ty]. destruct vals; try discriminate. auto.
@@ -1208,7 +1208,7 @@ Lemma transl_vars_names:
   forall ce vars tvars,
   mmap (transl_var ce) vars = OK tvars ->
   map fst tvars = var_names vars.
-Proof.
+Proof using.
   intros. exploit mmap_inversion; eauto. generalize vars tvars. induction 1; simpl.
 - auto.
 - monadInv H0. simpl; congruence.
@@ -1254,7 +1254,7 @@ Lemma transl_expr_lvalue:
   transl_expr cunit.(prog_comp_env) a = OK ta ->
   exists tb, transl_lvalue cunit.(prog_comp_env) a = OK (tb, bf)
           /\ make_load tb (typeof a) bf = OK ta.
-Proof.
+Proof using LINK.
   intros until ta; intros EVAL TR. inv EVAL; simpl in TR.
 - (* var local *)
   exists (Eaddrof id); auto.
@@ -1293,7 +1293,7 @@ Lemma transl_expr_lvalue_correct:
    Clight.eval_lvalue ge e le m a b ofs bf ->
    forall ta bf' (TR: transl_lvalue cunit.(prog_comp_env) a = OK (ta, bf')),
    bf = bf' /\ Csharpminor.eval_expr tge te le m ta (Vptr b ofs)).
-Proof.
+Proof using TRANSL MENV LINK.
   apply eval_expr_lvalue_ind; intros; try (monadInv TR).
 - (* const int *)
   apply make_intconst_correct.
@@ -1377,7 +1377,7 @@ Lemma transl_arglist_correct:
   Clight.eval_exprlist ge e le m al tyl vl ->
   forall tal, transl_arglist cunit.(prog_comp_env) al tyl = OK tal ->
   Csharpminor.eval_exprlist tge te le m tal vl.
-Proof.
+Proof using TRANSL MENV LINK.
   induction 1; intros.
   monadInv H. constructor.
   monadInv H2. constructor.
@@ -1388,7 +1388,7 @@ Lemma transl_arglist_typed:
   forall al tyl vl,
   Clight.eval_exprlist ge e le m al tyl vl ->
   Val.has_argtype_list vl (List.map argtype_of_type tyl).
-Proof.
+Proof using.
   induction 1; intros; simpl; constructor; eauto using val_casted_has_argtype, cast_val_is_casted.
 Qed.
 
@@ -1396,7 +1396,7 @@ Lemma typlist_of_arglist_eq:
   forall al tyl vl,
   Clight.eval_exprlist ge e le m al tyl vl ->
   typlist_of_arglist al tyl = List.map argtype_of_type tyl.
-Proof.
+Proof using.
   induction 1; simpl.
   auto.
   f_equal; auto.
@@ -1431,7 +1431,7 @@ Lemma match_transl_step:
   forall ts tk ts' tk' f te le m,
   match_transl (Sblock ts) tk ts' tk' ->
   star step tge (State f ts' tk' te le m) E0 (State f ts (Kblock tk) te le m).
-Proof.
+Proof using.
   intros. inv H.
   apply star_one. constructor.
   apply star_refl.
@@ -1518,7 +1518,7 @@ Remark match_states_skip:
   match_env e te ->
   match_cont cu.(prog_comp_env) (Clight.fn_return f) nbrk ncnt k tk ->
   match_states (Clight.State f Clight.Sskip k e le m) (State tf Sskip tk te le m).
-Proof.
+Proof using.
   intros. econstructor; eauto. simpl; reflexivity. constructor.
 Qed.
 
@@ -1555,7 +1555,7 @@ with transl_find_label_ls:
       /\ match_cont ce tyret nbrk' ncnt' k' tk'
   end.
 
-Proof.
+Proof using.
 * intro s; case s; intros; try (monadInv TR); simpl.
 - (* skip *)
   auto.
@@ -1632,7 +1632,7 @@ Lemma match_cont_call_cont:
   forall ce' nbrk' ncnt' ce tyret nbrk ncnt k tk,
   match_cont ce tyret nbrk ncnt k tk ->
   match_cont ce' tyret nbrk' ncnt' (Clight.call_cont k) (call_cont tk).
-Proof.
+Proof using.
   induction 1; simpl; auto.
 - apply match_Kstop.
 - eapply match_Kcall; eauto.
@@ -1644,7 +1644,7 @@ Lemma match_cont_is_call_cont:
   match_cont ce tyret nbrk ncnt k tk ->
   Clight.is_call_cont k ->
   match_cont ce' tyret nbrk' ncnt' k tk /\ is_call_cont tk.
-Proof.
+Proof using.
   intros. inv H; simpl in H0; try contradiction; simpl.
   split; auto; apply match_Kstop.
   split; auto; eapply match_Kcall; eauto.
@@ -1657,7 +1657,7 @@ Lemma transl_step:
   forall S1 t S2, Clight.step2 ge S1 t S2 ->
   forall T1, match_states S1 T1 ->
   exists T2, plus step tge T1 t T2 /\ match_states S2 T2.
-Proof.
+Proof using TRANSL.
   induction 1; intros T1 MST; inv MST.
 
 - (* assign *)
@@ -1939,7 +1939,7 @@ Qed.
 Lemma transl_initial_states:
   forall S, Clight.initial_state prog S ->
   exists R, initial_state tprog R /\ match_states S R.
-Proof.
+Proof using TRANSL.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
   assert (D: Genv.find_symbol tge (AST.prog_main tprog) = Some b).
@@ -1954,13 +1954,13 @@ Qed.
 Lemma transl_final_states:
   forall S R r,
   match_states S R -> Clight.final_state S r -> final_state R r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv MK. constructor.
 Qed.
 
 Theorem transl_program_correct:
   forward_simulation (Clight.semantics2 prog) (Csharpminor.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_plus.
   apply senv_preserved.
   eexact transl_initial_states.
@@ -1973,7 +1973,7 @@ End CORRECTNESS.
 (** ** Commutation with linking *)
 
 Global Instance TransfCshmgenLink : TransfLink match_prog.
-Proof.
+Proof using.
   red; intros. destruct (link_linkorder _ _ _ H) as (LO1 & LO2).
   generalize H.
 Local Transparent Ctypes.Linker_program.

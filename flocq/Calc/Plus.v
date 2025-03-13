@@ -45,7 +45,7 @@ Theorem Fplus_core_correct :
   (e <= e1)%Z ->
   let '(m, l) := Fplus_core m1 e1 m2 e2 e in
   inbetween_float beta m e (F2R (Float beta m1 e1) + F2R (Float beta m2 e2)) l.
-Proof.
+Proof using.
 intros m1 e1 m2 e2 e He1.
 unfold Fplus_core.
 case Zlt_bool_spec ; intros He2.
@@ -104,7 +104,7 @@ Theorem Fplus_correct :
   let '(m, e, l) := Fplus x y in
   (l = loc_Exact \/ e <= cexp beta fexp (F2R x + F2R y))%Z /\
   inbetween_float beta m e (F2R x + F2R y) l.
-Proof.
+Proof using monotone_exp.
 intros [m1 e1] [m2 e2].
 unfold Fplus.
 case Zeq_bool_spec ; intros Hm1.

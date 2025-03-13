@@ -35,7 +35,7 @@ Definition match_prog (p: Cminor.program) (tp: CminorSel.program) :=
 
 Lemma record_globdefs_sound:
   forall dm id gd, (record_globdefs dm)!id = Some gd -> dm!id = Some gd.
-Proof.
+Proof using.
   intros.
   set (f := fun m id gd => if globdef_of_interest gd then PTree.set id gd m else m) in *.
   set (P := fun m m' => m'!id = Some gd -> m!id = Some gd).
@@ -54,7 +54,7 @@ Lemma lookup_helper_correct_1:
   forall globs name sg id,
   lookup_helper globs name sg = OK id ->
   globs!id = Some (Gfun (External (EF_runtime name sg))).
-Proof.
+Proof using.
   intros.
   set (P := fun (m: PTree.t globdef) res => res = Some id -> m!id = Some(Gfun(External (EF_runtime name sg)))).
   assert (P globs (PTree.fold (lookup_helper_aux name sg) globs None)).
@@ -79,20 +79,20 @@ Lemma lookup_helper_correct:
   forall p name sg id,
   lookup_helper (record_globdefs (prog_defmap p)) name sg = OK id ->
   helper_declared p id name sg.
-Proof.
+Proof using.
   intros. apply lookup_helper_correct_1 in H. apply record_globdefs_sound in H. auto.
 Qed.
 
 Lemma get_helpers_correct:
   forall p hf,
   get_helpers (prog_defmap p) = OK hf -> helper_functions_declared p hf.
-Proof.
+Proof using.
   intros. monadInv H. red; simpl. auto 20 using lookup_helper_correct.
 Qed.
 
 Theorem transf_program_match:
   forall p tp, sel_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. monadInv H.
   eapply match_transform_partial_program_contextual. eexact EQ0.
   intros. exists x; split; auto. apply get_helpers_correct; auto.
@@ -101,7 +101,7 @@ Qed.
 Lemma helper_functions_declared_linkorder:
   forall (p p': Cminor.program) hf,
   helper_functions_declared p hf -> linkorder p p' -> helper_functions_declared p' hf.
-Proof.
+Proof using.
   intros.
   assert (X: forall id name sg, helper_declared p id name sg -> helper_declared p' id name sg).
   { unfold helper_declared; intros.
@@ -121,7 +121,7 @@ Let tge := Genv.globalenv tprog.
 Hypothesis TRANSF: match_prog prog tprog.
 
 Lemma wt_prog : wt_program prog.
-Proof.
+Proof using tprog TRANSF.
   red; intros. destruct TRANSF as [A _].
   exploit list_forall2_in_left; eauto.
   intros ((i' & gd') & B & (C & D)). simpl in *. inv D. 
@@ -149,7 +149,7 @@ Lemma functions_translated:
   Genv.find_funct ge v = Some f ->
   Val.lessdef v v' ->
   exists cu tf, Genv.find_funct tge v' = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof.
+Proof using TRANSF.
   intros. inv H0.
   eapply Genv.find_funct_match; eauto.
   discriminate.
@@ -157,19 +157,19 @@ Qed.
 
 Lemma sig_function_translated:
   forall cu f tf, match_fundef cu f tf -> funsig tf = Cminor.funsig f.
-Proof.
+Proof using.
   intros. destruct H as (hf & P & Q). destruct f; monadInv Q; auto. monadInv EQ; auto.
 Qed.
 
 Lemma stackspace_function_translated:
   forall dm hf f tf, sel_function dm hf f = OK tf -> fn_stackspace tf = Cminor.fn_stackspace f.
-Proof.
+Proof using.
   intros. monadInv H. auto.
 Qed.
 
 Lemma helper_functions_preserved:
   forall hf, helper_functions_declared prog hf -> helper_functions_declared tprog hf.
-Proof.
+Proof using TRANSF.
   assert (X: forall id name sg, helper_declared prog id name sg -> helper_declared tprog id name sg).
   { unfold helper_declared; intros.
     generalize (match_program_defmap _ _ _ _ _ TRANSF id).
@@ -186,7 +186,7 @@ Hypothesis LINK: linkorder cunit prog.
 Hypothesis HF: helper_functions_declared cunit hf.
 
 Let HF': helper_functions_declared tprog hf.
-Proof.
+Proof using.
   apply helper_functions_preserved. eapply helper_functions_declared_linkorder; eauto.
 Defined.
 
@@ -199,7 +199,7 @@ Lemma eval_condexpr_of_expr:
   eval_expr tge sp e m le a v ->
   Val.bool_of_val v b ->
   eval_condexpr tge sp e m le (condexpr_of_expr a) b.
-Proof.
+Proof using.
   intros until a. functional induction (condexpr_of_expr a); intros.
 (* compare *)
   inv H. econstructor; eauto.
@@ -220,7 +220,7 @@ Lemma eval_condition_of_expr:
   exists vl,
      eval_exprlist tge sp e m le (snd (condition_of_expr a)) vl
   /\ eval_condition (fst (condition_of_expr a)) vl m = Some b.
-Proof.
+Proof using.
   intros a; functional induction (condition_of_expr a); intros; simpl.
 - inv H. exists vl; split; auto.
   simpl in H6. inv H6. apply Val.bool_of_val_of_optbool in H0. auto.
@@ -234,7 +234,7 @@ Lemma eval_load:
   eval_expr tge sp e m le a v ->
   Mem.loadv chunk m v = Some v' ->
   eval_expr tge sp e m le (load chunk a) v'.
-Proof.
+Proof using.
   intros. generalize H0; destruct v; simpl; intro; try discriminate.
   unfold load.
   generalize (eval_addressing _ _ _ _ _ chunk _ _ _ _ H (eq_refl _)).
@@ -249,7 +249,7 @@ Lemma eval_store:
   Mem.storev chunk m v1 v2 = Some m' ->
   step tge (State f (store chunk a1 a2) k sp e m)
         E0 (State f Sskip k sp e m').
-Proof.
+Proof using.
   intros. generalize H1; destruct v1; simpl; intro; try discriminate.
   unfold store.
   generalize (eval_addressing _ _ _ _ _ chunk _ _ _ _ H (eq_refl _)).
@@ -264,7 +264,7 @@ Lemma eval_sel_unop:
   eval_expr tge sp e m le a1 v1 ->
   eval_unop op v1 = Some v ->
   exists v', eval_expr tge sp e m le (sel_unop op a1) v' /\ Val.lessdef v v'.
-Proof.
+Proof using prog ge cunit TRANSF LINK HF' HF.
   destruct op; simpl; intros; FuncInv; try subst v.
   apply eval_cast8unsigned; auto.
   apply eval_cast8signed; auto.
@@ -307,7 +307,7 @@ Lemma eval_sel_binop:
   eval_expr tge sp e m le a2 v2 ->
   eval_binop op v1 v2 m = Some v ->
   exists v', eval_expr tge sp e m le (sel_binop op a1 a2) v' /\ Val.lessdef v v'.
-Proof.
+Proof using prog ge cunit TRANSF LINK HF' HF.
   destruct op; simpl; intros; FuncInv; try subst v.
   apply eval_add; auto.
   apply eval_sub; auto.
@@ -359,7 +359,7 @@ Lemma eval_sel_select:
   Val.bool_of_val v1 b ->
   exists v, eval_expr tge sp e m le (sel_select ty a1 a2 a3) v
         /\  Val.lessdef (Val.select (Some b) v2 v3 ty) v.
-Proof.
+Proof using.
   unfold sel_select; intros.
   specialize (eval_condition_of_expr _ _ _ _ H H2). 
   destruct (condition_of_expr a1) as [cond args]; simpl fst; simpl snd. intros (vl & A & B).
@@ -378,7 +378,7 @@ Lemma eval_sel_known_builtin:
   eval_exprlist tge sp e m le args vl ->
   builtin_function_sem bf vl = Some v ->
   exists v', eval_expr tge sp e m le a v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros until le; intros SEL ARGS SEM.
   destruct bf as [bf|bf]; simpl in SEL.
 - destruct bf; try discriminate.
@@ -409,7 +409,7 @@ Lemma expr_is_addrof_ident_correct:
   forall e id,
   expr_is_addrof_ident e = Some id ->
   e = Cminor.Econst (Cminor.Oaddrsymbol id Ptrofs.zero).
-Proof.
+Proof using.
   intros e id. unfold expr_is_addrof_ident.
   destruct e; try congruence.
   destruct c; try congruence.
@@ -426,7 +426,7 @@ Lemma classify_call_correct:
   | Call_imm id => exists b, Genv.find_symbol ge id = Some b /\ v = Vptr b Ptrofs.zero
   | Call_builtin ef => fd = External ef
   end.
-Proof.
+Proof using.
   unfold classify_call; intros.
   destruct (expr_is_addrof_ident a) as [id|] eqn:EA; auto.
   exploit expr_is_addrof_ident_correct; eauto. intros EQ; subst a.
@@ -481,7 +481,7 @@ Lemma sel_switch_correct_rec:
   nth_error le arg = Some varg ->
   comptree_match modulus i t = Some x ->
   eval_exitexpr tge sp e m le (sel_switch make_cmp_eq make_cmp_ltu make_sub make_to_int arg t) x.
-Proof.
+Proof using eval_make_to_int eval_make_sub eval_make_cmp_ltu eval_make_cmp_eq.
   intros until x; intros Ri. induction t; simpl; intros until le; intros WF ARG MATCH.
 - (* base case *)
   inv MATCH. constructor.
@@ -530,7 +530,7 @@ Lemma sel_switch_correct:
   eval_exitexpr tge sp e m le
      (XElet arg (sel_switch make_cmp_eq make_cmp_ltu make_sub make_to_int O t))
      (switch_target i dfl cases).
-Proof.
+Proof using eval_make_to_int eval_make_sub eval_make_cmp_ltu eval_make_cmp_eq.
   intros. exploit validate_switch_correct; eauto. lia. intros [A B].
   econstructor. eauto. eapply sel_switch_correct_rec; eauto.
 Qed.
@@ -545,7 +545,7 @@ Hypothesis LINK: linkorder cunit prog.
 Hypothesis HF: helper_functions_declared cunit hf.
 
 Let HF': helper_functions_declared tprog hf.
-Proof.
+Proof using.
   apply helper_functions_preserved. eapply helper_functions_declared_linkorder; eauto.
 Defined.
 
@@ -554,7 +554,7 @@ Lemma sel_switch_int_correct:
   validate_switch Int.modulus dfl cases t = true ->
   eval_expr tge sp e m le arg (Vint i) ->
   eval_exitexpr tge sp e m le (XElet arg (sel_switch_int O t)) (switch_target (Int.unsigned i) dfl cases).
-Proof.
+Proof using.
   assert (INTCONST: forall n sp e m le,
             eval_expr tge sp e m le (Eop (Ointconst n) Enil) (Vint n)).
   { intros. econstructor. constructor. auto. }
@@ -594,7 +594,7 @@ Lemma sel_switch_long_correct:
   validate_switch Int64.modulus dfl cases t = true ->
   eval_expr tge sp e m le arg (Vlong i) ->
   eval_exitexpr tge sp e m le (XElet arg (sel_switch_long O t)) (switch_target (Int64.unsigned i) dfl cases).
-Proof.
+Proof using.
   intros. eapply sel_switch_correct with (R := Rlong); eauto.
 - intros until n; intros EVAL R RANGE.
   eapply eval_cmpl. eexact EVAL. apply eval_longconst with (n := Int64.repr n).
@@ -639,7 +639,7 @@ Lemma eval_unop_lessdef:
   forall op v1 v1' v,
   eval_unop op v1 = Some v -> Val.lessdef v1 v1' ->
   exists v', eval_unop op v1' = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros until v; intros EV LD. inv LD.
   exists v; auto.
   destruct op; simpl in *; inv EV; TrivialExists.
@@ -650,7 +650,7 @@ Lemma eval_binop_lessdef:
   eval_binop op v1 v2 m = Some v ->
   Val.lessdef v1 v1' -> Val.lessdef v2 v2' -> Mem.extends m m' ->
   exists v', eval_binop op v1' v2' m' = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros until m'; intros EV LD1 LD2 ME.
   assert (exists v', eval_binop op v1' v2' m = Some v' /\ Val.lessdef v v').
   { inv LD1. inv LD2. exists v; auto.
@@ -685,7 +685,7 @@ Lemma set_var_lessdef:
   forall e1 e2 id v1 v2,
   env_lessdef e1 e2 -> Val.lessdef v1 v2 ->
   env_lessdef (PTree.set id v1 e1) (PTree.set id v2 e2).
-Proof.
+Proof using.
   intros; red; intros. rewrite PTree.gsspec in *. destruct (peq id0 id).
   exists v2; split; congruence.
   auto.
@@ -695,7 +695,7 @@ Lemma set_optvar_lessdef:
   forall e1 e2 optid v1 v2,
   env_lessdef e1 e2 -> Val.lessdef v1 v2 ->
   env_lessdef (set_optvar optid v1 e1) (set_optvar optid v2 e2).
-Proof.
+Proof using.
   unfold set_optvar; intros. destruct optid; auto. apply set_var_lessdef; auto.
 Qed.
 
@@ -703,7 +703,7 @@ Lemma set_params_lessdef:
   forall il vl1 vl2,
   Val.lessdef_list vl1 vl2 ->
   env_lessdef (set_params vl1 il) (set_params vl2 il).
-Proof.
+Proof using.
   induction il; simpl; intros.
   red; intros. rewrite PTree.gempty in H0; congruence.
   inv H; apply set_var_lessdef; auto.
@@ -712,7 +712,7 @@ Qed.
 Lemma set_locals_lessdef:
   forall e1 e2, env_lessdef e1 e2 ->
   forall il, env_lessdef (set_locals il e1) (set_locals il e2).
-Proof.
+Proof using.
   induction il; simpl. auto. apply set_var_lessdef; auto.
 Qed.
 
@@ -731,7 +731,7 @@ Lemma sel_expr_correct:
   forall e' le m',
   env_lessdef e e' -> Mem.extends m m' ->
   exists v', eval_expr tge sp e' m' le (sel_expr a) v' /\ Val.lessdef v v'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   induction 1; intros; simpl.
   (* Evar *)
   exploit H0; eauto. intros [v' [A B]]. exists v'; split; auto. constructor; auto.
@@ -768,7 +768,7 @@ Lemma sel_exprlist_correct:
   forall e' le m',
   env_lessdef e e' -> Mem.extends m m' ->
   exists v', eval_exprlist tge sp e' m' le (sel_exprlist a) v' /\ Val.lessdef_list v v'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   induction 1; intros; simpl.
   exists (@nil val); split; auto. constructor.
   exploit sel_expr_correct; eauto. intros [v1' [A B]].
@@ -785,7 +785,7 @@ Lemma sel_select_opt_correct:
   Val.bool_of_val vcond b ->
   env_lessdef e e' -> Mem.extends m m' ->
   exists v', eval_expr tge sp e' m' le a v' /\ Val.lessdef (Val.select (Some b) v1 v2 ty) v'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   unfold sel_select_opt; intros. 
   destruct (condition_of_expr (sel_expr cond)) as [cnd args] eqn:C.
   exploit sel_expr_correct. eexact H0. eauto. eauto. intros (vcond' & EVC & LDC).
@@ -806,7 +806,7 @@ Lemma sel_builtin_arg_correct:
   exists v',
      CminorSel.eval_builtin_arg tge sp e' m' (sel_builtin_arg a c) v'
   /\ Val.lessdef v v'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   intros. unfold sel_builtin_arg.
   exploit sel_expr_correct; eauto. intros (v1 & A & B).
   exists v1; split; auto.
@@ -826,7 +826,7 @@ Lemma sel_builtin_args_correct:
                   (sel_builtin_args al cl)
                   vl'
   /\ Val.lessdef_list vl vl'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   induction 3; intros; simpl.
 - exists (@nil val); split; constructor.
 - exploit sel_builtin_arg_correct; eauto. intros (v1' & A & B).
@@ -838,7 +838,7 @@ Lemma sel_builtin_res_correct:
   forall oid v e v' e',
   env_lessdef e e' -> Val.lessdef v v' ->
   env_lessdef (set_optvar oid v e) (set_builtin_res (sel_builtin_res oid) v' e').
-Proof.
+Proof using.
   intros. destruct oid; simpl; auto. apply set_var_lessdef; auto.
 Qed.
 
@@ -852,7 +852,7 @@ Lemma sel_builtin_default_correct:
                  t (State f Sskip k sp e2' m2')
   /\ env_lessdef (set_optvar optid v e1) e2'
   /\ Mem.extends m2 m2'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   intros. unfold sel_builtin_default.
   exploit sel_builtin_args_correct; eauto. intros (vl' & A & B).
   exploit external_call_mem_extends; eauto. intros (v' & m2' & D & E & F & _).
@@ -872,7 +872,7 @@ Lemma sel_builtin_correct:
                  t (State f Sskip k sp e2' m2')
   /\ env_lessdef (set_optvar optid v e1) e2'
   /\ Mem.extends m2 m2'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   intros. 
   exploit sel_exprlist_correct; eauto. intros (vl' & A & B).
   exploit external_call_mem_extends; eauto. intros (v' & m2' & D & E & F & _).
@@ -898,7 +898,7 @@ Definition eventually := Smallstep.eventually Cminor.step Cminor.final_state ge.
 Lemma eventually_step: forall f s k sp e m n P,
   (forall t S', Cminor.step ge (Cminor.State f s k sp e m) t S' -> t = E0 /\ eventually n S' P) ->
   eventually (S n) (Cminor.State f s k sp e m) P.
-Proof.
+Proof using.
   intros. apply Smallstep.eventually_later; auto. intros r FS. inv FS.
 Qed.
 
@@ -914,7 +914,7 @@ Lemma classify_stmt_sound:
       eventually n (Cminor.State f s k sp e m) (eq (Cminor.State f Cminor.Sskip k sp (PTree.set id v e) m))
   | SCother => True
   end.
-Proof.
+Proof using.
   induction s; simpl; auto.
 - (* skip *)
   exists O; intros. constructor; auto.
@@ -960,7 +960,7 @@ Lemma classify_stmt_wt:
   classify_stmt s = SCassign id a ->
   wt_stmt env tyret s ->
   wt_expr env a (env id).
-Proof.
+Proof using.
   induction s; simpl; intros CL WT; try discriminate.
 - destruct e; try destruct (ident_eq i i0); inv CL; inv WT; auto.
 - destruct o; try discriminate. destruct e; discriminate.
@@ -982,7 +982,7 @@ Lemma if_conversion_base_correct:
   /\ Val.lessdef (if b then v1 else v2) v'
   /\ step tge (State tf s tk sp e' m')
            E0 (State tf Sskip tk sp (PTree.set id v' e') m').
-Proof.
+Proof using cunit TRANSF LINK HF.
   unfold if_conversion_base; intros. rewrite H2 in H. clear H2.
   destruct andb eqn:C; try discriminate.
   destruct (sel_select_opt ty cond ifso ifnot) as [a'|] eqn:SSO; simpl in H; inv H.
@@ -1010,7 +1010,7 @@ Lemma if_conversion_correct:
      step tge (State f' s k' sp e' m') E0 (State f' Sskip k' sp e1' m')
   /\ eventually n (Cminor.State f s0 k sp e m) (eq (Cminor.State f Cminor.Sskip k sp e1 m))
   /\ env_lessdef e1 e1'.
-Proof.
+Proof using cunit TRANSF LINK HF.
   unfold if_conversion; intros until m'; intros IFC DE WTE WT1 WT2 EVC BOV ELD MEXT.
   set (s0 := if b then ifso else ifnot). set (ki := known_id f) in *.
   generalize (classify_stmt_sound ifso) (classify_stmt_sound ifnot).
@@ -1133,14 +1133,14 @@ Remark match_states_skip: forall cunit hf f f' k k' sp e m e' m' env
         (LD: env_lessdef e e')
         (ME: Mem.extends m m'),
   match_states (Cminor.State f Cminor.Sskip k sp e m) (State f' Sskip k' sp e' m').
-Proof.
+Proof using.
   intros. eapply match_state with (kont := Sskip); eauto.
 Qed.
 
 Remark call_cont_commut:
   forall cunit hf ki env k k',
   match_cont cunit hf ki env k k' -> match_call_cont (Cminor.call_cont k) (call_cont k').
-Proof.
+Proof using.
   induction 1; simpl; auto. inversion H; subst; auto.
 Qed.
 
@@ -1148,7 +1148,7 @@ Remark match_is_call_cont:
   forall cunit hf ki env k k',
   match_cont cunit ki env hf k k' -> Cminor.is_call_cont k ->
   match_call_cont k k' /\ is_call_cont k'.
-Proof.
+Proof using.
   destruct 1; intros; try contradiction. split; auto. inv H; auto.
 Qed.
 
@@ -1159,7 +1159,7 @@ Definition nolabel' (s: stmt) : Prop :=
 
 Remark classify_stmt_nolabel:
   forall s, classify_stmt s <> SCother -> nolabel s.
-Proof.
+Proof using.
   induction s; simpl; intros DIFF; try congruence.
 - (* skip *) red; auto.
 - (* assign *) red; auto.
@@ -1174,7 +1174,7 @@ Qed.
 Lemma if_conversion_base_nolabel: forall (hf: helper_functions) ki env a id a1 a2 kont s,
   if_conversion_base ki env a id a1 a2 kont = Some s ->
   nolabel' s.
-Proof.
+Proof using.
   unfold if_conversion_base; intros.
   destruct andb; try discriminate.
   destruct (sel_select_opt (env id) a a1 a2); inv H. 
@@ -1184,7 +1184,7 @@ Qed.
 Lemma if_conversion_nolabel: forall (hf: helper_functions) ki env a s1 s2 kont s,
   if_conversion ki env a s1 s2 kont = Some s ->
   nolabel s1 /\ nolabel s2 /\ nolabel' s.
-Proof.
+Proof using.
   unfold if_conversion; intros.
   Ltac conclude :=
     split; [apply classify_stmt_nolabel;congruence
@@ -1199,7 +1199,7 @@ Qed.
 
 Remark sel_builtin_nolabel:
   forall (hf: helper_functions) optid ef args, nolabel' (sel_builtin optid ef args).
-Proof.
+Proof using.
   unfold sel_builtin; intros; red; intros.
   destruct ef; auto. destruct lookup_builtin_function; auto.
   destruct optid; auto. destruct sel_known_builtin; auto. 
@@ -1214,7 +1214,7 @@ Remark find_label_commut:
   | Some(s1, k1), Some(s1', k1') => exists kont1, sel_stmt (prog_defmap cunit) ki env s1 kont1 = OK s1' /\ match_cont cunit hf ki env k1 k1'
   | _, _ => False
   end.
-Proof.
+Proof using.
   induction s; intros until k'; simpl; intros MC SE; try (monadInv SE); simpl; auto.
 - (* store *)
   unfold store. destruct (addressing m (sel_expr e)); simpl; auto.
@@ -1272,7 +1272,7 @@ Lemma sel_step_correct:
   (exists T2, plus step tge T1 t T2 /\ match_states S2 T2)
   \/ (measure S2 < measure S1 /\ t = E0 /\ match_states S2 T1)%nat
   \/ (exists T2 n, step tge T1 t T2 /\ eventually n S2 (fun S3 => match_states S3 T2)).
-Proof.
+Proof using TRANSF.
   induction 1; intros T1 ME WTS; inv ME; try (monadInv TS).
 - (* skip seq *)
   inv MC. left; econstructor; split. apply plus_one; econstructor. econstructor; eauto.
@@ -1449,7 +1449,7 @@ Qed.
 Lemma sel_initial_states:
   forall S, Cminor.initial_state prog S ->
   exists R, initial_state tprog R /\ match_states S R.
-Proof.
+Proof using TRANSF.
   destruct 1.
   exploit function_ptr_translated; eauto. intros (cu & f' & A & B & C).
   econstructor; split.
@@ -1464,13 +1464,13 @@ Qed.
 Lemma sel_final_states:
   forall S R r,
   match_states S R -> Cminor.final_state S r -> final_state R r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv MC. inv LD. constructor.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (Cminor.semantics prog) (CminorSel.semantics tprog).
-Proof.
+Proof using TRANSF.
   set (MS := fun S T => match_states S T /\ wt_state S).
   apply forward_simulation_eventually_star with (measure := measure) (match_states := MS);
   unfold MS.
@@ -1496,7 +1496,7 @@ End PRESERVATION.
 (** ** Commutation with linking *)
 
 Global Instance TransfSelectionLink : TransfLink match_prog.
-Proof.
+Proof using.
   red; intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.
   intros. elim H3; intros hf1 [A1 B1]. elim H4; intros hf2 [A2 B2].

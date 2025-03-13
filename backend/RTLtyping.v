@@ -362,7 +362,7 @@ Definition type_function : res regenv :=
 
 Remark type_ros_incr:
   forall e ros e' te, type_ros e ros = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold type_ros; intros. destruct ros. eauto with ty. inv H; auto with ty.
 Qed.
 
@@ -371,7 +371,7 @@ Hint Resolve type_ros_incr: ty.
 Lemma type_ros_sound:
   forall e ros e' te, type_ros e ros = OK e' -> S.satisf te e' ->
   match ros with inl r => te r = Tptr | inr s => True end.
-Proof.
+Proof using.
   unfold type_ros; intros. destruct ros.
   eapply S.set_sound; eauto.
   auto.
@@ -379,7 +379,7 @@ Qed.
 
 Lemma check_successor_sound:
   forall s x, check_successor s = OK x -> valid_successor f s.
-Proof.
+Proof using.
   unfold check_successor, valid_successor; intros.
   destruct (fn_code f)!s; inv H. exists i; auto.
 Qed.
@@ -388,7 +388,7 @@ Hint Resolve check_successor_sound: ty.
 
 Lemma check_successors_sound:
   forall sl x, check_successors sl = OK x -> forall s, In s sl -> valid_successor f s.
-Proof.
+Proof using.
   induction sl; simpl; intros.
   contradiction.
   monadInv H. destruct H0. subst a; eauto with ty. eauto.
@@ -396,7 +396,7 @@ Qed.
 
 Remark type_expect_incr:
   forall e ty1 ty2 e' te, type_expect e ty1 ty2 = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold type_expect; intros. destruct (typ_eq ty1 ty2); inv H. auto.
 Qed.
 
@@ -404,19 +404,19 @@ Hint Resolve type_expect_incr: ty.
 
 Lemma type_expect_sound:
   forall e ty1 ty2 e', type_expect e ty1 ty2 = OK e' -> ty1 = ty2.
-Proof.
+Proof using.
   unfold type_expect; intros. destruct (typ_eq ty1 ty2); inv H. auto.
 Qed.
 
 Lemma type_builtin_arg_incr:
   forall e a ty e' te, type_builtin_arg e a ty = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold type_builtin_arg; intros; destruct a; eauto with ty.
 Qed.
 
 Lemma type_builtin_args_incr:
   forall a ty e e' te, type_builtin_args e a ty = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   induction a; destruct ty; simpl; intros; try discriminate.
   inv H; auto.
   monadInv H. eapply type_builtin_arg_incr; eauto.
@@ -424,7 +424,7 @@ Qed.
 
 Lemma type_builtin_res_incr:
   forall e a ty e' te, type_builtin_res e a ty = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   unfold type_builtin_res; intros; destruct a; inv H; eauto with ty.
 Qed.
 
@@ -433,7 +433,7 @@ Hint Resolve type_builtin_args_incr type_builtin_res_incr: ty.
 Lemma type_builtin_arg_sound:
   forall e a ty e' te,
   type_builtin_arg e a ty = OK e' -> S.satisf te e' -> type_of_builtin_arg te a = ty.
-Proof.
+Proof using.
   intros. destruct a; simpl in *; try (symmetry; eapply type_expect_sound; eassumption).
   eapply S.set_sound; eauto.
 Qed.
@@ -441,7 +441,7 @@ Qed.
 Lemma type_builtin_args_sound:
   forall al tyl e e' te,
   type_builtin_args e al tyl = OK e' -> S.satisf te e' -> List.map (type_of_builtin_arg te) al = tyl.
-Proof.
+Proof using.
   induction al as [|a al]; destruct tyl as [|ty tyl]; simpl; intros; try discriminate.
 - auto.
 - monadInv H. f_equal.
@@ -452,7 +452,7 @@ Qed.
 Lemma type_builtin_res_sound:
   forall e a ty e' te,
   type_builtin_res e a ty = OK e' -> S.satisf te e' -> type_of_builtin_res te a = ty.
-Proof.
+Proof using.
   intros. destruct a; simpl in *.
   eapply S.set_sound; eauto.
   symmetry; eapply type_expect_sound; eauto.
@@ -462,7 +462,7 @@ Qed.
 Lemma type_instr_incr:
   forall e i e' te,
   type_instr e i = OK e' -> S.satisf te e' -> S.satisf te e.
-Proof.
+Proof using.
   intros; destruct i; try (monadInv H); eauto with ty.
 - (* op *)
   destruct (is_move o) eqn:ISMOVE.
@@ -487,7 +487,7 @@ Qed.
 Lemma type_instr_sound:
   forall e i e' te,
   type_instr e i = OK e' -> S.satisf te e' -> wt_instr f te i.
-Proof.
+Proof using.
   intros; destruct i; try (monadInv H); simpl.
 - (* nop *)
   constructor; eauto with ty.
@@ -555,7 +555,7 @@ Lemma type_code_sound:
   forall pc i e e' te,
   type_code e = OK e' ->
   f.(fn_code)!pc = Some i -> S.satisf te e' -> wt_instr f te i.
-Proof.
+Proof using.
   intros pc i e0 e1 te TCODE.
   set (P := fun c opte =>
          match opte with
@@ -578,7 +578,7 @@ Qed.
 
 Theorem type_function_correct:
   forall env, type_function = OK env -> wt_function f env.
-Proof.
+Proof using.
   unfold type_function; intros. monadInv H.
   assert (SAT0: S.satisf env x0) by (eapply S.solve_sound; eauto).
   assert (SAT1: S.satisf env x) by (eauto with ty).
@@ -601,7 +601,7 @@ Lemma type_ros_complete:
   S.satisf te e ->
   match ros with inl r => te r = Tptr | inr s => True end ->
   exists e', type_ros e ros = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   intros; destruct ros; simpl.
   eapply S.set_complete; eauto.
   exists e; auto.
@@ -609,14 +609,14 @@ Qed.
 
 Lemma check_successor_complete:
   forall s, valid_successor f s -> check_successor s = OK tt.
-Proof.
+Proof using.
   unfold valid_successor, check_successor; intros.
   destruct H as [i EQ]; rewrite EQ; auto.
 Qed.
 
 Lemma type_expect_complete:
   forall e ty, type_expect e ty ty = OK e.
-Proof.
+Proof using.
   unfold type_expect; intros. rewrite dec_eq_true; auto.
 Qed.
 
@@ -624,7 +624,7 @@ Lemma type_builtin_arg_complete:
   forall te a e,
   S.satisf te e ->
   exists e', type_builtin_arg e a (type_of_builtin_arg te a) = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   intros. destruct a; simpl; try (exists e; split; [apply type_expect_complete|assumption]).
   apply S.set_complete; auto.
 Qed.
@@ -633,7 +633,7 @@ Lemma type_builtin_args_complete:
   forall te al e,
   S.satisf te e ->
   exists e', type_builtin_args e al (List.map (type_of_builtin_arg te) al) = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   induction al; simpl; intros.
 - exists e; auto.
 - destruct (type_builtin_arg_complete te a e) as (e1 & A & B); auto.
@@ -645,7 +645,7 @@ Lemma type_builtin_res_complete:
   forall te a e,
   S.satisf te e ->
   exists e', type_builtin_res e a (type_of_builtin_res te a) = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   intros. destruct a; simpl.
   apply S.set_complete; auto.
   exists e; auto.
@@ -657,7 +657,7 @@ Lemma type_instr_complete:
   S.satisf te e ->
   wt_instr f te i ->
   exists e', type_instr e i = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   induction 2; simpl.
 - (* nop *)
   econstructor; split. rewrite check_successor_complete; simpl; eauto. auto.
@@ -734,7 +734,7 @@ Lemma type_code_complete:
   (forall pc instr, f.(fn_code)!pc = Some instr -> wt_instr f te instr) ->
   S.satisf te e ->
   exists e', type_code e = OK e' /\ S.satisf te e'.
-Proof.
+Proof using.
   intros te e0 WTC SAT0.
   set (P := fun c res =>
         (forall pc i, c!pc = Some i -> wt_instr f te i) ->
@@ -756,7 +756,7 @@ Qed.
 
 Theorem type_function_complete:
   forall te, wt_function f te -> exists te, type_function = OK te.
-Proof.
+Proof using.
   intros. destruct H.
   destruct (type_code_complete te S.initial) as (e1 & A & B).
   auto. apply S.satisf_initial.
@@ -792,7 +792,7 @@ Lemma wt_regset_assign:
   wt_regset env rs ->
   Val.has_type v (env r) ->
   wt_regset env (rs#r <- v).
-Proof.
+Proof using.
   intros; red; intros.
   rewrite Regmap.gsspec.
   case (peq r0 r); intro.
@@ -804,7 +804,7 @@ Lemma wt_regset_list:
   forall env rs,
   wt_regset env rs ->
   forall rl, Val.has_type_list (rs##rl) (List.map env rl).
-Proof.
+Proof using.
   induction rl; simpl.
   auto.
   split. apply H. apply IHrl.
@@ -815,7 +815,7 @@ Lemma wt_regset_setres:
   wt_regset env rs ->
   Val.has_type v (type_of_builtin_res env res) ->
   wt_regset env (regmap_setres res v rs).
-Proof.
+Proof using.
   intros. destruct res; simpl in *; auto. apply wt_regset_assign; auto.
 Qed.
 
@@ -823,7 +823,7 @@ Lemma wt_init_regs:
   forall env rl args,
   Val.has_type_list args (List.map env rl) ->
   wt_regset env (init_regs args rl).
-Proof.
+Proof using.
   induction rl; destruct args; simpl; intuition.
   red; intros. rewrite Regmap.gi. simpl; auto.
   apply wt_regset_assign; auto.
@@ -835,7 +835,7 @@ Lemma wt_exec_Iop:
   eval_operation ge sp op rs##args m = Some v ->
   wt_regset env rs ->
   wt_regset env (rs#res <- v).
-Proof.
+Proof using.
   intros. inv H.
   simpl in H0. inv H0. apply wt_regset_assign; auto.
   rewrite H4; auto.
@@ -849,7 +849,7 @@ Lemma wt_exec_Iload:
   Mem.loadv chunk m a = Some v ->
   wt_regset env rs ->
   wt_regset env (rs#dst <- v).
-Proof.
+Proof using.
   intros. destruct a; simpl in H0; try discriminate. inv H.
   eapply wt_regset_assign; eauto. rewrite H8; eapply Mem.load_type; eauto.
 Qed.
@@ -860,7 +860,7 @@ Lemma wt_exec_Ibuiltin:
   external_call ef ge vargs m t vres m' ->
   wt_regset env rs ->
   wt_regset env (regmap_setres res vres rs).
-Proof.
+Proof using.
   intros. inv H.
   eapply wt_regset_setres; eauto.
   rewrite H7. eapply external_call_well_typed; eauto.
@@ -869,7 +869,7 @@ Qed.
 Lemma wt_instr_at:
   forall f env pc i,
   wt_function f env -> f.(fn_code)!pc = Some i -> wt_instr f env i.
-Proof.
+Proof using.
   intros. inv H. eauto.
 Qed.
 
@@ -907,7 +907,7 @@ Inductive wt_state: state -> Prop :=
 Remark wt_stackframes_change_sig:
   forall s sg1 sg2,
   sg1.(sig_res) = sg2.(sig_res) -> wt_stackframes s sg1 -> wt_stackframes s sg2.
-Proof.
+Proof using.
   intros. inv H0.
 - constructor; congruence.
 - econstructor; eauto. rewrite H3. unfold proj_sig_res. rewrite H. auto.
@@ -924,7 +924,7 @@ Let ge := Genv.globalenv p.
 Lemma subject_reduction:
   forall st1 t st2, step ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
-Proof.
+Proof using wt_p.
   induction 1; intros; inv WT;
   try (generalize (wt_instrs _ _ WT_FN pc _ H); intros WTI).
   (* Inop *)
@@ -982,7 +982,7 @@ Qed.
 
 Lemma wt_initial_state:
   forall S, initial_state p S -> wt_state S.
-Proof.
+Proof using wt_p.
   intros. inv H. constructor. constructor. rewrite H3; auto.
   pattern f. apply Genv.find_funct_ptr_prop with fundef unit p b.
   exact wt_p. exact H2.
@@ -994,7 +994,7 @@ Lemma wt_instr_inv:
   wt_state (State s f sp pc rs m) ->
   f.(fn_code)!pc = Some i ->
   exists env, wt_instr f env i /\ wt_regset env rs.
-Proof.
+Proof using.
   intros. inv H. exists env; split; auto.
   inv WT_FN. eauto.
 Qed.

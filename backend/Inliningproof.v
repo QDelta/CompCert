@@ -22,7 +22,7 @@ Definition match_prog (prog tprog: program) :=
 
 Lemma transf_program_match:
   forall prog tprog, transf_program prog = OK tprog -> match_prog prog tprog.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program_contextual; eauto.
 Qed.
 
@@ -56,7 +56,7 @@ Proof (Genv.find_funct_ptr_match TRANSF).
 
 Lemma sig_function_translated:
   forall cu f f', transf_fundef (funenv_program cu) f = OK f' -> funsig f' = funsig f.
-Proof.
+Proof using.
   intros. destruct f; Errors.monadInv H.
   exploit transf_function_spec; eauto. intros SP; inv SP. auto.
   auto.
@@ -66,20 +66,20 @@ Qed.
 
 Remark sreg_below_diff:
   forall ctx r r', Plt r' ctx.(dreg) -> sreg ctx r <> r'.
-Proof.
+Proof using.
   intros. zify. unfold sreg; rewrite shiftpos_eq. extlia.
 Qed.
 
 Remark context_below_diff:
   forall ctx1 ctx2 r1 r2,
   context_below ctx1 ctx2 -> Ple r1 ctx1.(mreg) -> sreg ctx1 r1 <> sreg ctx2 r2.
-Proof.
+Proof using.
   intros. red in H. zify. unfold sreg; rewrite ! shiftpos_eq. extlia.
 Qed.
 
 Remark context_below_lt:
   forall ctx1 ctx2 r, context_below ctx1 ctx2 -> Ple r ctx1.(mreg) -> Plt (sreg ctx1 r) ctx2.(dreg).
-Proof.
+Proof using.
   intros. red in H. unfold Plt; zify. unfold sreg; rewrite shiftpos_eq.
   extlia.
 Qed.
@@ -87,7 +87,7 @@ Qed.
 (*
 Remark context_below_le:
   forall ctx1 ctx2 r, context_below ctx1 ctx2 -> Ple r ctx1.(mreg) -> Ple (sreg ctx1 r) ctx2.(dreg).
-Proof.
+Proof using.
   intros. red in H. unfold Ple; zify. unfold sreg; rewrite shiftpos_eq.
   extlia.
 Qed.
@@ -104,13 +104,13 @@ Definition val_reg_charact (F: meminj) (ctx: context) (rs': regset) (v: val) (r:
 
 Remark Plt_Ple_dec:
   forall p q, {Plt p q} + {Ple q p}.
-Proof.
+Proof using.
   intros. destruct (plt p q). left; auto. right; extlia.
 Qed.
 
 Lemma agree_val_reg_gen:
   forall F ctx rs rs' r, agree_regs F ctx rs rs' -> val_reg_charact F ctx rs' rs#r r.
-Proof.
+Proof using.
   intros. destruct H as [A B].
   destruct (Plt_Ple_dec (mreg ctx) r).
   left. rewrite B; auto.
@@ -120,13 +120,13 @@ Qed.
 Lemma agree_val_regs_gen:
   forall F ctx rs rs' rl,
   agree_regs F ctx rs rs' -> list_forall2 (val_reg_charact F ctx rs') rs##rl rl.
-Proof.
+Proof using.
   induction rl; intros; constructor; auto. apply agree_val_reg_gen; auto.
 Qed.
 
 Lemma agree_val_reg:
   forall F ctx rs rs' r, agree_regs F ctx rs rs' -> Val.inject F rs#r rs'#(sreg ctx r).
-Proof.
+Proof using.
   intros. exploit agree_val_reg_gen; eauto. instantiate (1 := r). intros [[A B] | [A B]].
   rewrite B; auto.
   auto.
@@ -134,7 +134,7 @@ Qed.
 
 Lemma agree_val_regs:
   forall F ctx rs rs' rl, agree_regs F ctx rs rs' -> Val.inject_list F rs##rl rs'##(sregs ctx rl).
-Proof.
+Proof using.
   induction rl; intros; simpl. constructor. constructor; auto. apply agree_val_reg; auto.
 Qed.
 
@@ -144,7 +144,7 @@ Lemma agree_set_reg:
   Val.inject F v v' ->
   Ple r ctx.(mreg) ->
   agree_regs F ctx (rs#r <- v) (rs'#(sreg ctx r) <- v').
-Proof.
+Proof using.
   unfold agree_regs; intros. destruct H. split; intros.
   repeat rewrite Regmap.gsspec.
   destruct (peq r0 r). subst r0. rewrite peq_true. auto.
@@ -156,7 +156,7 @@ Lemma agree_set_reg_undef:
   forall F ctx rs rs' r v',
   agree_regs F ctx rs rs' ->
   agree_regs F ctx (rs#r <- Vundef) (rs'#(sreg ctx r) <- v').
-Proof.
+Proof using.
   unfold agree_regs; intros. destruct H. split; intros.
   repeat rewrite Regmap.gsspec.
   destruct (peq r0 r). subst r0. rewrite peq_true. auto.
@@ -168,7 +168,7 @@ Lemma agree_set_reg_undef':
   forall F ctx rs rs' r,
   agree_regs F ctx rs rs' ->
   agree_regs F ctx (rs#r <- Vundef) rs'.
-Proof.
+Proof using.
   unfold agree_regs; intros. destruct H. split; intros.
   rewrite Regmap.gsspec.
   destruct (peq r0 r). subst r0. auto. auto.
@@ -180,7 +180,7 @@ Lemma agree_regs_invariant:
   agree_regs F ctx rs rs1 ->
   (forall r, Ple ctx.(dreg) r -> Plt r (ctx.(dreg) + ctx.(mreg)) -> rs2#r = rs1#r) ->
   agree_regs F ctx rs rs2.
-Proof.
+Proof using.
   unfold agree_regs; intros. destruct H. split; intros.
   rewrite H0. auto.
   apply shiftpos_above.
@@ -193,13 +193,13 @@ Lemma agree_regs_incr:
   agree_regs F ctx rs1 rs2 ->
   inject_incr F F' ->
   agree_regs F' ctx rs1 rs2.
-Proof.
+Proof using.
   intros. destruct H. split; intros. eauto. auto.
 Qed.
 
 Remark agree_regs_init:
   forall F ctx rs, agree_regs F ctx (Regmap.init Vundef) rs.
-Proof.
+Proof using.
   intros; split; intros. rewrite Regmap.gi; auto. rewrite Regmap.gi; auto.
 Qed.
 
@@ -208,7 +208,7 @@ Lemma agree_regs_init_regs:
   Val.inject_list F vl vl' ->
   (forall r, In r rl -> Ple r ctx.(mreg)) ->
   agree_regs F ctx (init_regs vl rl) (init_regs vl' (sregs ctx rl)).
-Proof.
+Proof using.
   induction rl; simpl; intros.
   apply agree_regs_init.
   inv H. apply agree_regs_init.
@@ -228,7 +228,7 @@ Lemma tr_moves_init_regs:
                E0 (State stk f sp pc2 rs2 m)
   /\ agree_regs F ctx2 (init_regs vl rdsts) rs2
   /\ forall r, Plt r ctx2.(dreg) -> rs2#r = rs1#r.
-Proof.
+Proof using.
   induction rdsts; simpl; intros.
 (* rdsts = nil *)
   inv H0. exists rs1; split. apply star_refl. split. apply agree_regs_init. auto.
@@ -270,7 +270,7 @@ Lemma range_private_invariant:
       F b = Some(sp, delta) /\ Mem.perm m b ofs Max Nonempty) ->
   (forall ofs, Mem.perm m' sp ofs Cur Freeable -> Mem.perm m1' sp ofs Cur Freeable) ->
   range_private F1 m1 m1' sp lo hi.
-Proof.
+Proof using.
   intros; red; intros. exploit H; eauto. intros [A B]. split; auto.
   intros; red; intros. exploit H0; eauto. lia. intros [P Q].
   eelim B; eauto.
@@ -280,7 +280,7 @@ Lemma range_private_perms:
   forall F m m' sp lo hi,
   range_private F m m' sp lo hi ->
   Mem.range_perm m' sp lo hi Cur Freeable.
-Proof.
+Proof using.
   intros; red; intros. eapply H; eauto.
 Qed.
 
@@ -291,7 +291,7 @@ Lemma range_private_alloc_left:
   F1 sp = Some(sp', base) ->
   (forall b, b <> sp -> F1 b = F b) ->
   range_private F1 m1 m' sp' (base + Z.max sz 0) hi.
-Proof.
+Proof using.
   intros; red; intros.
   exploit (H ofs). generalize (Z.le_max_r sz 0). lia. intros [A B].
   split; auto. intros; red; intros.
@@ -309,7 +309,7 @@ Lemma range_private_free_left:
   F b = Some(sp, base) ->
   Mem.inject F m m' ->
   range_private F m1 m' sp base hi.
-Proof.
+Proof using.
   intros; red; intros.
   destruct (zlt ofs (base + Z.max sz 0)) as [z|z].
   red; split.
@@ -342,7 +342,7 @@ Lemma range_private_extcall:
   inject_separated F F' m1 m1' ->
   Mem.valid_block m1' sp ->
   range_private F' m2 m2' sp base hi.
-Proof.
+Proof using.
   intros until hi; intros RP PERM UNCH INJ INCR SEP VB.
   red; intros. exploit RP; eauto. intros [A B].
   split. eapply Mem.perm_unchanged_on; eauto.
@@ -371,7 +371,7 @@ Lemma find_function_agree:
   match_globalenvs F bound ->
   exists cu fd',
   find_function tge (sros ctx ros) rs' = Some fd' /\ transf_fundef (funenv_program cu) fd = OK fd' /\ linkorder cu prog.
-Proof.
+Proof using TRANSF.
   intros. destruct ros as [r | id]; simpl in *.
 - (* register *)
   assert (EQ: rs'#(sreg ctx r) = rs#r).
@@ -394,7 +394,7 @@ Lemma find_inlined_function:
   find_function ge (inr id) rs = Some fd ->
   fenv!id = Some f ->
   fd = Internal f.
-Proof.
+Proof using.
   intros.
   apply H in H1. apply Genv.find_def_symbol in H1. destruct H1 as (b & A & B).
   simpl in H0. unfold ge, fundef in H0. rewrite A in H0.
@@ -414,7 +414,7 @@ Lemma tr_builtin_arg:
   eval_builtin_arg ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m a v ->
   exists v', eval_builtin_arg tge (fun r => rs'#r) (Vptr sp' Ptrofs.zero) m' (sbuiltinarg ctx a) v'
           /\ Val.inject F v v'.
-Proof.
+Proof using TRANSF.
   intros until m'; intros MG AG SP MI. induction 1; simpl.
 - exists rs'#(sreg ctx x); split. constructor. eapply agree_val_reg; eauto.
 - econstructor; eauto with barg.
@@ -455,7 +455,7 @@ Lemma tr_builtin_args:
   eval_builtin_args ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m al vl ->
   exists vl', eval_builtin_args tge (fun r => rs'#r) (Vptr sp' Ptrofs.zero) m' (map (sbuiltinarg ctx) al) vl'
           /\ Val.inject_list F vl vl'.
-Proof.
+Proof using TRANSF.
   induction 5; simpl.
 - exists (@nil val); split; constructor.
 - exploit tr_builtin_arg; eauto. intros (v1' & A & B).
@@ -532,14 +532,14 @@ Lemma match_stacks_globalenvs:
 with match_stacks_inside_globalenvs:
   forall stk stk' f ctx sp rs',
   match_stacks_inside F m m' stk stk' f ctx sp rs' -> exists b, match_globalenvs F b.
-Proof.
+Proof using.
   induction 1; eauto.
   induction 1; eauto.
 Qed.
 
 Lemma match_globalenvs_preserves_globals:
   forall b, match_globalenvs F b -> meminj_preserves_globals ge F.
-Proof.
+Proof using.
   intros. inv H. red. split. eauto. split. eauto.
   intros. symmetry. eapply IMAGE; eauto.
 Qed.
@@ -547,7 +547,7 @@ Qed.
 Lemma match_stacks_inside_globals:
   forall stk stk' f ctx sp rs',
   match_stacks_inside F m m' stk stk' f ctx sp rs' -> meminj_preserves_globals ge F.
-Proof.
+Proof using.
   intros. exploit match_stacks_inside_globalenvs; eauto. intros [b A].
   eapply match_globalenvs_preserves_globals; eauto.
 Qed.
@@ -557,7 +557,7 @@ Lemma match_stacks_bound:
   match_stacks F m m' stk stk' bound ->
   Ple bound bound1 ->
   match_stacks F m m' stk stk' bound1.
-Proof.
+Proof using.
   intros. inv H.
   apply match_stacks_nil with bound0. auto. eapply Ple_trans; eauto.
   eapply match_stacks_cons; eauto. eapply Pos.lt_le_trans; eauto.
@@ -597,7 +597,7 @@ with match_stacks_inside_invariant:
                Mem.perm m1' b ofs k p -> Mem.perm m' b ofs k p),
   match_stacks_inside F1 m1 m1' stk stk' f' ctx sp' rs2.
 
-Proof.
+Proof using INCR.
   induction 1; intros.
   (* nil *)
   apply match_stacks_nil with (bound1 := bound1).
@@ -648,7 +648,7 @@ Lemma match_stacks_empty:
 with match_stacks_inside_empty:
   forall stk stk' f ctx sp rs,
   match_stacks_inside F m m' stk stk' f ctx sp rs -> stk = nil -> stk' = nil /\ ctx.(retinfo) = None.
-Proof.
+Proof using.
   induction 1; intros.
   auto.
   discriminate.
@@ -666,7 +666,7 @@ Lemma match_stacks_inside_set_reg:
   forall F m m' stk stk' f' ctx sp' rs' r v,
   match_stacks_inside F m m' stk stk' f' ctx sp' rs' ->
   match_stacks_inside F m m' stk stk' f' ctx sp' (rs'#(sreg ctx r) <- v).
-Proof.
+Proof using.
   intros. eapply match_stacks_inside_invariant; eauto.
   intros. apply Regmap.gso. zify. unfold sreg; rewrite shiftpos_eq. extlia.
 Qed.
@@ -675,7 +675,7 @@ Lemma match_stacks_inside_set_res:
   forall F m m' stk stk' f' ctx sp' rs' res v,
   match_stacks_inside F m m' stk stk' f' ctx sp' rs' ->
   match_stacks_inside F m m' stk stk' f' ctx sp' (regmap_setres (sbuiltinres ctx res) v rs').
-Proof.
+Proof using.
   intros. destruct res; simpl; auto.
   apply match_stacks_inside_set_reg; auto.
 Qed.
@@ -688,7 +688,7 @@ Lemma match_stacks_inside_store:
   Mem.store chunk m b ofs v = Some m1 ->
   Mem.store chunk' m' b' ofs' v' = Some m1' ->
   match_stacks_inside F m1 m1' stk stk' f' ctx sp' rs'.
-Proof.
+Proof using.
   intros.
   eapply match_stacks_inside_invariant; eauto with mem.
 Qed.
@@ -705,7 +705,7 @@ Lemma match_stacks_inside_alloc_left:
   (forall b1, b1 <> b -> F1 b1 = F b1) ->
   delta >= ctx.(dstk) ->
   match_stacks_inside F1 m1 m' stk stk' f' ctx sp' rs'.
-Proof.
+Proof using.
   induction 1; intros.
   (* base *)
   eapply match_stacks_inside_base; eauto.
@@ -732,7 +732,7 @@ Lemma match_stacks_free_left:
   match_stacks F m m' stk stk' sp ->
   Mem.free m b lo hi = Some m1 ->
   match_stacks F m1 m' stk stk' sp.
-Proof.
+Proof using.
   intros. eapply match_stacks_invariant; eauto.
   intros. eapply Mem.perm_free_3; eauto.
 Qed.
@@ -742,7 +742,7 @@ Lemma match_stacks_free_right:
   match_stacks F m m' stk stk' sp ->
   Mem.free m' sp lo hi = Some m1' ->
   match_stacks F m m1' stk stk' sp.
-Proof.
+Proof using.
   intros. eapply match_stacks_invariant; eauto.
   intros. eapply Mem.perm_free_1; eauto with ordered_type.
   intros. eapply Mem.perm_free_3; eauto.
@@ -750,7 +750,7 @@ Qed.
 
 Lemma min_alignment_sound:
   forall sz n, (min_alignment sz | n) -> Mem.inj_offset_aligned n sz.
-Proof.
+Proof using.
   intros; red; intros. unfold min_alignment in H.
   assert (2 <= sz -> (2 | n)). intros.
     destruct (zle sz 1). extlia.
@@ -795,7 +795,7 @@ with match_stacks_inside_extcall:
   match_stacks_inside F1 m1 m1' stk stk' f' ctx sp' rs' ->
   Plt sp' (Mem.nextblock m1') ->
   match_stacks_inside F2 m2 m2' stk stk' f' ctx sp' rs'.
-Proof.
+Proof using UNCHANGED SEP MAXPERM' MAXPERM INJ INCR.
   induction 1; intros.
   apply match_stacks_nil with bound1; auto.
     inv MG. constructor; intros; eauto.
@@ -825,7 +825,7 @@ End EXTCALL.
 
 Lemma align_unchanged:
   forall n amount, amount > 0 -> (amount | n) -> align n amount = n.
-Proof.
+Proof using.
   intros. destruct H0 as [p EQ]. subst n. unfold align. decEq.
   apply Zdiv_unique with (b := amount - 1). lia. lia.
 Qed.
@@ -839,7 +839,7 @@ Lemma match_stacks_inside_inlined_tailcall:
   range_private F m m' sp' ctx.(dstk) f'.(fn_stacksize) ->
   tr_funbody fenv f'.(fn_stacksize) ctx' f f'.(fn_code) ->
   match_stacks_inside F m m' stk stk' f' ctx' sp' rs'.
-Proof.
+Proof using.
   intros. inv H.
   (* base *)
   eapply match_stacks_inside_base; eauto. congruence.
@@ -923,7 +923,7 @@ Definition measure (S: RTL.state) : nat :=
 Lemma tr_funbody_inv:
   forall fenv sz cts f c pc i,
   tr_funbody fenv sz cts f c -> f.(fn_code)!pc = Some i -> tr_instr fenv sz cts pc i c.
-Proof.
+Proof using.
   intros. inv H. eauto.
 Qed.
 
@@ -933,7 +933,7 @@ Theorem step_simulation:
   forall S1' (MS: match_states S1 S1'),
   (exists S2', plus step tge S1' t S2' /\ match_states S2 S2')
   \/ (measure S2 < measure S1 /\ t = E0 /\ match_states S2 S1')%nat.
-Proof.
+Proof using TRANSF.
   induction 1; intros; inv MS.
 
 - (* nop *)
@@ -1287,7 +1287,7 @@ Qed.
 
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 -> exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros (cu & tf & FIND & TR & LINK).
   exists (Callstate nil tf nil m0); split.
@@ -1312,7 +1312,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H.
   exploit match_stacks_empty; eauto. intros EQ; subst. inv VINJ. constructor.
   exploit match_stacks_inside_empty; eauto. intros [A B]. congruence.
@@ -1320,7 +1320,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (semantics prog) (semantics tprog).
-Proof.
+Proof using TRANSF.
   eapply forward_simulation_star.
   apply senv_preserved.
   eexact transf_initial_states.

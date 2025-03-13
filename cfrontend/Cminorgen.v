@@ -238,7 +238,7 @@ Module VarOrder <: TotalLeBool.
   Definition t := (ident * Z)%type.
   Definition leb (v1 v2: t) : bool := zle (snd v1) (snd v2).
   Theorem leb_total: forall v1 v2, leb v1 v2 = true \/ leb v2 v1 = true.
-  Proof.
+  Proof using.
     unfold leb; intros.
     assert (snd v1 <= snd v2 \/ snd v2 <= snd v1) by lia.
     unfold proj_sumbool. destruct H; [left|right]; apply zle_true; auto.

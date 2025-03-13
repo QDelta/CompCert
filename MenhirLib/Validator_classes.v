@@ -18,35 +18,35 @@ Class IsValidator (P : Prop) (b : bool) :=
 Global Hint Mode IsValidator + - : typeclass_instances.
 
 Global Instance is_validator_true : IsValidator True true.
-Proof. done. Qed.
+Proof using. done. Qed.
 
 Global Instance is_validator_false : IsValidator False false.
-Proof. done. Qed.
+Proof using. done. Qed.
 
 Global Instance is_validator_eq_true b :
   IsValidator (b = true) b.
-Proof. done. Qed.
+Proof using. done. Qed.
 
 Global Instance is_validator_and P1 b1 P2 b2 `{IsValidator P1 b1} `{IsValidator P2 b2}:
   IsValidator (P1 /\ P2) (if b1 then b2 else false).
-Proof. by split; destruct b1, b2; apply is_validator. Qed.
+Proof using. by split; destruct b1, b2; apply is_validator. Qed.
 
 Global Instance is_validator_comparable_leibniz_eq A (C:Comparable A) (x y : A) :
   ComparableLeibnizEq C ->
   IsValidator (x = y) (compare_eqb x y).
-Proof. intros ??. by apply compare_eqb_iff. Qed.
+Proof using. intros ??. by apply compare_eqb_iff. Qed.
 
 Global Instance is_validator_comparable_eq_impl A `(Comparable A) (x y : A) P b :
   IsValidator P b ->
   IsValidator (x = y -> P) (if compare_eqb x y then b else true).
-Proof.
+Proof using.
   intros Hval Val ->. rewrite /compare_eqb compare_refl in Val. auto.
 Qed.
 
 Lemma is_validator_forall_finite A P b `(Finite A) :
   (forall (x : A), IsValidator (P x) (b x)) ->
   IsValidator (forall (x : A), P x) (forallb b all_list).
-Proof.
+Proof using.
   move=> ? /forallb_forall Hb ?.
   apply is_validator, Hb, all_list_forall.
 Qed.

@@ -47,7 +47,7 @@ Definition lookup_builtin_function (name: string) (sg: signature) : option built
 
 Lemma lookup_builtin_function_sig:
   forall name sg b, lookup_builtin_function name sg = Some b -> builtin_function_sig b = sg.
-Proof.
+Proof using.
   unfold lookup_builtin_function; intros.
   destruct (lookup_builtin standard_builtin_sig name sg standard_builtin_table) as [bs|] eqn:E.
   inv H. simpl. eapply lookup_builtin_sig; eauto.

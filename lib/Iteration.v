@@ -52,7 +52,7 @@ Hypothesis ord_wf: well_founded ord.
 Hypothesis step_decr: forall a a', step a = inr _ a' -> ord a' a.
 
 Definition step_info (a: A) : {b | step a = inl _ b} + {a' | step a = inr _ a' & ord a' a}.
-Proof.
+Proof using step_decr.
   caseEq (step a); intros. left; exists b; auto. right; exists a0; auto.
 Defined.
 
@@ -76,7 +76,7 @@ Hypothesis step_prop:
 
 Lemma iterate_prop:
   forall a, P a -> Q (iterate a).
-Proof.
+Proof using step_prop.
   intros a0. pattern a0. apply well_founded_ind with (R := ord). auto.
   intros. unfold iterate; rewrite unroll_Fix. unfold iterate_F.
   destruct (step_info x) as [[b U] | [a' U V]].
@@ -171,7 +171,7 @@ Hypothesis step_prop:
 
 Lemma iter_prop:
   forall n a b, P a -> iter n a = Some b -> Q b.
-Proof.
+Proof using step_prop.
   apply (well_founded_ind Plt_wf
          (fun p => forall a b, P a -> iter p a = Some b -> Q b)).
   intros. unfold iter in H1. rewrite unroll_Fix in H1. unfold iter_step in H1.
@@ -184,7 +184,7 @@ Qed.
 
 Lemma iterate_prop:
   forall a b, iterate a = Some b -> P a -> Q b.
-Proof.
+Proof using step_prop.
   intros. apply iter_prop with num_iterations a; assumption.
 Qed.
 
@@ -223,7 +223,7 @@ Definition F_iter (next: A -> option B) (a: A) : option B :=
 
 Lemma F_iter_monot:
  forall f g, F_le f g -> F_le (F_iter f) (F_iter g).
-Proof.
+Proof using.
   intros; red; intros. unfold F_iter.
   destruct (step a) as [b | a']. red; auto. apply H.
 Qed.
@@ -236,7 +236,7 @@ Fixpoint iter (n: nat) : A -> option B :=
 
 Lemma iter_monot:
   forall p q, (p <= q)%nat -> F_le (iter p) (iter q).
-Proof.
+Proof using.
   induction p; intros.
   simpl. red; intros; red; auto.
   destruct q. exfalso; lia.
@@ -247,7 +247,7 @@ Lemma iter_either:
   forall a,
   (exists n, exists b, iter n a = Some b) \/
   (forall n, iter n a = None).
-Proof.
+Proof using.
   intro a. elim (classic (forall n, iter n a = None)); intro.
   right; assumption.
   left. generalize (not_all_ex_not nat (fun n => iter n a = None) H).
@@ -260,7 +260,7 @@ Definition converges_to (a: A) (b: option B) : Prop :=
 
 Lemma converges_to_Some:
   forall a n b, iter n a = Some b -> converges_to a (Some b).
-Proof.
+Proof using.
   intros. exists n. intros.
   assert (B_le (iter n a) (iter m a)). apply iter_monot. auto.
   elim H1; intro; congruence.
@@ -268,7 +268,7 @@ Qed.
 
 Lemma converges_to_exists:
   forall a, exists b, converges_to a b.
-Proof.
+Proof using.
   intros. elim (iter_either a).
   intros [n [b EQ]]. exists (Some b). apply converges_to_Some with n. assumption.
   intro. exists (@None B). exists O. intros. auto.
@@ -276,7 +276,7 @@ Qed.
 
 Lemma converges_to_unique:
   forall a b, converges_to a b -> forall b', converges_to a b' -> b = b'.
-Proof.
+Proof using.
   intros a b [n C] b' [n' C'].
   rewrite <- (C (max n n')). rewrite <- (C' (max n n')). auto.
   apply Nat.le_max_r. apply Nat.le_max_l.
@@ -284,7 +284,7 @@ Qed.
 
 Lemma converges_to_exists_uniquely:
   forall a, exists! b, converges_to a b .
-Proof.
+Proof using.
   intro. destruct (converges_to_exists a) as [b CT].
   exists b. split. assumption. exact (converges_to_unique _ _ CT).
 Qed.
@@ -294,7 +294,7 @@ Definition iterate (a: A) : option B :=
 
 Lemma converges_to_iterate:
   forall a b, converges_to a b -> iterate a = b.
-Proof.
+Proof using.
   intros. unfold iterate.
   destruct (constructive_definite_description (converges_to a) (converges_to_exists_uniquely a)) as [b' P].
   simpl. apply converges_to_unique with a; auto.
@@ -302,7 +302,7 @@ Qed.
 
 Lemma iterate_converges_to:
   forall a, converges_to a (iterate a).
-Proof.
+Proof using.
   intros. unfold iterate.
   destruct (constructive_definite_description (converges_to a) (converges_to_exists_uniquely a)) as [b' P].
   simpl; auto.
@@ -319,7 +319,7 @@ Hypothesis step_prop:
 
 Lemma iter_prop:
   forall n a b, P a -> iter n a = Some b -> Q b.
-Proof.
+Proof using step_prop.
   induction n; intros until b; intro H; simpl.
   congruence.
   unfold F_iter. generalize (step_prop a H).
@@ -329,7 +329,7 @@ Qed.
 
 Lemma iterate_prop:
   forall a b, iterate a = Some b -> P a -> Q b.
-Proof.
+Proof using step_prop.
   intros. destruct (iterate_converges_to a) as [n IT].
   rewrite H in IT. apply iter_prop with n a. auto. apply IT. auto.
 Qed.

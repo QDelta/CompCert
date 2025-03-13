@@ -38,7 +38,7 @@ Definition eq_valnum: forall (x y: valnum), {x=y}+{x<>y} := peq.
 Definition eq_list_valnum: forall (x y: list valnum), {x=y}+{x<>y} := list_eq_dec peq.
 
 Definition eq_rhs (x y: rhs) : {x=y}+{x<>y}.
-Proof.
+Proof using.
   generalize chunk_eq eq_operation eq_addressing eq_valnum eq_list_valnum eq_aptr.
   decide equality.
 Defined.
@@ -53,7 +53,7 @@ Inductive rhs_compat: rhs -> rhs -> Prop :=
 
 Lemma rhs_compat_sym: forall rh1 rh2,
   rhs_compat rh1 rh2 -> rhs_compat rh2 rh1.
-Proof.
+Proof using.
   destruct 1; constructor; auto.
 Qed.
 
@@ -67,7 +67,7 @@ Definition compat_rhs (r1 r2: rhs) : bool :=
 
 Lemma compat_rhs_sound: forall r1 r2,
   compat_rhs r1 r2 = true -> rhs_compat r1 r2.
-Proof.
+Proof using.
   unfold compat_rhs; intros; destruct r1, r2; try discriminate;
   InvBooleans; subst; constructor.
 Qed.
@@ -140,7 +140,7 @@ Lemma rhs_eval_to_compat: forall valu ge sp m rh v rh',
   rhs_eval_to valu ge sp m rh v ->
   rhs_compat rh rh' ->
   rhs_eval_to valu ge sp m rh' v.
-Proof.
+Proof using.
   intros. inv H; inv H0; econstructor; eauto.
 Qed.
 
@@ -185,7 +185,7 @@ Global Hint Resolve num_holds_wf num_holds_eq num_holds_reg: cse.
 Lemma empty_numbering_holds:
   forall valu ge sp rs m,
   numbering_holds valu ge sp rs m empty_numbering.
-Proof.
+Proof using.
   intros; split; simpl; intros.
 - split; simpl; intros.
   + contradiction.
@@ -212,7 +212,7 @@ Lemma combine_comparison_cmp_sound:
   combine_comparison c x y = Some res' ->
   Val.cmp_bool c (valu x) (valu y) = Some res ->
   res = res'.
-Proof.
+Proof using.
   unfold combine_comparison; intros. destruct (eq_valnum x y); inv H.
   destruct (valu y); simpl in H0; inv H0.
   destruct c; simpl; unfold Int.lt; rewrite ? Int.eq_true, ? zlt_false by lia; auto.
@@ -223,7 +223,7 @@ Lemma combine_comparison_cmpu_sound:
   combine_comparison c x y = Some res' ->
   Val.cmpu_bool (Mem.valid_pointer m) c (valu x) (valu y) = Some res ->
   res = res'.
-Proof.
+Proof using.
   unfold combine_comparison, Val.cmpu_bool; intros. destruct (eq_valnum x y); inv H.
   destruct (valu y).
 - discriminate.
@@ -241,7 +241,7 @@ Lemma combine_comparison_cmpl_sound:
   combine_comparison c x y = Some res' ->
   Val.cmpl_bool c (valu x) (valu y) = Some res ->
   res = res'.
-Proof.
+Proof using.
   unfold combine_comparison; intros. destruct (eq_valnum x y); inv H.
   destruct (valu y); simpl in H0; inv H0.
   destruct c; simpl; unfold Int64.lt; rewrite ? Int64.eq_true, ? zlt_false by lia; auto.
@@ -252,7 +252,7 @@ Lemma combine_comparison_cmplu_sound:
   combine_comparison c x y = Some res' ->
   Val.cmplu_bool (Mem.valid_pointer m) c (valu x) (valu y) = Some res ->
   res = res'.
-Proof.
+Proof using.
   unfold combine_comparison, Val.cmplu_bool; intros. destruct (eq_valnum x y); inv H.
   destruct (valu y).
 - discriminate.

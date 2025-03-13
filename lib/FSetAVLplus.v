@@ -61,7 +61,7 @@ Lemma raw_mem_between_1:
   forall m,
   raw_mem_between m = true ->
   exists x, Raw.In x m /\ above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using.
   induction m; simpl; intros.
 - discriminate.
 - destruct (above_low_bound t1) eqn: LB; [destruct (below_high_bound t1) eqn: HB | idtac].
@@ -78,7 +78,7 @@ Lemma raw_mem_between_2:
   Raw.bst m ->
   Raw.In x m -> above_low_bound x = true -> below_high_bound x = true ->
   raw_mem_between m = true.
-Proof.
+Proof using below_monotone above_monotone.
   induction 1; simpl; intros.
 - inv H.
 - rewrite Raw.In_node_iff in H1.
@@ -98,7 +98,7 @@ Theorem mem_between_1:
   forall s,
   mem_between s = true ->
   exists x, In x s /\ above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using.
   intros. apply raw_mem_between_1. auto.
 Qed.
 
@@ -106,7 +106,7 @@ Theorem mem_between_2:
   forall x s,
   In x s -> above_low_bound x = true -> below_high_bound x = true ->
   mem_between s = true.
-Proof.
+Proof using below_monotone above_monotone.
   unfold mem_between; intros. apply raw_mem_between_2 with x; auto. apply MSet.is_ok.
 Qed.
 
@@ -136,7 +136,7 @@ Fixpoint raw_elements_between (m: Raw.tree) : Raw.tree :=
 Remark In_raw_elements_between_1:
   forall x m,
   Raw.In x (raw_elements_between m) -> Raw.In x m.
-Proof.
+Proof using.
   induction m; simpl; intros.
 - inv H.
 - rewrite Raw.In_node_iff.
@@ -148,7 +148,7 @@ Qed.
 
 Lemma raw_elements_between_ok:
   forall m, Raw.bst m -> Raw.bst (raw_elements_between m).
-Proof.
+Proof using.
   induction 1; simpl.
 - constructor.
 - destruct (above_low_bound x) eqn:LB; [destruct (below_high_bound x) eqn: RB | idtac]; simpl.
@@ -170,7 +170,7 @@ Hypothesis below_monotone:
 Remark In_raw_elements_between_2:
   forall x m,
   Raw.In x (raw_elements_between m) -> above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using below_monotone above_monotone.
   induction m; simpl; intros.
 - inv H.
 - destruct (above_low_bound t1) eqn:LB; [destruct (below_high_bound t1) eqn: RB | idtac]; simpl in H.
@@ -186,7 +186,7 @@ Remark In_raw_elements_between_3:
   Raw.bst m ->
   Raw.In x m -> above_low_bound x = true -> below_high_bound x = true ->
   Raw.In x (raw_elements_between m).
-Proof.
+Proof using below_monotone above_monotone.
   induction 1; simpl; intros.
 - auto.
 - rewrite Raw.In_node_iff in H1.
@@ -203,7 +203,7 @@ Qed.
 Theorem elements_between_iff:
   forall x s,
   In x (elements_between s) <-> In x s /\ above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using below_monotone above_monotone.
   intros. unfold elements_between, In; simpl. split.
   intros. split. apply In_raw_elements_between_1; auto. eapply In_raw_elements_between_2; eauto.
   intros [A [B C]]. apply In_raw_elements_between_3; auto. apply MSet.is_ok.
@@ -253,7 +253,7 @@ Lemma raw_for_all_between_1:
   above_low_bound x = true ->
   below_high_bound x = true ->
   pred x = true.
-Proof.
+Proof using pred_compat below_monotone above_monotone.
   induction 1; simpl; intros.
 - inv H0.
 - destruct (above_low_bound x0) eqn: LB; [destruct (below_high_bound x0) eqn: HB | idtac].
@@ -284,7 +284,7 @@ Lemma raw_for_all_between_2:
   Raw.bst m ->
   (forall x, Raw.In x m -> above_low_bound x = true -> below_high_bound x = true -> pred x = true) ->
   raw_for_all_between m = true.
-Proof.
+Proof using.
   induction 1; intros; simpl.
 - auto.
 - destruct (above_low_bound x) eqn: LB; [destruct (below_high_bound x) eqn: HB | idtac].
@@ -302,7 +302,7 @@ Qed.
 Theorem for_all_between_iff:
   forall s,
   for_all_between s = true <-> (forall x, In x s -> above_low_bound x = true -> below_high_bound x = true -> pred x = true).
-Proof.
+Proof using pred_compat below_monotone above_monotone.
   unfold for_all_between; intros; split; intros.
 - eapply raw_for_all_between_1; eauto. apply MSet.is_ok.
 - apply raw_for_all_between_2; auto. apply MSet.is_ok.
@@ -335,7 +335,7 @@ Fixpoint raw_partition_between (m: Raw.tree) : Raw.tree * Raw.tree :=
 Remark In_raw_partition_between_1:
   forall x m,
   Raw.In x (fst (raw_partition_between m)) -> Raw.In x m.
-Proof.
+Proof using.
   induction m; simpl; intros.
 - inv H.
 - destruct (raw_partition_between m1) as [l1 l2] eqn:LEQ; simpl in *.
@@ -349,7 +349,7 @@ Qed.
 Remark In_raw_partition_between_2:
   forall x m,
   Raw.In x (snd (raw_partition_between m)) -> Raw.In x m.
-Proof.
+Proof using.
   induction m; simpl; intros.
 - inv H.
 - destruct (raw_partition_between m1) as [l1 l2] eqn:LEQ; simpl in *.
@@ -362,7 +362,7 @@ Qed.
 
 Lemma raw_partition_between_ok:
   forall m, Raw.bst m -> Raw.bst (fst (raw_partition_between m)) /\ Raw.bst (snd (raw_partition_between m)).
-Proof.
+Proof using.
   induction 1; simpl.
 - split; constructor.
 - destruct IHbst1 as [L1 L2]. destruct IHbst2 as [R1 R2].
@@ -395,7 +395,7 @@ Hypothesis below_monotone:
 Remark In_raw_partition_between_3:
   forall x m,
   Raw.In x (fst (raw_partition_between m)) -> above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using below_monotone above_monotone.
   induction m; simpl; intros.
 - inv H.
 - destruct (raw_partition_between m1) as [l1 l2] eqn:LEQ; simpl in *.
@@ -412,7 +412,7 @@ Remark In_raw_partition_between_4:
   forall x m,
   Raw.bst m ->
   Raw.In x (snd (raw_partition_between m)) -> above_low_bound x = false \/ below_high_bound x = false.
-Proof.
+Proof using below_monotone above_monotone.
   induction 1; simpl; intros.
 - inv H.
 - destruct (raw_partition_between l) as [l1 l2] eqn:LEQ; simpl in *.
@@ -436,7 +436,7 @@ Remark In_raw_partition_between_5:
   Raw.bst m ->
   Raw.In x m -> above_low_bound x = true -> below_high_bound x = true ->
   Raw.In x (fst (raw_partition_between m)).
-Proof.
+Proof using below_monotone above_monotone.
   induction 1; simpl; intros.
 - inv H.
 - destruct (raw_partition_between l) as [l1 l2] eqn:LEQ; simpl in *.
@@ -465,7 +465,7 @@ Remark In_raw_partition_between_6:
   Raw.bst m ->
   Raw.In x m -> above_low_bound x = false \/ below_high_bound x = false ->
   Raw.In x (snd (raw_partition_between m)).
-Proof.
+Proof using below_monotone above_monotone.
   induction 1; simpl; intros.
 - inv H.
 - destruct (raw_partition_between l) as [l1 l2] eqn:LEQ; simpl in *.
@@ -496,7 +496,7 @@ Theorem partition_between_iff_1:
   forall x s,
   In x (fst (partition_between s)) <->
   In x s /\ above_low_bound x = true /\ below_high_bound x = true.
-Proof.
+Proof using below_monotone above_monotone.
   intros. unfold partition_between, In; simpl. split.
   intros. split. apply In_raw_partition_between_1; auto. eapply In_raw_partition_between_3; eauto.
   intros [A [B C]]. apply In_raw_partition_between_5; auto. apply MSet.is_ok.
@@ -506,7 +506,7 @@ Theorem partition_between_iff_2:
   forall x s,
   In x (snd (partition_between s)) <->
   In x s /\ (above_low_bound x = false \/ below_high_bound x = false).
-Proof.
+Proof using below_monotone above_monotone.
   intros. unfold partition_between, In; simpl. split.
   intros. split. apply In_raw_partition_between_2; auto. eapply In_raw_partition_between_4; eauto. apply MSet.is_ok.
   intros [A B]. apply In_raw_partition_between_6; auto. apply MSet.is_ok.

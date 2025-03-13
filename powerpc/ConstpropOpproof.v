@@ -42,14 +42,14 @@ Hypothesis MATCH: ematch bc rs ae.
 Lemma match_G:
   forall r id ofs,
   AE.get r ae = Ptr(Gl id ofs) -> Val.lessdef rs#r (Genv.symbol_address ge id ofs).
-Proof.
+Proof using.
   intros. apply vmatch_ptr_gl with bc; auto. rewrite <- H. apply MATCH.
 Qed.
 
 Lemma match_S:
   forall r ofs,
   AE.get r ae = Ptr(Stk ofs) -> Val.lessdef rs#r (Vptr sp ofs).
-Proof.
+Proof using.
   intros. apply vmatch_ptr_stk with bc; auto. rewrite <- H. apply MATCH.
 Qed.
 
@@ -96,7 +96,7 @@ Lemma const_for_result_correct:
   const_for_result a = Some op ->
   vmatch bc v a ->
   exists v', eval_operation ge (Vptr sp Ptrofs.zero) op nil m = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   unfold const_for_result; intros.
   destruct a; inv H; SimplVM.
 - (* integer *)
@@ -122,7 +122,7 @@ Lemma cond_strength_reduction_correct:
   vl = map (fun r => AE.get r ae) args ->
   let (cond', args') := cond_strength_reduction cond args vl in
   eval_condition cond' rs##args' m = eval_condition cond rs##args m.
-Proof.
+Proof using.
   intros until vl. unfold cond_strength_reduction.
   case (cond_strength_reduction_match cond args vl); simpl; intros; InvApproxRegs; SimplVM.
 - apply Val.swap_cmp_bool.
@@ -142,7 +142,7 @@ Lemma make_cmp_base_correct:
   let (op', args') := make_cmp_base c args vl in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op' rs##args' m = Some v
          /\ Val.lessdef (Val.of_optbool (eval_condition c rs##args m)) v.
-Proof.
+Proof using.
   intros. unfold make_cmp_base.
   generalize (cond_strength_reduction_correct c args vl H).
   destruct (cond_strength_reduction c args vl) as [c' args']. intros EQ.
@@ -155,7 +155,7 @@ Lemma make_cmp_correct:
   let (op', args') := make_cmp c args vl in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op' rs##args' m = Some v
          /\ Val.lessdef (Val.of_optbool (eval_condition c rs##args m)) v.
-Proof.
+Proof using.
   intros c args vl.
   assert (Y: forall r, vincl (AE.get r ae) (Uns Ptop 1) = true ->
              rs#r = Vundef \/ rs#r = Vint Int.zero \/ rs#r = Vint Int.one).
@@ -221,7 +221,7 @@ Lemma make_select_correct:
   let (op', args') := make_select c ty r1 r2 args vl in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op' rs##args' m = Some v
          /\ Val.lessdef (Val.select (eval_condition c rs##args m) rs#r1 rs#r2 ty) v.
-Proof.
+Proof using.
   unfold make_select; intros.
   destruct (resolve_branch (eval_static_condition c vl)) as [b|] eqn:RB.
 - exists (if b then rs#r1 else rs#r2); split.
@@ -241,7 +241,7 @@ Lemma make_addimm_correct:
   forall n r,
   let (op, args) := make_addimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.add rs#r (Vint n)) v.
-Proof.
+Proof using.
   intros. unfold make_addimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros.
   subst. exists (rs#r); split; auto. destruct (rs#r); simpl; auto. rewrite Int.add_zero; auto. rewrite Ptrofs.add_zero; auto.
@@ -253,7 +253,7 @@ Lemma make_shlimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shlimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shl rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shlimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shl_zero. auto.
@@ -267,7 +267,7 @@ Lemma make_shrimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shrimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shr rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shrimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shr_zero. auto.
@@ -281,7 +281,7 @@ Lemma make_shruimm_aux_correct:
   Int.ltu n Int.iwordsize = true ->
   let (op, args) := make_shruimm_aux n r1 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shru rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shruimm_aux.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shru_zero. auto.
@@ -293,7 +293,7 @@ Lemma make_shruimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shruimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shru rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shruimm.
   destruct (Int.ltu n Int.iwordsize) eqn:?; intros.
   apply make_shruimm_aux_correct; auto.
@@ -305,7 +305,7 @@ Lemma make_mulimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_mulimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mul rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_mulimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (Vint Int.zero); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.mul_zero; auto.
@@ -324,7 +324,7 @@ Lemma make_divimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_divimm n r1 r2 in
   exists w, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some w /\ Val.lessdef v w.
-Proof.
+Proof using.
   intros; unfold make_divimm.
   predSpec Int.eq Int.eq_spec n Int.one; intros. subst. rewrite H0 in H.
   destruct (rs#r1) eqn:?;
@@ -343,7 +343,7 @@ Lemma make_divuimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_divuimm n r1 r2 in
   exists w, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some w /\ Val.lessdef v w.
-Proof.
+Proof using.
   intros; unfold make_divuimm.
   destruct (Int.is_power2 n) eqn:?.
   exploit Int.is_power2_range; eauto. intros RANGE.
@@ -361,7 +361,7 @@ Lemma make_andimm_correct:
   vmatch bc rs#r x ->
   let (op, args) := make_andimm n r x in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.and rs#r (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_andimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros.
   subst n. exists (Vint Int.zero); split; auto. destruct (rs#r); simpl; auto. rewrite Int.and_zero; auto.
@@ -386,7 +386,7 @@ Lemma make_orimm_correct:
   forall n r,
   let (op, args) := make_orimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.or rs#r (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_orimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros.
   subst n. exists (rs#r); split; auto. destruct (rs#r); simpl; auto. rewrite Int.or_zero; auto.
@@ -399,7 +399,7 @@ Lemma make_xorimm_correct:
   forall n r,
   let (op, args) := make_xorimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.xor rs#r (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_xorimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros.
   subst n. exists (rs#r); split; auto. destruct (rs#r); simpl; auto. rewrite Int.xor_zero; auto.
@@ -412,7 +412,7 @@ Lemma make_addlimm_correct:
   forall n r,
   let (op, args) := make_addlimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.addl rs#r (Vlong n)) v.
-Proof.
+Proof using.
   intros. unfold make_addlimm.
   predSpec Int64.eq Int64.eq_spec n Int64.zero; intros.
   subst. exists (rs#r); split; auto.
@@ -425,7 +425,7 @@ Lemma make_mullimm_correct:
   rs#r2 = Vlong n ->
   let (op, args) := make_mullimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mull rs#r1 (Vlong n)) v.
-Proof.
+Proof using.
   intros; unfold make_mullimm.
   predSpec Int64.eq Int64.eq_spec n Int64.zero; intros. subst.
   exists (Vlong Int64.zero); split; auto. destruct (rs#r1); simpl; auto. rewrite Int64.mul_zero; auto.
@@ -445,7 +445,7 @@ Lemma make_shllimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shllimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shll rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shllimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto.
@@ -460,7 +460,7 @@ Lemma make_shrlimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shrlimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shrl rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shrlimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto.
@@ -473,7 +473,7 @@ Lemma make_shrluimm_aux_correct:
   Int.ltu n Int64.iwordsize' = true ->
   let (op, args) := make_shrluimm_aux n r1 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shrlu rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shrluimm_aux.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   - exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto.
@@ -486,7 +486,7 @@ Lemma make_shrluimm_correct:
   rs#r2 = Vint n ->
   let (op, args) := make_shrluimm n r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.shrlu rs#r1 (Vint n)) v.
-Proof.
+Proof using.
   intros; unfold make_shrluimm.
   destruct (Int.ltu n Int64.iwordsize') eqn:LT; simpl.
   apply make_shrluimm_aux_correct; auto.
@@ -497,7 +497,7 @@ Lemma make_andlimm_correct:
   forall n r x,
   let (op, args) := make_andlimm n r x in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.andl rs#r (Vlong n)) v.
-Proof.
+Proof using.
   intros; unfold make_andlimm.
   predSpec Int64.eq Int64.eq_spec n Int64.zero; intros.
   subst n. exists (Vlong Int64.zero); split; auto. destruct (rs#r); simpl; auto. rewrite Int64.and_zero; auto.
@@ -510,7 +510,7 @@ Lemma make_orlimm_correct:
   forall n r,
   let (op, args) := make_orlimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.orl rs#r (Vlong n)) v.
-Proof.
+Proof using.
   intros; unfold make_orlimm.
   predSpec Int64.eq Int64.eq_spec n Int64.zero; intros.
   subst n. exists (rs#r); split; auto. destruct (rs#r); simpl; auto. rewrite Int64.or_zero; auto.
@@ -523,7 +523,7 @@ Lemma make_xorlimm_correct:
   forall n r,
   let (op, args) := make_xorlimm n r in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.xorl rs#r (Vlong n)) v.
-Proof.
+Proof using.
   intros; unfold make_xorlimm.
   predSpec Int64.eq Int64.eq_spec n Int64.zero; intros.
   subst n. exists (rs#r); split; auto. destruct (rs#r); simpl; auto. rewrite Int64.xor_zero; auto.
@@ -538,7 +538,7 @@ Lemma make_divluimm_correct:
   rs#r2 = Vlong n ->
   let (op, args) := make_divluimm n r1 r2 in
   exists w, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some w /\ Val.lessdef v w.
-Proof.
+Proof using.
   intros; unfold make_divluimm.
   destruct (Int64.is_power2' n) eqn:?.
   exploit Int64.is_power2'_range; eauto. intros RANGE.
@@ -556,7 +556,7 @@ Lemma make_mulfimm_correct:
   rs#r2 = Vfloat n ->
   let (op, args) := make_mulfimm n r1 r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mulf rs#r1 rs#r2) v.
-Proof.
+Proof using.
   intros; unfold make_mulfimm.
   destruct (Float.eq_dec n (Float.of_int (Int.repr 2))); intros.
   simpl. econstructor; split. eauto. rewrite H; subst n.
@@ -570,7 +570,7 @@ Lemma make_divlimm_correct:
   rs#r2 = Vlong n ->
   let (op, args) := make_divlimm n r1 r2 in
   exists w, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some w /\ Val.lessdef v w.
-Proof.
+Proof using.
   intros; unfold make_divlimm.
   destruct (Int64.is_power2' n) eqn:?. destruct (Int.ltu i (Int.repr 63)) eqn:?.
   rewrite H0 in H. econstructor; split. simpl; eauto. eapply Val.divls_pow2; eauto. auto.
@@ -583,7 +583,7 @@ Lemma make_mulfimm_correct_2:
   rs#r1 = Vfloat n ->
   let (op, args) := make_mulfimm n r2 r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mulf rs#r1 rs#r2) v.
-Proof.
+Proof using.
   intros; unfold make_mulfimm.
   destruct (Float.eq_dec n (Float.of_int (Int.repr 2))); intros.
   simpl. econstructor; split. eauto. rewrite H; subst n.
@@ -597,7 +597,7 @@ Lemma make_mulfsimm_correct:
   rs#r2 = Vsingle n ->
   let (op, args) := make_mulfsimm n r1 r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mulfs rs#r1 rs#r2) v.
-Proof.
+Proof using.
   intros; unfold make_mulfsimm.
   destruct (Float32.eq_dec n (Float32.of_int (Int.repr 2))); intros.
   simpl. econstructor; split. eauto. rewrite H; subst n.
@@ -610,7 +610,7 @@ Lemma make_mulfsimm_correct_2:
   rs#r1 = Vsingle n ->
   let (op, args) := make_mulfsimm n r2 r1 r2 in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.mulfs rs#r1 rs#r2) v.
-Proof.
+Proof using.
   intros; unfold make_mulfsimm.
   destruct (Float32.eq_dec n (Float32.of_int (Int.repr 2))); intros.
   simpl. econstructor; split. eauto. rewrite H; subst n.
@@ -624,7 +624,7 @@ Lemma make_cast8signed_correct:
   vmatch bc rs#r x ->
   let (op, args) := make_cast8signed r x in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.sign_ext 8 rs#r) v.
-Proof.
+Proof using.
   intros; unfold make_cast8signed. destruct (vincl x (Sgn Ptop 8)) eqn:INCL.
   exists rs#r; split; auto.
   assert (V: vmatch bc rs#r (Sgn Ptop 8)).
@@ -638,7 +638,7 @@ Lemma make_cast16signed_correct:
   vmatch bc rs#r x ->
   let (op, args) := make_cast16signed r x in
   exists v, eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v /\ Val.lessdef (Val.sign_ext 16 rs#r) v.
-Proof.
+Proof using.
   intros; unfold make_cast16signed. destruct (vincl x (Sgn Ptop 16)) eqn:INCL.
   exists rs#r; split; auto.
   assert (V: vmatch bc rs#r (Sgn Ptop 16)).
@@ -653,7 +653,7 @@ Lemma op_strength_reduction_correct:
   eval_operation ge (Vptr sp Ptrofs.zero) op rs##args m = Some v ->
   let (op', args') := op_strength_reduction op args vl in
   exists w, eval_operation ge (Vptr sp Ptrofs.zero) op' rs##args' m = Some w /\ Val.lessdef v w.
-Proof.
+Proof using.
   intros until v; unfold op_strength_reduction;
   case (op_strength_reduction_match op args vl); simpl; intros.
 (* cast8signed *)
@@ -758,7 +758,7 @@ Qed.
 Remark shift_symbol_address:
   forall id ofs delta,
   Genv.symbol_address ge id (Ptrofs.add ofs (Ptrofs.of_int delta)) = Val.add (Genv.symbol_address ge id ofs) (Vint delta).
-Proof.
+Proof using.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id); auto.
 Qed.
 
@@ -768,7 +768,7 @@ Lemma addr_strength_reduction_correct:
   eval_addressing ge (Vptr sp Ptrofs.zero) addr rs##args = Some res ->
   let (addr', args') := addr_strength_reduction addr args vl in
   exists res', eval_addressing ge (Vptr sp Ptrofs.zero) addr' rs##args' = Some res' /\ Val.lessdef res res'.
-Proof.
+Proof using.
   intros until res. unfold addr_strength_reduction.
   destruct (addr_strength_reduction_match addr args vl); simpl;
   intros VL EA; InvApproxRegs; SimplVM; try (inv EA).

@@ -388,9 +388,9 @@ Module IndexedEqKind <: INDEXED_TYPE.
   Definition index (x: t) :=
     match x with Full => 1%positive | Low => 2%positive | High => 3%positive end.
   Lemma index_inj: forall x y, index x = index y -> x = y.
-  Proof. destruct x; destruct y; simpl; congruence. Qed.
+  Proof using. destruct x; destruct y; simpl; congruence. Qed.
   Definition eq (x y: t) : {x=y} + {x<>y}.
-  Proof. decide equality. Defined.
+  Proof using. decide equality. Defined.
 End IndexedEqKind.
 
 Module OrderedEqKind := OrderedIndexed(IndexedEqKind).
@@ -412,7 +412,7 @@ Module OrderedEquation <: OrderedType.
   Lemma eq_trans : forall x y z : t, eq x y -> eq y z -> eq x z.
   Proof (@eq_trans t).
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-  Proof.
+  Proof using.
     unfold lt; intros.
     destruct H.
     destruct H0. left; eapply Plt_trans; eauto.
@@ -427,14 +427,14 @@ Module OrderedEquation <: OrderedType.
     right; split. congruence. eapply OrderedEqKind.lt_trans; eauto.
   Qed.
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-  Proof.
+  Proof using.
     unfold lt, eq; intros; red; intros. subst y. intuition.
     eelim Plt_strict; eauto.
     eelim OrderedLoc.lt_not_eq; eauto. red; auto.
     eelim OrderedEqKind.lt_not_eq; eauto. red; auto.
   Qed.
   Definition compare : forall x y : t, Compare lt eq x y.
-  Proof.
+  Proof using.
     intros.
     destruct (OrderedPositive.compare (ereg x) (ereg y)).
   - apply LT. red; auto.
@@ -449,7 +449,7 @@ Module OrderedEquation <: OrderedType.
   - apply GT. red; auto.
   Defined.
   Definition eq_dec (x y: t) : {x = y} + {x <> y}.
-  Proof.
+  Proof using.
     intros. decide equality.
     apply Loc.eq.
     apply peq.
@@ -474,7 +474,7 @@ Module OrderedEquation' <: OrderedType.
   Lemma eq_trans : forall x y z : t, eq x y -> eq y z -> eq x z.
   Proof (@eq_trans t).
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-  Proof.
+  Proof using.
     unfold lt; intros.
     destruct H.
     destruct H0. left; eapply OrderedLoc.lt_trans; eauto.
@@ -489,14 +489,14 @@ Module OrderedEquation' <: OrderedType.
     right; split. congruence. eapply OrderedEqKind.lt_trans; eauto.
   Qed.
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-  Proof.
+  Proof using.
     unfold lt, eq; intros; red; intros. subst y. intuition.
     eelim OrderedLoc.lt_not_eq; eauto. red; auto.
     eelim Plt_strict; eauto.
     eelim OrderedEqKind.lt_not_eq; eauto. red; auto.
   Qed.
   Definition compare : forall x y : t, Compare lt eq x y.
-  Proof.
+  Proof using.
     intros.
     destruct (OrderedLoc.compare (eloc x) (eloc y)).
   - apply LT. red; auto.
@@ -1157,18 +1157,18 @@ Module LEq <: SEMILATTICE.
     end.
 
   Lemma eq_refl: forall x, eq x x.
-  Proof.
+  Proof using.
     intros; destruct x; simpl; auto. red; tauto.
   Qed.
 
   Lemma eq_sym: forall x y, eq x y -> eq y x.
-  Proof.
+  Proof using.
     unfold eq; intros; destruct x; destruct y; auto.
     red in H; red; intros. rewrite H; tauto.
   Qed.
 
   Lemma eq_trans: forall x y z, eq x y -> eq y z -> eq x z.
-  Proof.
+  Proof using.
     unfold eq; intros. destruct x; destruct y; try contradiction; destruct z; auto.
     red in H; red in H0; red; intros. rewrite H. auto.
   Qed.
@@ -1181,7 +1181,7 @@ Module LEq <: SEMILATTICE.
     end.
 
   Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-  Proof.
+  Proof using.
     unfold beq, eq; intros. destruct x; destruct y.
     apply EqSet.equal_2. auto.
     discriminate.
@@ -1197,12 +1197,12 @@ Module LEq <: SEMILATTICE.
     end.
 
   Lemma ge_refl: forall x y, eq x y -> ge x y.
-  Proof.
+  Proof using.
     unfold eq, ge, EqSet.Equal, EqSet.Subset; intros.
     destruct x; destruct y; auto. intros; rewrite H; auto.
   Qed.
   Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-  Proof.
+  Proof using.
     unfold ge, EqSet.Subset; intros.
     destruct x; auto; destruct y; try contradiction.
     destruct z; eauto.
@@ -1211,7 +1211,7 @@ Module LEq <: SEMILATTICE.
   Definition bot: t := OK empty_eqs.
 
   Lemma ge_bot: forall x, ge x bot.
-  Proof.
+  Proof using.
     unfold ge, bot, EqSet.Subset; simpl; intros.
     destruct x; auto. intros. elim (EqSet.empty_1 H).
   Qed.
@@ -1233,14 +1233,14 @@ Module LEq <: SEMILATTICE.
   Qed.
 
   Lemma ge_lub_left: forall x y, ge (lub x y) x.
-  Proof.
+  Proof using.
     unfold lub, ge, EqSet.Subset; intros.
     destruct x; destruct y; auto.
     intros; apply EqSet.union_2; auto.
   Qed.
 
   Lemma ge_lub_right: forall x y, ge (lub x y) y.
-  Proof.
+  Proof using.
     unfold lub, ge, EqSet.Subset; intros.
     destruct x; destruct y; auto.
     intros; apply EqSet.union_3; auto.

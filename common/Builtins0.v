@@ -183,23 +183,23 @@ Definition proj_num {A: Type} (t: typ) (k0: A) (v: val): (valty t -> A) -> A :=
   end.
 
 Lemma inj_num_wt: forall t x, Val.has_rettype (inj_num t x) t.
-Proof.
+Proof using.
   destruct t; intros; simpl; auto; apply proj2_sig.
 Qed.
 
 Lemma inj_num_inject: forall j t x, Val.inject j (inj_num t x) (inj_num t x).
-Proof.
+Proof using.
   destruct t; intros; constructor.
 Qed.
 
 Lemma inj_num_opt_wt: forall t x, val_opt_has_rettype (option_map (inj_num t) x) t.
-Proof.
+Proof using.
   intros. destruct x; simpl. apply inj_num_wt. auto. 
 Qed.
 
 Lemma inj_num_opt_inject: forall j t x,
   val_opt_inject j (option_map (inj_num t) x) (option_map (inj_num t) x).
-Proof.
+Proof using.
   destruct x; simpl. apply inj_num_inject. auto.
 Qed.
 
@@ -207,7 +207,7 @@ Lemma proj_num_wt:
   forall tres t k1 v,
   (forall x, Val.has_rettype (k1 x) tres) ->
   Val.has_rettype (proj_num t Vundef v k1) tres.
-Proof.
+Proof using.
   intros.
   assert (U: Val.has_rettype Vundef tres).
   { destruct tres; exact I. }
@@ -219,7 +219,7 @@ Lemma proj_num_inject:
   (forall x, Val.inject j (k1 x) (k1' x)) ->
   Val.inject j v v' -> 
   Val.inject j (proj_num t Vundef v k1) (proj_num t Vundef v' k1').
-Proof.
+Proof using.
   intros. destruct t; simpl; inv H0; auto.
 Qed.
 
@@ -228,7 +228,7 @@ Lemma proj_num_opt_wt:
   k0 = None \/ k0 = Some Vundef ->
   (forall x, val_opt_has_rettype (k1 x) tres) ->
   val_opt_has_rettype (proj_num t k0 v k1) tres.
-Proof.
+Proof using.
   intros.
   assert (val_opt_has_rettype k0 tres).
   { destruct H; subst k0. exact I. hnf. destruct tres; exact I. }
@@ -241,7 +241,7 @@ Lemma proj_num_opt_inject:
   (forall x, val_opt_inject j (k1 x) (k1' x)) ->
   Val.inject j v v' -> 
   val_opt_inject j (proj_num t k0 v k1) (proj_num t k0 v' k1').
-Proof.
+Proof using.
   intros. destruct t; simpl; inv H1; auto.
 Qed.
 
@@ -342,7 +342,7 @@ Fixpoint lookup_builtin (name: string) (sg: signature) (l: list (string * A)) : 
 
 Lemma lookup_builtin_sig: forall name sg b l,
   lookup_builtin name sg l = Some b -> sig_of b = sg.
-Proof.
+Proof using.
   induction l as [ | [n b'] l ]; simpl; intros.
 - discriminate.
 - destruct (string_dec name n && signature_eq sg (sig_of b')) eqn:E.

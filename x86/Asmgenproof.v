@@ -23,7 +23,7 @@ Definition match_prog (p: Mach.program) (tp: Asm.program) :=
 
 Lemma transf_program_match:
   forall p tp, transf_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program; eauto.
 Qed.
 
@@ -55,7 +55,7 @@ Lemma functions_transl:
   Genv.find_funct_ptr ge fb = Some (Internal f) ->
   transf_function f = OK tf ->
   Genv.find_funct_ptr tge fb = Some (Internal tf).
-Proof.
+Proof using TRANSF.
   intros. exploit functions_translated; eauto. intros [tf' [A B]].
   monadInv B. rewrite H0 in EQ; inv EQ; auto.
 Qed.
@@ -65,7 +65,7 @@ Qed.
 Lemma transf_function_no_overflow:
   forall f tf,
   transf_function f = OK tf -> list_length_z (fn_code tf) <= Ptrofs.max_unsigned.
-Proof.
+Proof using.
   intros. monadInv H. destruct (zlt Ptrofs.max_unsigned (list_length_z (fn_code x))); monadInv EQ0.
   lia.
 Qed.
@@ -75,7 +75,7 @@ Lemma exec_straight_exec:
   transl_code_at_pc ge (rs PC) fb f c ep tf tc ->
   exec_straight tge tf tc rs m c' rs' m' ->
   plus step tge (State rs m) E0 (State rs' m').
-Proof.
+Proof using TRANSF.
   intros. inv H.
   eapply exec_straight_steps_1; eauto.
   eapply transf_function_no_overflow; eauto.
@@ -88,7 +88,7 @@ Lemma exec_straight_at:
   transl_code f c' ep' = OK tc' ->
   exec_straight tge tf tc rs m tc' rs' m' ->
   transl_code_at_pc ge (rs' PC) fb f c' ep' tf tc'.
-Proof.
+Proof using TRANSF.
   intros. inv H.
   exploit exec_straight_steps_2; eauto.
   eapply transf_function_no_overflow; eauto.
@@ -119,7 +119,7 @@ Section TRANSL_LABEL.
 
 Remark mk_mov_label:
   forall rd rs k c, mk_mov rd rs k = OK c -> tail_nolabel k c.
-Proof.
+Proof using.
   unfold mk_mov; intros.
   destruct rd; try discriminate; destruct rs; TailNoLabel.
 Qed.
@@ -127,14 +127,14 @@ Hint Resolve mk_mov_label: labels.
 
 Remark mk_shrximm_label:
   forall n k c, mk_shrximm n k = OK c -> tail_nolabel k c.
-Proof.
+Proof using.
   intros. monadInv H; TailNoLabel.
 Qed.
 Hint Resolve mk_shrximm_label: labels.
 
 Remark mk_shrxlimm_label:
   forall n k c, mk_shrxlimm n k = OK c -> tail_nolabel k c.
-Proof.
+Proof using.
   intros. monadInv H. destruct (Int.eq n Int.zero); TailNoLabel.
 Qed.
 Hint Resolve mk_shrxlimm_label: labels.
@@ -143,14 +143,14 @@ Remark mk_intconv_label:
   forall f r1 r2 k c, mk_intconv f r1 r2 k = OK c ->
   (forall r r', nolabel (f r r')) ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold mk_intconv; intros. TailNoLabel.
 Qed.
 Hint Resolve mk_intconv_label: labels.
 
 Remark mk_storebyte_label:
   forall addr r k c, mk_storebyte addr r k = OK c -> tail_nolabel k c.
-Proof.
+Proof using.
   unfold mk_storebyte; intros. TailNoLabel.
 Qed.
 Hint Resolve mk_storebyte_label: labels.
@@ -159,7 +159,7 @@ Remark loadind_label:
   forall base ofs ty dst k c,
   loadind base ofs ty dst k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold loadind; intros. destruct ty; try discriminate; destruct (preg_of dst); TailNoLabel.
 Qed.
 
@@ -167,21 +167,21 @@ Remark storeind_label:
   forall base ofs ty src k c,
   storeind src base ofs ty k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold storeind; intros. destruct ty; try discriminate; destruct (preg_of src); TailNoLabel.
 Qed.
 
 Remark mk_setcc_base_label:
   forall xc rd k,
   tail_nolabel k (mk_setcc_base xc rd k).
-Proof.
+Proof using.
   intros. destruct xc; simpl; destruct (ireg_eq rd RAX); TailNoLabel.
 Qed.
 
 Remark mk_setcc_label:
   forall xc rd k,
   tail_nolabel k (mk_setcc xc rd k).
-Proof.
+Proof using.
   intros. unfold mk_setcc. destruct (Archi.ptr64 || low_ireg rd).
   apply mk_setcc_base_label.
   eapply tail_nolabel_trans. apply mk_setcc_base_label. TailNoLabel.
@@ -190,7 +190,7 @@ Qed.
 Remark mk_jcc_label:
   forall xc lbl' k,
   tail_nolabel k (mk_jcc xc lbl' k).
-Proof.
+Proof using.
   intros. destruct xc; simpl; TailNoLabel.
 Qed.
 
@@ -198,7 +198,7 @@ Remark mk_sel_label:
   forall xc rd r2 k c,
   mk_sel xc rd r2 k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold mk_sel; intros; destruct xc; inv H; TailNoLabel.
 Qed.
 
@@ -206,7 +206,7 @@ Remark transl_cond_label:
   forall cond args k c,
   transl_cond cond args k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold transl_cond; intros.
   destruct cond; TailNoLabel.
   destruct (Int.eq_dec n Int.zero); TailNoLabel.
@@ -221,7 +221,7 @@ Remark transl_op_label:
   forall op args r k c,
   transl_op op args r k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   unfold transl_op; intros. destruct op; TailNoLabel.
   destruct (Int.eq_dec n Int.zero); TailNoLabel.
   destruct (Int64.eq_dec n Int64.zero); TailNoLabel.
@@ -238,7 +238,7 @@ Remark transl_load_label:
   forall chunk addr args dest k c,
   transl_load chunk addr args dest k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   intros. monadInv H. destruct chunk; TailNoLabel.
 Qed.
 
@@ -246,7 +246,7 @@ Remark transl_store_label:
   forall chunk addr args src k c,
   transl_store chunk addr args src k = OK c ->
   tail_nolabel k c.
-Proof.
+Proof using.
   intros. monadInv H. destruct chunk; TailNoLabel.
 Qed.
 
@@ -254,7 +254,7 @@ Lemma transl_instr_label:
   forall f i ep k c,
   transl_instr f i ep k = OK c ->
   match i with Mlabel lbl => c = Plabel lbl :: k | _ => tail_nolabel k c end.
-Proof.
+Proof using.
 Opaque loadind.
   unfold transl_instr; intros; destruct i; TailNoLabel.
   eapply loadind_label; eauto.
@@ -273,7 +273,7 @@ Lemma transl_instr_label':
   forall lbl f i ep k c,
   transl_instr f i ep k = OK c ->
   find_label lbl c = if Mach.is_label lbl i then Some k else find_label lbl k.
-Proof.
+Proof using.
   intros. exploit transl_instr_label; eauto.
   destruct i; try (intros [A B]; apply B).
   intros. subst c. simpl. auto.
@@ -286,7 +286,7 @@ Lemma transl_code_label:
   | None => find_label lbl tc = None
   | Some c' => exists tc', find_label lbl tc = Some tc' /\ transl_code f c' false = OK tc'
   end.
-Proof.
+Proof using.
   induction c; simpl; intros.
   inv H. auto.
   monadInv H. rewrite (transl_instr_label' lbl _ _ _ _ _ EQ0).
@@ -303,7 +303,7 @@ Lemma transl_find_label:
   | None => find_label lbl tf.(fn_code) = None
   | Some c => exists tc, find_label lbl tf.(fn_code) = Some tc /\ transl_code f c false = OK tc
   end.
-Proof.
+Proof using.
   intros. monadInv H. destruct (zlt Ptrofs.max_unsigned (list_length_z (fn_code x))); inv EQ0.
   monadInv EQ. simpl. eapply transl_code_label; eauto. rewrite transl_code'_transl_code in EQ0; eauto.
 Qed.
@@ -323,7 +323,7 @@ Lemma find_label_goto_label:
     goto_label tf lbl rs m = Next rs' m
   /\ transl_code_at_pc ge (rs' PC) b f c' false tf tc'
   /\ forall r, r <> PC -> rs'#r = rs#r.
-Proof.
+Proof using.
   intros. exploit (transl_find_label lbl f tf); eauto. rewrite H2.
   intros [tc [A B]].
   exploit label_pos_code_tail; eauto. instantiate (1 := 0).
@@ -342,7 +342,7 @@ Qed.
 Lemma return_address_exists:
   forall f sg ros c, is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
   exists ra, return_address_offset f c ra.
-Proof.
+Proof using.
   intros. eapply Asmgenproof0.return_address_exists; eauto.
 - intros. exploit transl_instr_label; eauto.
   destruct i; try (intros [A B]; apply A). intros. subst c0. repeat constructor.
@@ -414,7 +414,7 @@ Lemma exec_straight_steps:
   exists st',
   plus step tge (State rs1 m1') E0 st' /\
   match_states (Mach.State s fb sp c ms2 m2) st'.
-Proof.
+Proof using TRANSF.
   intros. inversion H2. subst. monadInv H7.
   exploit H3; eauto. intros [rs2 [A [B C]]].
   exists (State rs2 m2'); split.
@@ -438,7 +438,7 @@ Lemma exec_straight_steps_goto:
   exists st',
   plus step tge (State rs1 m1') E0 st' /\
   match_states (Mach.State s fb sp c' ms2 m2) st'.
-Proof.
+Proof using TRANSF.
   intros. inversion H3. subst. monadInv H9.
   exploit H5; eauto. intros [jmp [k' [rs2 [A [B C]]]]].
   generalize (functions_transl _ _ _ H7 H8); intro FN.
@@ -481,7 +481,7 @@ Theorem step_simulation:
   forall S1' (MS: match_states S1 S1'),
   (exists S2', plus step tge S1' t S2' /\ match_states S2 S2')
   \/ (measure S2 < measure S1 /\ t = E0 /\ match_states S2 S1')%nat.
-Proof.
+Proof using TRANSF.
   induction 1; intros; inv MS.
 
 - (* Mlabel *)
@@ -884,7 +884,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, Mach.initial_state prog st1 ->
   exists st2, Asm.initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inversion H. unfold ge0 in *.
   econstructor; split.
   econstructor.
@@ -906,7 +906,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> Mach.final_state st1 r -> Asm.final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. constructor. auto.
   assert (r0 = AX).
   { unfold loc_result in H1; destruct Archi.ptr64; compute in H1; congruence. }
@@ -916,7 +916,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (Mach.semantics return_address_offset prog) (Asm.semantics tprog).
-Proof.
+Proof using TRANSF.
   eapply forward_simulation_star with (measure := measure).
   apply senv_preserved.
   eexact transf_initial_states.

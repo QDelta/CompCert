@@ -176,14 +176,14 @@ Definition cexec_do_step := Cexec.do_step.
 Lemma print_identity:
   forall (A: Type) (printer: A -> unit) (prog: A),
   print printer prog = prog.
-Proof.
+Proof using.
   intros; unfold print. destruct (printer prog); auto.
 Qed.
 
 Lemma compose_print_identity:
   forall (A: Type) (x: res A) (f: A -> unit),
   x @@ print f = x.
-Proof.
+Proof using.
   intros. destruct x; simpl. rewrite print_identity. auto. auto.
 Qed.
 
@@ -196,7 +196,7 @@ Lemma total_if_match:
   forall (A: Type) (flag: unit -> bool) (f: A -> A) (rel: A -> A -> Prop) (prog: A),
   (forall p, rel p (f p)) ->
   match_if flag rel prog (total_if flag f prog).
-Proof.
+Proof using.
   intros. unfold match_if, total_if. destruct (flag tt); auto.
 Qed.
 
@@ -205,14 +205,14 @@ Lemma partial_if_match:
   (forall p tp, f p = OK tp -> rel p tp) ->
   partial_if flag f prog = OK tprog ->
   match_if flag rel prog tprog.
-Proof.
+Proof using.
   intros. unfold match_if, partial_if in *. destruct (flag tt). auto. congruence.
 Qed.
 
 Global Instance TransfIfLink {A: Type} {LA: Linker A}
                       (flag: unit -> bool) (transf: A -> A -> Prop) (TL: TransfLink transf)
                       : TransfLink (match_if flag transf).
-Proof.
+Proof using.
   unfold match_if. destruct (flag tt).
 - auto.
 - red; intros. subst tp1 tp2. exists p; auto.
@@ -266,7 +266,7 @@ Theorem transf_c_program_match:
   forall p tp,
   transf_c_program p = OK tp ->
   match_prog p tp.
-Proof.
+Proof using.
   intros p tp T.
   unfold transf_c_program, time in T. simpl in T.
   destruct (SimplExpr.transl_program p) as [p1|e] eqn:P1; simpl in T; try discriminate.
@@ -333,7 +333,7 @@ Qed.
 
 Remark forward_simulation_identity:
   forall sem, forward_simulation sem sem.
-Proof.
+Proof using.
   intros. apply forward_simulation_step with (fun s1 s2 => s2 = s1); intros.
 - auto.
 - exists s1; auto.
@@ -346,7 +346,7 @@ Lemma match_if_simulation:
   match_if flag transf prog tprog ->
   (forall p tp, transf p tp -> forward_simulation (sem p) (sem tp)) ->
   forward_simulation (sem prog) (sem tprog).
-Proof.
+Proof using.
   intros. unfold match_if in *. destruct (flag tt). eauto. subst. apply forward_simulation_identity.
 Qed.
 
@@ -355,7 +355,7 @@ Theorem cstrategy_semantic_preservation:
   match_prog p tp ->
   forward_simulation (Cstrategy.semantics p) (Asm.semantics tp)
   /\ backward_simulation (atomic (Cstrategy.semantics p)) (Asm.semantics tp).
-Proof.
+Proof using.
   intros p tp M. unfold match_prog, pass_match in M; simpl in M.
 Ltac DestructM :=
   match goal with
@@ -420,7 +420,7 @@ Theorem c_semantic_preservation:
   forall p tp,
   match_prog p tp ->
   backward_simulation (Csem.semantics p) (Asm.semantics tp).
-Proof.
+Proof using.
   intros.
   apply compose_backward_simulation with (atomic (Cstrategy.semantics p)).
   eapply sd_traces; eapply Asm.semantics_determinate.
@@ -447,7 +447,7 @@ Theorem transf_c_program_correct:
   forall p tp,
   transf_c_program p = OK tp ->
   backward_simulation (Csem.semantics p) (Asm.semantics tp).
-Proof.
+Proof using.
   intros. apply c_semantic_preservation. apply transf_c_program_match; auto.
 Qed.
 
@@ -470,7 +470,7 @@ Theorem separate_transf_c_program_correct:
   exists asm_program,
       link_list asm_units = Some asm_program
    /\ backward_simulation (Csem.semantics c_program) (Asm.semantics asm_program).
-Proof.
+Proof using.
   intros.
   assert (nlist_forall2 match_prog c_units asm_units).
   { eapply nlist_forall2_imply. eauto. simpl; intros. apply transf_c_program_match; auto. }

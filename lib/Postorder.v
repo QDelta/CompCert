@@ -40,7 +40,7 @@ Module PositiveOrd.
   Definition leb (x y: t): bool := if plt y x then false else true.
 (*  Infix "<=?" := leb (at level 35). *)
   Theorem leb_total : forall x y, is_true (leb x y) \/ is_true (leb y x).
-  Proof.
+  Proof using.
     unfold leb, is_true; intros.
     destruct (plt x y); auto. destruct (plt y x); auto.
     elim (Plt_strict x). eapply Plt_trans; eauto.
@@ -134,7 +134,7 @@ Inductive postcondition (map: PTree.t positive) : Prop :=
 
 Remark In_sort:
   forall x l, In x l <-> In x (Sort.sort l).
-Proof.
+Proof using.
   intros; split; intros.
   apply Permutation_in with l. apply Sort.Permuted_sort. auto.
   apply Permutation_in with (Sort.sort l). apply Permutation_sym. apply Sort.Permuted_sort. auto.
@@ -143,7 +143,7 @@ Qed.
 Lemma transition_spec:
   forall s, invariant s ->
   match transition s with inr s' => invariant s' | inl m => postcondition m end.
-Proof.
+Proof using.
   intros. inv H. unfold transition. destruct (wrk s) as [ | [x succ_x] l].
   (* finished *)
   constructor; intros.
@@ -241,7 +241,7 @@ Qed.
 
 Lemma initial_state_spec:
   invariant (init_state ginit root).
-Proof.
+Proof using.
   unfold init_state. destruct (ginit!root) as [succs|] eqn:?.
   (* root has succs *)
   constructor; simpl; intros.
@@ -300,7 +300,7 @@ Definition lt_state (s1 s2: state) : Prop :=
                 (PTree_Properties.cardinal s2.(gr), size_worklist s2.(wrk)).
 
 Lemma lt_state_wf: well_founded lt_state.
-Proof.
+Proof using.
   set (f := fun s => (PTree_Properties.cardinal s.(gr), size_worklist s.(wrk))).
   change (well_founded (fun s1 s2 => lex_ord lt lt (f s1) (f s2))).
   apply wf_inverse_image.
@@ -310,7 +310,7 @@ Qed.
 
 Lemma transition_decreases:
   forall s s', transition s = inr _ s' -> lt_state s' s.
-Proof.
+Proof using.
   unfold transition, lt_state; intros.
   destruct (wrk s) as [ | [x succs] l].
   discriminate.
@@ -338,7 +338,7 @@ Theorem postorder_correct:
   let m := postorder g root in
   (forall x1 x2 y, m!x1 = Some y -> m!x2 = Some y -> x1 = x2)
   /\ (forall x, reachable g root x -> g!x <> None -> m!x <> None).
-Proof.
+Proof using.
   intros.
   assert (postcondition g root m).
     unfold m. unfold postorder.

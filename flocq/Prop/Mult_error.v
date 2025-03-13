@@ -46,7 +46,7 @@ Lemma mult_error_FLX_aux:
     (F2R f = round beta (FLX_exp prec) rnd (x * y) - (x * y))%R
     /\ (cexp (F2R f) <= Fexp f)%Z
     /\ (Fexp f = cexp x + cexp y)%Z.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd prec_gt_0_) with auto with typeclass_instances.
 intros x y Hx Hy Hz.
 set (f := (round beta (FLX_exp prec) rnd (x * y))).
 destruct (Req_dec (x * y) 0) as [Hxy0|Hxy0].
@@ -141,7 +141,7 @@ Theorem mult_error_FLX :
   forall x y,
   format x -> format y ->
   format (round beta (FLX_exp prec) rnd (x * y) - (x * y))%R.
-Proof.
+Proof using valid_rnd prec_gt_0_.
 intros x y Hx Hy.
 destruct (Req_dec (round beta (FLX_exp prec) rnd (x * y) - x * y) 0) as [Hr0|Hr0].
 rewrite Hr0.
@@ -155,7 +155,7 @@ Lemma mult_bpow_exact_FLX :
   forall x e,
   format x ->
   format (x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Fx.
 destruct (Req_dec x 0) as [Zx|Nzx].
 { rewrite Zx, Rmult_0_l; apply generic_format_0. }
@@ -191,7 +191,7 @@ Theorem mult_error_FLT :
   format x -> format y ->
   (x * y <> 0 -> bpow (emin + 2*prec - 1) <= Rabs (x * y))%R ->
   format (round beta (FLT_exp emin prec) rnd (x * y) - (x * y))%R.
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd prec_gt_0_) with auto with typeclass_instances.
 intros x y Hx Hy Hxy.
 set (f := (round beta (FLT_exp emin prec) rnd (x * y))).
 destruct (Req_dec (f - x * y) 0) as [Hr0|Hr0].
@@ -255,7 +255,7 @@ Qed.
 
 Lemma F2R_ge: forall (y:float beta),
    (F2R y <> 0)%R -> (bpow (Fexp y) <= Rabs (F2R y))%R.
-Proof.
+Proof using.
 intros (ny,ey).
 rewrite <- F2R_Zabs; unfold F2R; simpl.
 case (Zle_lt_or_eq 0 (Z.abs ny)).
@@ -277,7 +277,7 @@ Theorem mult_error_FLT_ge_bpow :
   (bpow (e+2*prec-1) <= Rabs (x * y))%R ->
   (round beta (FLT_exp emin prec) rnd (x * y) - (x * y) <> 0)%R ->
   (bpow e <= Rabs (round beta (FLT_exp emin prec) rnd (x * y) - (x * y)))%R.
-Proof with auto with typeclass_instances.
+Proof using valid_rnd with auto with typeclass_instances.
 intros x y e.
 set (f := (round beta (FLT_exp emin prec) rnd (x * y))).
 intros Fx Fy H1.
@@ -318,7 +318,7 @@ Lemma mult_bpow_exact_FLT :
   format x ->
   (emin + prec - mag beta x <= e)%Z ->
   format (x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Fx He.
 destruct (Req_dec x 0) as [Zx|Nzx].
 { rewrite Zx, Rmult_0_l; apply generic_format_0. }
@@ -339,7 +339,7 @@ Lemma mult_bpow_pos_exact_FLT :
   format x ->
   (0 <= e)%Z ->
   format (x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Fx He.
 destruct (Req_dec x 0) as [Zx|Nzx].
 { rewrite Zx, Rmult_0_l; apply generic_format_0. }

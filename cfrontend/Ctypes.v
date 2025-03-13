@@ -81,33 +81,33 @@ Inductive type : Type :=
   | Tunion: ident -> attr -> type.                  (**r union types *)
 
 Lemma intsize_eq: forall (s1 s2: intsize), {s1=s2} + {s1<>s2}.
-Proof.
+Proof using.
   decide equality.
 Defined.
 
 Lemma signedness_eq: forall (s1 s2: signedness), {s1=s2} + {s1<>s2}.
-Proof.
+Proof using.
   decide equality.
 Defined.
 
 Lemma floatsize_eq: forall (s1 s2: floatsize), {s1=s2} + {s1<>s2}.
-Proof.
+Proof using.
   decide equality.
 Defined.
 
 Lemma attr_eq: forall (a1 a2: attr), {a1=a2} + {a1<>a2}.
-Proof.
+Proof using.
   decide equality. decide equality. apply N.eq_dec. apply bool_dec.
 Defined.
 
 Lemma type_eq: forall (ty1 ty2: type), {ty1=ty2} + {ty1<>ty2}.
-Proof.
+Proof using.
   fix REC 1.
   decide equality; auto using ident_eq, zeq, bool_dec, ident_eq, intsize_eq, signedness_eq, floatsize_eq, attr_eq, list_eq_dec, calling_convention_eq.
 Defined.
 
 Lemma typelist_eq: forall (tyl1 tyl2: list type), {tyl1=tyl2} + {tyl1<>tyl2}.
-Proof.
+Proof using.
   auto using list_eq_dec, type_eq.
 Defined.
 
@@ -214,7 +214,7 @@ Definition name_composite_def (c: composite_definition) : ident :=
   match c with Composite id su m a => id end.
 
 Definition composite_def_eq (x y: composite_definition): {x=y} + {x<>y}.
-Proof.
+Proof using.
   decide equality.
 - decide equality. decide equality. apply N.eq_dec. apply bool_dec.
 - apply list_eq_dec. decide equality.
@@ -347,7 +347,7 @@ Remark align_attr_two_p:
   forall al a,
   (exists n, al = two_power_nat n) ->
   (exists n, align_attr a al = two_power_nat n).
-Proof.
+Proof using.
   intros. unfold align_attr. destruct (attr_alignas a).
   exists (N.to_nat n). rewrite two_power_nat_two_p. rewrite N_nat_Z. auto.
   auto.
@@ -355,7 +355,7 @@ Qed.
 
 Lemma alignof_two_p:
   forall env t, exists n, alignof env t = two_power_nat n.
-Proof.
+Proof using.
   induction t; apply align_attr_two_p; simpl.
   exists 0%nat; auto.
   destruct i.
@@ -376,7 +376,7 @@ Qed.
 
 Lemma alignof_pos:
   forall env t, alignof env t > 0.
-Proof.
+Proof using.
   intros. destruct (alignof_two_p env t) as [n EQ]. rewrite EQ. apply two_power_nat_pos.
 Qed.
 
@@ -408,7 +408,7 @@ Fixpoint sizeof (env: composite_env) (t: type) : Z :=
 
 Lemma sizeof_pos:
   forall env t, sizeof env t >= 0.
-Proof.
+Proof using.
   induction t; simpl.
 - lia.
 - destruct i; lia.
@@ -434,7 +434,7 @@ Fixpoint naturally_aligned (t: type) : Prop :=
 
 Lemma sizeof_alignof_compat:
   forall env t, naturally_aligned t -> (alignof env t | sizeof env t).
-Proof.
+Proof using.
   induction t; intros [A B]; unfold alignof, align_attr; rewrite A; simpl.
 - apply Z.divide_refl.
 - destruct i; apply Z.divide_refl.
@@ -499,13 +499,13 @@ Definition layout_field (pos: Z) (m: member) : res (Z * bitfield) :=
 
 Lemma bitalignof_intsize_pos:
   forall sz, bitalignof_intsize sz > 0.
-Proof.
+Proof using.
   destruct sz; simpl; lia.
 Qed.
 
 Lemma next_field_incr:
   forall pos m, pos <= next_field pos m.
-Proof.
+Proof using.
   intros. unfold next_field. destruct m.
 - set (al := bitalignof t).
   assert (A: al > 0).
@@ -533,7 +533,7 @@ Lemma layout_field_range: forall pos m ofs bf,
   layout_field pos m = OK (ofs, bf) ->
   pos <= layout_start ofs bf 
   /\ layout_start ofs bf + layout_width (type_member m) bf <= next_field pos m.
-Proof.
+Proof using.
   intros until bf; intros L. unfold layout_start, layout_width. destruct m; simpl in L.
 - inv L. simpl.
   set (al := bitalignof t).
@@ -574,7 +574,7 @@ Definition layout_alignment (t: type) (bf: bitfield) :=
 Lemma layout_field_alignment: forall pos m ofs bf,
   layout_field pos m = OK (ofs, bf) ->
   (layout_alignment (type_member m) bf | ofs).
-Proof.
+Proof using.
   intros until bf; intros L. destruct m; simpl in L.
 - inv L; simpl. 
   set (q := align pos (bitalignof t)).
@@ -641,7 +641,7 @@ Fixpoint sizeof_union (env: composite_env) (ms: members) : Z :=
 
 Lemma alignof_composite_two_p:
   forall env m, exists n, alignof_composite env m = two_power_nat n.
-Proof.
+Proof using.
   induction m; simpl.
 - exists 0%nat; auto.
 - destruct (member_is_padding a); auto.
@@ -650,7 +650,7 @@ Qed.
 
 Lemma alignof_composite_pos:
   forall env m a, align_attr a (alignof_composite env m) > 0.
-Proof.
+Proof using.
   intros.
   exploit align_attr_two_p. apply (alignof_composite_two_p env m).
   instantiate (1 := a). intros [n EQ].
@@ -659,7 +659,7 @@ Qed.
 
 Lemma bitsizeof_struct_incr:
   forall env m cur, cur <= bitsizeof_struct env cur m.
-Proof.
+Proof using.
   induction m; simpl; intros.
 - lia.
 - apply Z.le_trans with (next_field env cur a).
@@ -668,7 +668,7 @@ Qed.
 
 Lemma sizeof_union_pos:
   forall env m, 0 <= sizeof_union env m.
-Proof.
+Proof using.
   induction m; simpl; extlia.
 Qed.
 
@@ -732,7 +732,7 @@ Remark field_offset_rec_in_range:
   field_offset_rec env id ms pos = OK (ofs, bf) -> field_type id ms = OK ty ->
   pos <= layout_start ofs bf
   /\ layout_start ofs bf + layout_width env ty bf <= bitsizeof_struct env pos ms.
-Proof.
+Proof using.
   induction ms as [ | m ms]; simpl; intros.
 - discriminate.
 - destruct (ident_eq id (name_member m)).
@@ -750,7 +750,7 @@ Lemma field_offset_in_range_gen:
   field_offset env id ms = OK (ofs, bf) -> field_type id ms = OK ty ->
   0 <= layout_start ofs bf
   /\ layout_start ofs bf + layout_width env ty bf <= bitsizeof_struct env 0 ms.
-Proof.
+Proof using.
   intros. eapply field_offset_rec_in_range; eauto.
 Qed.
 
@@ -758,7 +758,7 @@ Corollary field_offset_in_range:
   forall env ms id ofs ty,
   field_offset env id ms = OK (ofs, Full) -> field_type id ms = OK ty ->
   0 <= ofs /\ ofs + sizeof env ty <= sizeof_struct env ms.
-Proof.
+Proof using.
   intros. exploit field_offset_in_range_gen; eauto. 
   unfold layout_start, layout_width, bitsizeof, sizeof_struct. intros [A B].
   assert (C: forall x y, x * 8 <= y -> x <= bytes_of_bits y).
@@ -778,7 +778,7 @@ Lemma field_offset_no_overlap:
   id1 <> id2 ->
   layout_start ofs1 bf1 + layout_width env ty1 bf1 <= layout_start ofs2 bf2
   \/ layout_start ofs2 bf2 + layout_width env ty2 bf2 <= layout_start ofs1 bf1.
-Proof.
+Proof using.
   intros until fld. unfold field_offset. generalize 0 as pos.
   induction fld as [|m fld]; simpl; intros.
 - discriminate.
@@ -800,7 +800,7 @@ Lemma field_offset_prefix:
   forall env id ofs bf fld2 fld1,
   field_offset env id fld1 = OK (ofs, bf) ->
   field_offset env id (fld1 ++ fld2) = OK (ofs, bf).
-Proof.
+Proof using.
   intros until fld1. unfold field_offset. generalize 0 as pos.
   induction fld1 as [|m fld1]; simpl; intros.
 - discriminate.
@@ -813,7 +813,7 @@ Lemma field_offset_aligned_gen:
   forall env id fld ofs bf ty,
   field_offset env id fld = OK (ofs, bf) -> field_type id fld = OK ty ->
   (layout_alignment env ty bf | ofs).
-Proof.
+Proof using.
   intros until ty. unfold field_offset. generalize 0 as pos. revert fld.
   induction fld as [|m fld]; simpl; intros.
 - discriminate.
@@ -826,7 +826,7 @@ Corollary field_offset_aligned:
   forall env id fld ofs ty,
   field_offset env id fld = OK (ofs, Full) -> field_type id fld = OK ty ->
   (alignof env ty | ofs).
-Proof.
+Proof using.
   intros. exploit field_offset_aligned_gen; eauto.
 Qed.
 
@@ -851,7 +851,7 @@ Lemma union_field_offset_in_range_gen:
   forall env id ofs bf ty ms,
   union_field_offset env id ms = OK (ofs, bf) -> field_type id ms = OK ty ->
   ofs = 0 /\ 0 <= layout_start ofs bf /\ layout_start ofs bf + layout_width env ty bf <= sizeof_union env ms * 8.
-Proof.
+Proof using.
   induction ms as [ | m ms]; simpl; intros.
 - discriminate.
 - destruct (ident_eq id (name_member m)).
@@ -876,7 +876,7 @@ Corollary union_field_offset_in_range:
   forall env ms id ofs ty,
   union_field_offset env id ms = OK (ofs, Full) -> field_type id ms = OK ty ->
   ofs = 0 /\ sizeof env ty <= sizeof_union env ms.
-Proof.
+Proof using.
   intros. exploit union_field_offset_in_range_gen; eauto. 
   unfold layout_start, layout_width, bitsizeof. lia.
 Qed.
@@ -957,7 +957,7 @@ Fixpoint alignof_blockcopy (env: composite_env) (t: type) : Z :=
 
 Lemma alignof_blockcopy_1248:
   forall env ty, let a := alignof_blockcopy env ty in a = 1 \/ a = 2 \/ a = 4 \/ a = 8.
-Proof.
+Proof using.
   assert (X: forall co, let a := Z.min 8 (co_alignof co) in
              a = 1 \/ a = 2 \/ a = 4 \/ a = 8).
   {
@@ -983,13 +983,13 @@ Qed.
 
 Lemma alignof_blockcopy_pos:
   forall env ty, alignof_blockcopy env ty > 0.
-Proof.
+Proof using.
   intros. generalize (alignof_blockcopy_1248 env ty). simpl. intuition lia.
 Qed.
 
 Lemma sizeof_alignof_blockcopy_compat:
   forall env ty, (alignof_blockcopy env ty | sizeof env ty).
-Proof.
+Proof using.
   assert (X: forall co, (Z.min 8 (co_alignof co) | co_sizeof co)).
   {
     intros. apply Z.divide_trans with (co_alignof co). 2: apply co_sizeof_alignof.
@@ -1109,7 +1109,7 @@ Definition sizeof_composite (env: composite_env) (su: struct_or_union) (m: membe
 
 Lemma sizeof_composite_pos:
   forall env su m, 0 <= sizeof_composite env su m.
-Proof.
+Proof using.
   intros. destruct su; simpl.
 - unfold sizeof_struct, bytes_of_bits.
   assert (0 <= bitsizeof_struct env 0 m) by apply bitsizeof_struct_incr.
@@ -1126,7 +1126,7 @@ Fixpoint complete_members (env: composite_env) (ms: members) : bool :=
 Lemma complete_member:
   forall env m ms,
   In m ms -> complete_members env ms = true -> complete_type env (type_member m) = true.
-Proof.
+Proof using.
   induction ms as [|m1 ms]; simpl; intuition auto.
   InvBooleans; inv H1; auto.
   InvBooleans; eauto.
@@ -1213,7 +1213,7 @@ Hypothesis extends: forall id co, env!id = Some co -> env'!id = Some co.
 
 Lemma alignof_stable:
   forall t, complete_type env t = true -> alignof env' t = alignof env t.
-Proof.
+Proof using extends.
   induction t; simpl; intros; f_equal; auto.
   destruct (env!i) as [co|] eqn:E; try discriminate.
   erewrite extends by eauto. auto.
@@ -1223,7 +1223,7 @@ Qed.
 
 Lemma sizeof_stable:
   forall t, complete_type env t = true -> sizeof env' t = sizeof env t.
-Proof.
+Proof using extends.
   induction t; simpl; intros; auto.
   rewrite IHt by auto. auto.
   destruct (env!i) as [co|] eqn:E; try discriminate.
@@ -1234,7 +1234,7 @@ Qed.
 
 Lemma complete_type_stable:
   forall t, complete_type env t = true -> complete_type env' t = true.
-Proof.
+Proof using extends.
   induction t; simpl; intros; auto.
   destruct (env!i) as [co|] eqn:E; try discriminate.
   erewrite extends by eauto. auto.
@@ -1244,7 +1244,7 @@ Qed.
 
 Lemma rank_type_stable:
   forall t, complete_type env t = true -> rank_type env' t = rank_type env t.
-Proof.
+Proof using extends.
   induction t; simpl; intros; auto.
   destruct (env!i) as [co|] eqn:E; try discriminate.
   erewrite extends by eauto. auto.
@@ -1254,7 +1254,7 @@ Qed.
 
 Lemma alignof_composite_stable:
   forall ms, complete_members env ms = true -> alignof_composite env' ms = alignof_composite env ms.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
   auto.
   InvBooleans. rewrite alignof_stable by auto. rewrite IHms by auto. auto.
@@ -1262,7 +1262,7 @@ Qed.
 
 Remark next_field_stable: forall pos m,
   complete_type env (type_member m) = true -> next_field env' pos m = next_field env pos m.
-Proof.
+Proof using extends.
   destruct m; simpl; intros.
 - unfold bitalignof, bitsizeof. rewrite alignof_stable, sizeof_stable by auto. auto.
 - auto.
@@ -1270,7 +1270,7 @@ Qed.
 
 Lemma bitsizeof_struct_stable:
   forall ms pos, complete_members env ms = true -> bitsizeof_struct env' pos ms = bitsizeof_struct env pos ms.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
   auto.
   InvBooleans. rewrite next_field_stable by auto. apply IHms; auto.
@@ -1278,7 +1278,7 @@ Qed.
 
 Lemma sizeof_union_stable:
   forall ms, complete_members env ms = true -> sizeof_union env' ms = sizeof_union env ms.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
   auto.
   InvBooleans. rewrite sizeof_stable by auto. rewrite IHms by auto. auto.
@@ -1286,7 +1286,7 @@ Qed.
 
 Lemma sizeof_composite_stable:
   forall su ms, complete_members env ms = true -> sizeof_composite env' su ms = sizeof_composite env su ms.
-Proof.
+Proof using extends.
   intros. destruct su; simpl.
   unfold sizeof_struct. f_equal. apply bitsizeof_struct_stable; auto.
   apply sizeof_union_stable; auto.
@@ -1294,7 +1294,7 @@ Qed.
 
 Lemma complete_members_stable:
   forall ms, complete_members env ms = true -> complete_members env' ms = true.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
   auto.
   InvBooleans. rewrite complete_type_stable by auto. rewrite IHms by auto. auto.
@@ -1302,7 +1302,7 @@ Qed.
 
 Lemma rank_members_stable:
   forall ms, complete_members env ms = true -> rank_members env' ms = rank_members env ms.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
   auto.
   InvBooleans. destruct m; auto. f_equal; auto. apply rank_type_stable; auto.
@@ -1310,7 +1310,7 @@ Qed.
 
 Remark layout_field_stable: forall pos m,
   complete_type env (type_member m) = true -> layout_field env' pos m = layout_field env pos m.
-Proof.
+Proof using extends.
   destruct m; simpl; intros.
 - unfold bitalignof. rewrite alignof_stable by auto. auto.
 - auto.
@@ -1318,7 +1318,7 @@ Qed.
 
 Lemma field_offset_stable:
   forall f ms, complete_members env ms = true -> field_offset env' f ms = field_offset env f ms.
-Proof.
+Proof using extends.
   intros until ms. unfold field_offset. generalize 0.
   induction ms as [|m ms]; simpl; intros.
 - auto.
@@ -1329,7 +1329,7 @@ Qed.
 
 Lemma union_field_offset_stable:
   forall f ms, complete_members env ms = true -> union_field_offset env' f ms = union_field_offset env f ms.
-Proof.
+Proof using extends.
   induction ms as [|m ms]; simpl; intros.
 - auto.
 - InvBooleans. destruct (ident_eq f (name_member m)).
@@ -1343,7 +1343,7 @@ Lemma add_composite_definitions_incr:
   forall id co defs env1 env2,
   add_composite_definitions env1 defs = OK env2 ->
   env1!id = Some co -> env2!id = Some co.
-Proof.
+Proof using.
   induction defs; simpl; intros.
 - inv H; auto.
 - destruct a; monadInv H.
@@ -1374,7 +1374,7 @@ Lemma composite_consistent_stable:
          (EXTENDS: forall id co, env!id = Some co -> env'!id = Some co)
          co,
   composite_consistent env co -> composite_consistent env' co.
-Proof.
+Proof using.
   intros. destruct H as [A B C D]. constructor. 
   eapply complete_members_stable; eauto.
   symmetry; rewrite B. f_equal. apply alignof_composite_stable; auto. 
@@ -1386,7 +1386,7 @@ Lemma composite_of_def_consistent:
   forall env id su m a co,
   composite_of_def env id su m a = OK co ->
   composite_consistent env co.
-Proof.
+Proof using.
   unfold composite_of_def; intros. 
   destruct (env!id); try discriminate. destruct (complete_members env m) eqn:C; inv H.
   constructor; auto.
@@ -1394,7 +1394,7 @@ Qed.
 
 Theorem build_composite_env_consistent:
   forall defs env, build_composite_env defs = OK env -> composite_env_consistent env.
-Proof.
+Proof using.
   cut (forall defs env0 env,
        add_composite_definitions env0 defs = OK env ->
        composite_env_consistent env0 ->
@@ -1423,7 +1423,7 @@ Theorem build_composite_env_charact:
   build_composite_env defs = OK env ->
   In (Composite id su m a) defs ->
   exists co, env!id = Some co /\ co_members co = m /\ co_attr co = a /\ co_su co = su.
-Proof.
+Proof using.
   intros until defs. unfold build_composite_env. generalize (PTree.empty composite) as env0.
   revert defs. induction defs as [|d1 defs]; simpl; intros.
 - contradiction.
@@ -1442,7 +1442,7 @@ Theorem build_composite_env_domain:
   build_composite_env defs = OK env ->
   env!id = Some co ->
   In (Composite id (co_su co) (co_members co) (co_attr co)) defs.
-Proof.
+Proof using.
   intros env0 defs0 id co.
   assert (REC: forall l env env',
     add_composite_definitions env l = OK env' ->
@@ -1465,7 +1465,7 @@ Qed.
 
 Remark rank_type_members:
   forall ce m ms, In m ms -> (rank_type ce (type_member m) <= rank_members ce ms)%nat.
-Proof.
+Proof using.
   induction ms; simpl; intros.
 - tauto.
 - destruct a; destruct H; subst; simpl.
@@ -1481,7 +1481,7 @@ Lemma rank_struct_member:
   ce!id = Some co ->
   In m (co_members co) ->
   (rank_type ce (type_member m) < rank_type ce (Tstruct id a))%nat.
-Proof.
+Proof using.
   intros; simpl. rewrite H0.
   erewrite co_consistent_rank by eauto.
   exploit (rank_type_members ce); eauto.
@@ -1494,7 +1494,7 @@ Lemma rank_union_member:
   ce!id = Some co ->
   In m (co_members co) ->
   (rank_type ce (type_member m) < rank_type ce (Tunion id a))%nat.
-Proof.
+Proof using.
   intros; simpl. rewrite H0.
   erewrite co_consistent_rank by eauto.
   exploit (rank_type_members ce); eauto.
@@ -1601,7 +1601,7 @@ Lemma link_composite_def_inv:
      (forall cd1 cd2, In cd1 l1 -> In cd2 l2 -> name_composite_def cd2 = name_composite_def cd1 -> cd2 = cd1)
   /\ l = l1 ++ filter_redefs l1 l2
   /\ (forall x, In x l <-> In x l1 \/ In x l2).
-Proof.
+Proof using.
   unfold link_composite_defs; intros.
   destruct (forallb (check_compat_composite l2) l1) eqn:C; inv H.
   assert (A: 
@@ -1638,7 +1638,7 @@ Lemma add_composite_definitions_append:
   forall l1 l2 env env'',
   add_composite_definitions env (l1 ++ l2) = OK env'' <->
   exists env', add_composite_definitions env l1 = OK env' /\ add_composite_definitions env' l2 = OK env''.
-Proof.
+Proof using.
   induction l1; simpl; intros.
 - split; intros. exists env; auto. destruct H as (env' & A & B). congruence.
 - destruct a; simpl. destruct (composite_of_def env id su m a); simpl.
@@ -1651,7 +1651,7 @@ Lemma composite_eq:
          su2 m2 a2 sz2 al2 r2 pos2 al2p2 szal2,
   su1 = su2 -> m1 = m2 -> a1 = a2 -> sz1 = sz2 -> al1 = al2 -> r1 = r2 ->
   Build_composite su1 m1 a1 sz1 al1 r1 pos1 al2p1 szal1 = Build_composite su2 m2 a2 sz2 al2 r2 pos2 al2p2 szal2.
-Proof.
+Proof using.
   intros. subst.
   assert (pos1 = pos2) by apply proof_irr. 
   assert (al2p1 = al2p2) by apply proof_irr.
@@ -1664,7 +1664,7 @@ Lemma composite_of_def_eq:
   composite_consistent env co ->
   env!id = None ->
   composite_of_def env id (co_su co) (co_members co) (co_attr co) = OK co.
-Proof.
+Proof using.
   intros. destruct H as [A B C D]. unfold composite_of_def. rewrite H0, A.
   destruct co; simpl in *. f_equal. apply composite_eq; auto. rewrite C, B; auto. 
 Qed.
@@ -1677,7 +1677,7 @@ Lemma composite_consistent_unique:
   co_members co1 = co_members co2 ->
   co_attr co1 = co_attr co2 ->
   co1 = co2.
-Proof.
+Proof using.
   intros. destruct H, H0. destruct co1, co2; simpl in *. apply composite_eq; congruence.
 Qed.
 
@@ -1688,7 +1688,7 @@ Lemma composite_of_def_stable:
   env'!id = None ->
   composite_of_def env id su m a = OK co ->
   composite_of_def env' id su m a = OK co.
-Proof.
+Proof using.
   intros. 
   unfold composite_of_def in H0. 
   destruct (env!id) eqn:E; try discriminate.
@@ -1713,7 +1713,7 @@ Lemma link_add_composite_definitions:
       add_composite_definitions env2 (filter_redefs l0 l) = OK env2'
   /\ (forall id co, env1'!id = Some co -> env2'!id = Some co)
   /\ (forall id co, env0!id = Some co -> env2'!id = Some co) }.
-Proof.
+Proof using.
   induction l; simpl; intros until env2; intros ACD AGREE1 AGREE0 AGREE2 UNIQUE.
 - inv ACD. exists env2; auto.
 - destruct a. destruct (composite_of_def env1 id su m a) as [x|e] eqn:EQ; try discriminate.
@@ -1764,7 +1764,7 @@ Theorem link_build_composite_env:
      build_composite_env l = OK env
   /\ (forall id co, env1!id = Some co -> env!id = Some co)
   /\ (forall id co, env2!id = Some co -> env!id = Some co) }.
-Proof.
+Proof using.
   intros. edestruct link_composite_def_inv as (A & B & C); eauto.
   edestruct link_add_composite_definitions as (env & P & Q & R).
   eexact H.
@@ -1823,7 +1823,7 @@ Defined.
 
 Remark link_fundef_either:
   forall (F: Type) (f1 f2 f: fundef F), link f1 f2 = Some f -> f = f1 \/ f = f2.
-Proof.
+Proof using.
   simpl; intros. unfold link_fundef in H. destruct f1, f2; try discriminate.
 - destruct e; inv H. auto.
 - destruct e; inv H. auto.
@@ -1835,7 +1835,7 @@ Global Opaque Linker_fundef.
 (** ** Linking programs *)
 
 Definition lift_option {A: Type} (opt: option A) : { x | opt = Some x } + { opt = None }.
-Proof.
+Proof using.
   destruct opt. left; exists a; auto. right; auto. 
 Defined.
 
@@ -1911,7 +1911,7 @@ Theorem link_match_program_gen:
   forall p1 p2 tp1 tp2 p,
   link p1 p2 = Some p -> match_program p1 tp1 -> match_program p2 tp2 ->
   exists tp, link tp1 tp2 = Some tp /\ match_program p tp.
-Proof.
+Proof using link_match_fundef.
   intros until p; intros L [M1 T1] [M2 T2].
   destruct (link_linkorder _ _ _ L) as [LO1 LO2].
 Local Transparent Linker_program.
@@ -1962,7 +1962,7 @@ Theorem link_match_program:
   forall p1 p2 tp1 tp2 p,
   link p1 p2 = Some p -> match_program p1 tp1 -> match_program p2 tp2 ->
   exists tp, link tp1 tp2 = Some tp /\ match_program p tp.
-Proof.
+Proof using link_match_fundef.
   intros. destruct H0, H1. 
 Local Transparent Linker_program.
   simpl in H; unfold link_program in H.

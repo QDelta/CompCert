@@ -65,7 +65,7 @@ Definition is_val (a: expr) : option (val * type) :=
 
 Lemma is_val_inv:
   forall a v ty, is_val a = Some(v, ty) -> a = Eval v ty.
-Proof.
+Proof using.
   intros until ty. destruct a; simpl; congruence.
 Qed.
 
@@ -77,7 +77,7 @@ Definition is_loc (a: expr) : option (block * ptrofs * bitfield * type) :=
 
 Lemma is_loc_inv:
   forall a b ofs bf ty, is_loc a = Some(b, ofs, bf, ty) -> a = Eloc b ofs bf ty.
-Proof.
+Proof using.
   intros until ty. destruct a; simpl; congruence.
 Qed.
 
@@ -90,7 +90,7 @@ Fixpoint is_val_list (al: exprlist) : option (list (val * type)) :=
   end.
 
 Definition is_skip (s: statement) : {s = Sskip} + {s <> Sskip}.
-Proof.
+Proof using.
   destruct s; (left; congruence) || (right; congruence).
 Defined.
 
@@ -149,14 +149,14 @@ Ltac mydestr :=
 
 Lemma eventval_of_val_sound:
   forall v t ev, eventval_of_val v t = Some ev -> eventval_match ge ev t v.
-Proof.
+Proof using.
   intros until ev. destruct v; simpl; mydestr; constructor.
   auto. apply Genv.invert_find_symbol; auto.
 Qed.
 
 Lemma eventval_of_val_complete:
   forall ev t v, eventval_match ge ev t v -> eventval_of_val v t = Some ev.
-Proof.
+Proof using.
   induction 1; simpl.
 - auto.
 - auto.
@@ -168,7 +168,7 @@ Qed.
 
 Lemma list_eventval_of_val_sound:
   forall vl tl evl, list_eventval_of_val vl tl = Some evl -> eventval_list_match ge evl tl vl.
-Proof with try discriminate.
+Proof using () with try discriminate.
   induction vl; destruct tl; simpl; intros; inv H.
   constructor.
   destruct (eventval_of_val a t) as [ev1|] eqn:?...
@@ -178,20 +178,20 @@ Qed.
 
 Lemma list_eventval_of_val_complete:
   forall evl tl vl, eventval_list_match ge evl tl vl -> list_eventval_of_val vl tl = Some evl.
-Proof.
+Proof using.
   induction 1; simpl. auto.
   rewrite (eventval_of_val_complete _ _ _ H). rewrite IHeventval_list_match. auto.
 Qed.
 
 Lemma val_of_eventval_sound:
   forall ev t v, val_of_eventval ev t = Some v -> eventval_match ge ev t v.
-Proof.
+Proof using.
   intros until v. destruct ev; simpl; mydestr; constructor; auto.
 Qed.
 
 Lemma val_of_eventval_complete:
   forall ev t v, eventval_match ge ev t v -> val_of_eventval ev t = Some v.
-Proof.
+Proof using.
   induction 1; simpl.
 - auto.
 - auto.
@@ -231,7 +231,7 @@ Lemma do_volatile_load_sound:
   forall w chunk m b ofs w' t v,
   do_volatile_load w chunk m b ofs = Some(w', t, v) ->
   volatile_load ge chunk m b ofs t v /\ possible_trace w t w'.
-Proof.
+Proof using.
   intros until v. unfold do_volatile_load. mydestr.
   destruct p as [ev w'']. mydestr.
   split. constructor; auto. apply Genv.invert_find_symbol; auto.
@@ -244,7 +244,7 @@ Lemma do_volatile_load_complete:
   forall w chunk m b ofs w' t v,
   volatile_load ge chunk m b ofs t v -> possible_trace w t w' ->
   do_volatile_load w chunk m b ofs = Some(w', t, v).
-Proof.
+Proof using.
   unfold do_volatile_load; intros. inv H; simpl in *.
   rewrite H1. rewrite (Genv.find_invert_symbol _ _ H2). inv H0. inv H8. inv H6. rewrite H9.
   rewrite (val_of_eventval_complete _ _ _ H3). auto.
@@ -255,7 +255,7 @@ Lemma do_volatile_store_sound:
   forall w chunk m b ofs v w' t m' v',
   do_volatile_store w chunk m b ofs v = Some(w', t, m', v') ->
   volatile_store ge chunk m b ofs v t m' /\ possible_trace w t w' /\ v' = v.
-Proof.
+Proof using.
   intros until v'. unfold do_volatile_store. mydestr.
   split. constructor; auto. apply Genv.invert_find_symbol; auto.
   apply eventval_of_val_sound; auto.
@@ -267,7 +267,7 @@ Lemma do_volatile_store_complete:
   forall w chunk m b ofs v w' t m',
   volatile_store ge chunk m b ofs v t m' -> possible_trace w t w' ->
   do_volatile_store w chunk m b ofs v = Some(w', t, m', v).
-Proof.
+Proof using.
   unfold do_volatile_store; intros. inv H; simpl in *.
   rewrite H1. rewrite (Genv.find_invert_symbol _ _ H2).
   rewrite (eventval_of_val_complete _ _ _ H3).
@@ -313,7 +313,7 @@ Definition assign_copy_ok (ty: type) (b: block) (ofs: ptrofs) (b': block) (ofs':
 Remark check_assign_copy:
   forall (ty: type) (b: block) (ofs: ptrofs) (b': block) (ofs': ptrofs),
   { assign_copy_ok ty b ofs b' ofs' } + {~ assign_copy_ok ty b ofs b' ofs' }.
-Proof with try (right; intuition lia).
+Proof using () with try (right; intuition lia).
   intros. unfold assign_copy_ok.
   destruct (Zdivide_dec (alignof_blockcopy ge ty) (Ptrofs.unsigned ofs')); auto...
   destruct (Zdivide_dec (alignof_blockcopy ge ty) (Ptrofs.unsigned ofs)); auto...
@@ -371,7 +371,7 @@ Lemma do_deref_loc_sound:
   forall w ty m b ofs bf w' t v,
   do_deref_loc w ty m b ofs bf = Some(w', t, v) ->
   deref_loc ge ty m b ofs bf t v /\ possible_trace w t w'.
-Proof.
+Proof using.
   unfold do_deref_loc; intros until v.
   destruct bf.
 - destruct (access_mode ty) eqn:?; mydestr.
@@ -387,7 +387,7 @@ Lemma do_deref_loc_complete:
   forall w ty m b ofs bf w' t v,
   deref_loc ge ty m b ofs bf t v -> possible_trace w t w' ->
   do_deref_loc w ty m b ofs bf = Some(w', t, v).
-Proof.
+Proof using.
   unfold do_deref_loc; intros. inv H.
 - inv H0. rewrite H1; rewrite H2; rewrite H3; auto.
 - rewrite H1; rewrite H2. apply do_volatile_load_complete; auto.
@@ -402,7 +402,7 @@ Lemma do_assign_loc_sound:
   forall w ty m b ofs bf v w' t m' v',
   do_assign_loc w ty m b ofs bf v = Some(w', t, m', v') ->
   assign_loc ge ty m b ofs bf v t m' v' /\ possible_trace w t w'.
-Proof.
+Proof using.
   unfold do_assign_loc; intros until v'.
   destruct bf.
 - destruct (access_mode ty) eqn:?; mydestr.
@@ -419,7 +419,7 @@ Lemma do_assign_loc_complete:
   forall w ty m b ofs bf v w' t m' v',
   assign_loc ge ty m b ofs bf v t m' v' -> possible_trace w t w' ->
   do_assign_loc w ty m b ofs bf v = Some(w', t, m', v').
-Proof.
+Proof using.
   unfold do_assign_loc; intros. inv H.
 - inv H0. rewrite H1; rewrite H2; rewrite H3; auto.
 - rewrite H1; rewrite H2. apply do_volatile_store_complete; auto.
@@ -587,7 +587,7 @@ Lemma do_ef_external_sound:
   forall ef w vargs m w' t vres m',
   do_external ef w vargs m = Some(w', t, vres, m') ->
   external_call ef ge vargs m t vres m' /\ possible_trace w t w'.
-Proof with try congruence.
+Proof using (do_inline_assembly_sound do_external_function_sound) with try congruence.
   intros until m'.
   assert (SIZE: forall v sz, do_alloc_size v = Some sz -> v = Vptrofs sz).
   { intros until sz; unfold Vptrofs; destruct v; simpl; destruct Archi.ptr64 eqn:SF; 
@@ -654,7 +654,7 @@ Lemma do_ef_external_complete:
   forall ef w vargs m w' t vres m',
   external_call ef ge vargs m t vres m' -> possible_trace w t w' ->
   do_external ef w vargs m = Some(w', t, vres, m').
-Proof.
+Proof using do_inline_assembly_complete do_external_function_complete.
   intros.
   assert (SIZE: forall n, do_alloc_size (Vptrofs n) = Some n).
   { unfold Vptrofs, do_alloc_size; intros; destruct Archi.ptr64 eqn:SF. 
@@ -1005,7 +1005,7 @@ Inductive imm_safe_t: kind -> expr -> mem -> Prop :=
 
 Remark imm_safe_t_imm_safe:
   forall k a m, imm_safe_t k a m -> imm_safe ge e k a m.
-Proof.
+Proof using.
   induction 1.
   constructor.
   constructor.
@@ -1085,7 +1085,7 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
 
 Lemma lred_invert:
   forall l m l' m', lred ge e l m l' m' -> invert_expr_prop l m.
-Proof.
+Proof using.
   induction 1; red; auto.
   exists b; auto.
   exists b; auto.
@@ -1096,7 +1096,7 @@ Qed.
 
 Lemma rred_invert:
   forall w' r m t r' m', rred ge r m t r' m' -> possible_trace w t w' -> invert_expr_prop r m.
-Proof.
+Proof using.
   induction 1; intros; red; auto.
   split; auto; exists t; exists v; exists w'; auto.
   exists v; auto.
@@ -1116,7 +1116,7 @@ Lemma callred_invert:
   forall r fd args ty m,
   callred ge r m fd args ty ->
   invert_expr_prop r m.
-Proof.
+Proof using.
   intros. inv H. simpl.
   intros. exists tyargs, tyres, cconv, fd, args; auto.
 Qed.
@@ -1134,7 +1134,7 @@ Lemma invert_expr_context:
   forall a m,
   invert_expr_prop a m ->
   ~exprlist_all_values (C a)).
-Proof.
+Proof using.
   apply context_contextlist_ind; intros; try (exploit H0; [eauto|intros]); simpl.
   auto.
   destruct (C a); auto; contradiction.
@@ -1170,7 +1170,7 @@ Lemma imm_safe_t_inv:
   | Eval _ _ => True
   | _ => invert_expr_prop a m
   end.
-Proof.
+Proof using.
   destruct invert_expr_context as [A B].
   intros. inv H.
   auto.
@@ -1197,7 +1197,7 @@ with contextlist_compose:
   forall k2 C2, contextlist k2 C2 ->
   forall k1 C1, context k1 k2 C1 ->
   contextlist k1 (fun x => C2(C1 x)).
-Proof.
+Proof using.
   induction 1; intros; try (constructor; eauto).
   replace (fun x => C1 x) with C1. auto. apply extensionality; auto.
   induction 1; intros; constructor; eauto.
@@ -1242,7 +1242,7 @@ Lemma sem_cast_arguments_sound:
   is_val_list rargs = Some vtl ->
   sem_cast_arguments vtl tyargs m = Some vargs ->
   cast_arguments m rargs tyargs vargs.
-Proof.
+Proof using.
   induction rargs; simpl; intros.
   inv H. destruct tyargs; simpl in H0; inv H0. constructor.
   monadInv. inv H. simpl in H0. destruct p as [v1 t1]. destruct tyargs; try congruence. monadInv.
@@ -1253,7 +1253,7 @@ Lemma sem_cast_arguments_complete:
   forall m al tyl vl,
   cast_arguments m al tyl vl ->
   exists vtl, is_val_list al = Some vtl /\ sem_cast_arguments vtl tyl m = Some vl.
-Proof.
+Proof using.
   induction 1.
   exists (@nil (val * type)); auto.
   destruct IHcast_arguments as [vtl [A B]].
@@ -1264,7 +1264,7 @@ Lemma topred_ok:
   forall k a m rd,
   reduction_ok k a m rd ->
   reducts_ok k a m (topred rd).
-Proof.
+Proof using.
   intros. unfold topred; split; simpl; intros.
   destruct H0; try contradiction. inv H0. exists a; exists k; auto.
   congruence.
@@ -1274,7 +1274,7 @@ Lemma stuck_ok:
   forall k a m,
   ~imm_safe_t k a m ->
   reducts_ok k a m stuck.
-Proof.
+Proof using.
   intros. unfold stuck; split; simpl; intros.
   destruct H0; try contradiction. inv H0. exists a; exists k; intuition. red. destruct k; auto.
   congruence.
@@ -1284,7 +1284,7 @@ Lemma wrong_kind_ok:
   forall k a m,
   k <> Cstrategy.expr_kind a ->
   reducts_ok k a m stuck.
-Proof.
+Proof using.
   intros. apply stuck_ok. red; intros. exploit Cstrategy.imm_safe_kind; eauto.
   eapply imm_safe_t_imm_safe; eauto.
 Qed.
@@ -1297,7 +1297,7 @@ Lemma not_invert_ok:
   | _ => invert_expr_prop a m -> False
   end ->
   reducts_ok k a m stuck.
-Proof.
+Proof using.
   intros. apply stuck_ok. red; intros.
   exploit imm_safe_t_inv; eauto. destruct a; auto.
 Qed.
@@ -1309,7 +1309,7 @@ Lemma incontext_ok:
   context k' k C ->
   match k' with LV => is_loc a' = None | RV => is_val a' = None end ->
   reducts_ok k a m (incontext C res).
-Proof.
+Proof using.
   unfold reducts_ok, incontext; intros. destruct H. split; intros.
   exploit list_in_map_inv; eauto. intros [[C1 rd1] [P Q]]. inv P.
   exploit H; eauto. intros [a'' [k'' [U [V W]]]].
@@ -1326,7 +1326,7 @@ Lemma incontext2_ok:
   match k1 with LV => is_loc a1 = None | RV => is_val a1 = None end
   \/ match k2 with LV => is_loc a2 = None | RV => is_val a2 = None end ->
   reducts_ok k a m (incontext2 C1 res1 C2 res2).
-Proof.
+Proof using.
   unfold reducts_ok, incontext2, incontext; intros. destruct H; destruct H0; split; intros.
   destruct (in_app_or _ _ _ H8).
   exploit list_in_map_inv; eauto. intros [[C' rd'] [P Q]]. inv P.
@@ -1345,7 +1345,7 @@ Lemma incontext_list_ok:
   is_val_list al = None ->
   reducts_ok RV (Ebuiltin ef tyargs al ty) m
                 (incontext (fun x => Ebuiltin ef tyargs x ty) res).
-Proof.
+Proof using.
   unfold reducts_ok, incontext; intros. destruct H. split; intros.
   exploit list_in_map_inv; eauto. intros [[C1 rd1] [P Q]]. inv P.
   exploit H; eauto. intros [a'' [k'' [U [V W]]]].
@@ -1361,7 +1361,7 @@ Lemma incontext2_list_ok:
   reducts_ok RV (Ecall a1 a2 ty) m
                (incontext2 (fun x => Ecall x a2 ty) res1
                            (fun x => Ecall a1 x ty) res2).
-Proof.
+Proof using.
   unfold reducts_ok, incontext2, incontext; intros. destruct H; destruct H0; split; intros.
   destruct (in_app_or _ _ _ H4).
   exploit list_in_map_inv; eauto. intros [[C' rd'] [P Q]]. inv P.
@@ -1381,7 +1381,7 @@ Lemma incontext2_list_ok':
   list_reducts_ok (Econs a1 a2) m
                (incontext2 (fun x => Econs x a2) res1
                            (fun x => Econs a1 x) res2).
-Proof.
+Proof using.
   unfold reducts_ok, list_reducts_ok, incontext2, incontext; intros.
   destruct H; destruct H0. split; intros.
   destruct (in_app_or _ _ _ H3).
@@ -1397,7 +1397,7 @@ Qed.
 
 Lemma is_val_list_all_values:
   forall al vtl, is_val_list al = Some vtl -> exprlist_all_values al.
-Proof.
+Proof using.
   induction al; simpl; intros. auto.
   destruct (is_val r1) as [[v ty]|] eqn:?; try discriminate.
   destruct (is_val_list al) as [vtl'|] eqn:?; try discriminate.
@@ -1416,7 +1416,7 @@ Theorem step_expr_sound:
   forall a k m, reducts_ok k a m (step_expr k a m)
 with step_exprlist_sound:
   forall al m, list_reducts_ok al m (step_exprlist al m).
-Proof with (try (apply not_invert_ok; simpl; intro; myinv; intuition congruence; fail)).
+Proof using (do_inline_assembly_sound do_inline_assembly_complete do_external_function_sound do_external_function_complete) with (try (apply not_invert_ok; simpl; intro; myinv; intuition congruence; fail)).
   induction a; intros; simpl; destruct k; try (apply wrong_kind_ok; simpl; congruence).
 (* Eval *)
   split; intros. tauto. simpl; congruence.
@@ -1616,7 +1616,7 @@ Qed.
 
 Lemma step_exprlist_val_list:
   forall m al, is_val_list al <> None -> step_exprlist al m = nil.
-Proof.
+Proof using.
   induction al; simpl; intros.
   auto.
   destruct (is_val r1) as [[v1 ty1]|] eqn:?; try congruence.
@@ -1631,7 +1631,7 @@ Lemma lred_topred:
   forall l1 m1 l2 m2,
   lred ge e l1 m1 l2 m2 ->
   exists rule, step_expr LV l1 m1 = topred (Lred rule l2 m2).
-Proof.
+Proof using.
   induction 1; simpl.
 (* var local *)
   rewrite H. rewrite dec_eq_true. econstructor; eauto.
@@ -1649,7 +1649,7 @@ Lemma rred_topred:
   forall w' r1 m1 t r2 m2,
   rred ge r1 m1 t r2 m2 -> possible_trace w t w' ->
   exists rule, step_expr RV r1 m1 = topred (Rred rule r2 m2 t).
-Proof.
+Proof using do_inline_assembly_complete do_external_function_complete.
   induction 1; simpl; intros.
 (* valof *)
   rewrite dec_eq_true.
@@ -1697,7 +1697,7 @@ Lemma callred_topred:
   forall a fd args ty m,
   callred ge a m fd args ty ->
   exists rule, step_expr RV a m = topred (Callred rule fd args ty m).
-Proof.
+Proof using.
   induction 1; simpl.
   rewrite H2. exploit sem_cast_arguments_complete; eauto. intros [vtl [A B]].
   rewrite A; rewrite H; rewrite B; rewrite H1; rewrite dec_eq_true. econstructor; eauto.
@@ -1711,42 +1711,42 @@ Lemma reducts_incl_trans:
   forall (A3: Type) (C': A2 -> A3) res3,
   reducts_incl C' res2 res3 ->
   reducts_incl (fun x => C'(C x)) res1 res3.
-Proof.
+Proof using.
   unfold reducts_incl; intros. auto.
 Qed.
 
 Lemma reducts_incl_nil:
   forall (A B: Type) (C: A -> B) res,
   reducts_incl C nil res.
-Proof.
+Proof using.
   intros; red. intros; contradiction.
 Qed.
 
 Lemma reducts_incl_val:
   forall (A: Type) a m v ty (C: expr -> A) res,
   is_val a = Some(v, ty) -> reducts_incl C (step_expr RV a m) res.
-Proof.
+Proof using.
   intros. rewrite (is_val_inv _ _ _ H). apply reducts_incl_nil.
 Qed.
 
 Lemma reducts_incl_loc:
   forall (A: Type) a m b ofs ty bf (C: expr -> A) res,
   is_loc a = Some(b, ofs, bf, ty) -> reducts_incl C (step_expr LV a m) res.
-Proof.
+Proof using.
   intros. rewrite (is_loc_inv _ _ _ _ _ H). apply reducts_incl_nil.
 Qed.
 
 Lemma reducts_incl_listval:
   forall (A: Type) a m vtl (C: exprlist -> A) res,
   is_val_list a = Some vtl -> reducts_incl C (step_exprlist a m) res.
-Proof.
+Proof using.
   intros. rewrite step_exprlist_val_list. apply reducts_incl_nil. congruence.
 Qed.
 
 Lemma reducts_incl_incontext:
   forall (A B: Type) (C: A -> B) res,
   reducts_incl C res (incontext C res).
-Proof.
+Proof using.
   unfold reducts_incl, incontext. intros.
   set (f := fun z : (expr -> A) * reduction => (fun x : expr => C (fst z x), snd z)).
   change (In (f (C1, rd)) (map f res)). apply in_map. auto.
@@ -1755,7 +1755,7 @@ Qed.
 Lemma reducts_incl_incontext2_left:
   forall (A1 A2 B: Type) (C1: A1 -> B) res1 (C2: A2 -> B) res2,
   reducts_incl C1 res1 (incontext2 C1 res1 C2 res2).
-Proof.
+Proof using.
   unfold reducts_incl, incontext2, incontext. intros.
   rewrite in_app_iff. left.
   set (f := fun z : (expr -> A1) * reduction => (fun x : expr => C1 (fst z x), snd z)).
@@ -1765,7 +1765,7 @@ Qed.
 Lemma reducts_incl_incontext2_right:
   forall (A1 A2 B: Type) (C1: A1 -> B) res1 (C2: A2 -> B) res2,
   reducts_incl C2 res2 (incontext2 C1 res1 C2 res2).
-Proof.
+Proof using.
   unfold reducts_incl, incontext2, incontext. intros.
   rewrite in_app_iff. right.
   set (f := fun z : (expr -> A2) * reduction => (fun x : expr => C2 (fst z x), snd z)).
@@ -1782,7 +1782,7 @@ Lemma step_expr_context:
 with step_exprlist_context:
   forall from C, contextlist from C ->
   forall a m, reducts_incl C (step_expr from a m) (step_exprlist (C a) m).
-Proof.
+Proof using.
   induction 1; simpl; intros.
 (* top *)
   red. destruct (step_expr k a m); auto.
@@ -1873,7 +1873,7 @@ Qed.
 Lemma not_stuckred_imm_safe:
   forall m a k,
   (forall C, ~In (C, Stuckred) (step_expr k a m)) -> imm_safe_t k a m.
-Proof.
+Proof using do_inline_assembly_sound do_inline_assembly_complete do_external_function_sound do_external_function_complete.
   intros. generalize (step_expr_sound a k m). intros [A B].
   destruct (step_expr k a m) as [|[C rd] res] eqn:?.
   specialize (B (eq_refl _)). destruct k.
@@ -1893,7 +1893,7 @@ Lemma not_imm_safe_stuck_red:
   context k RV C ->
   ~imm_safe_t k a m ->
   exists C', In (C', Stuckred) (step_expr RV (C a) m).
-Proof.
+Proof using do_inline_assembly_sound do_inline_assembly_complete do_external_function_sound do_external_function_complete.
   intros.
   assert (exists C', In (C', Stuckred) (step_expr k a m)).
     destruct (classic (exists C', In (C', Stuckred) (step_expr k a m))); auto.
@@ -1912,7 +1912,7 @@ Lemma imm_safe_imm_safe_t:
   imm_safe_t k a m \/
   exists C, exists a1, exists t, exists a1', exists m',
     context RV k C /\ a = C a1 /\ rred ge a1 m t a1' m' /\ forall w', ~possible_trace w t w'.
-Proof.
+Proof using.
   intros. inv H.
   left. apply imm_safe_t_val.
   left. apply imm_safe_t_loc.
@@ -1934,7 +1934,7 @@ Theorem not_imm_safe_t:
   context K RV C ->
   ~imm_safe_t K a m ->
   Csem.step ge (ExprState f (C a) k e m) E0 Stuckstate \/ can_crash_world w (ExprState f (C a) k e m).
-Proof.
+Proof using.
   intros. destruct (classic (imm_safe ge e K a m)).
   exploit imm_safe_imm_safe_t; eauto.
   intros [A | [C1 [a1 [t [a1' [m' [A [B [D E]]]]]]]]]. contradiction.
@@ -1957,7 +1957,7 @@ end.
 
 Lemma do_alloc_variables_sound:
   forall l e m, alloc_variables ge e m l (fst (do_alloc_variables e m l)) (snd (do_alloc_variables e m l)).
-Proof.
+Proof using.
   induction l; intros; simpl.
   constructor.
   destruct a as [id ty]. destruct (Mem.alloc m 0 (sizeof ge ty)) as [m1 b1] eqn:?; simpl.
@@ -1967,7 +1967,7 @@ Qed.
 Lemma do_alloc_variables_complete:
   forall e1 m1 l e2 m2, alloc_variables ge e1 m1 l e2 m2 ->
   do_alloc_variables e1 m1 l = (e2, m2).
-Proof.
+Proof using.
   induction 1; simpl.
   auto.
   rewrite H; rewrite IHalloc_variables; auto.
@@ -1991,7 +1991,7 @@ end.
 Lemma sem_bind_parameters_sound : forall w e m l lv m',
   sem_bind_parameters w e m l lv = Some m' ->
   bind_parameters ge e m l lv m'.
-Proof.
+Proof using.
    intros; functional induction (sem_bind_parameters w e m l lv); try discriminate.
    inversion H; constructor; auto.
    exploit do_assign_loc_sound; eauto. intros [A B]. econstructor; eauto.
@@ -2000,7 +2000,7 @@ Qed.
 Lemma sem_bind_parameters_complete : forall w e m l lv m',
   bind_parameters ge e m l lv m' ->
   sem_bind_parameters w e m l lv = Some m'.
-Proof.
+Proof using.
 Local Opaque do_assign_loc.
    induction 1; simpl; auto.
    rewrite H. rewrite dec_eq_true.
@@ -2166,7 +2166,7 @@ Theorem do_step_sound:
   forall w S rule t S',
   In (TR rule t S') (do_step w S) ->
   Csem.step ge S t S' \/ (t = E0 /\ S' = Stuckstate /\ can_crash_world w S).
-Proof with try (left; right; econstructor; eauto; fail).
+Proof using (do_inline_assembly_sound do_inline_assembly_complete do_external_function_sound do_external_function_complete) with try (left; right; econstructor; eauto; fail).
   intros until S'. destruct S; simpl.
 (* State *)
   destruct s; myinv...
@@ -2217,7 +2217,7 @@ Qed.
 
 Remark estep_not_val:
   forall f a k e m t S, estep ge (ExprState f a k e m) t S -> is_val a = None.
-Proof.
+Proof using.
   intros.
   assert (forall b from to C, context from to C -> (from = to /\ C = fun x => x) \/ is_val (C b) = None).
     induction 1; simpl; auto.
@@ -2231,7 +2231,7 @@ Qed.
 Theorem do_step_complete:
   forall w S t S' w',
   possible_trace w t w' -> Csem.step ge S t S' -> exists rule, In (TR rule t S') (do_step w S).
-Proof with (unfold ret; eauto with coqlib).
+Proof using (do_inline_assembly_sound do_inline_assembly_complete do_external_function_sound do_external_function_complete) with (unfold ret; eauto with coqlib).
   intros until w'; intros PT H.
   destruct H.
   (* Expression step *)

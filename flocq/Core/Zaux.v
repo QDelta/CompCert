@@ -29,7 +29,7 @@ Section Zmissing.
 Theorem Zopp_le_cancel :
   forall x y : Z,
   (-y <= -x)%Z -> Z.le x y.
-Proof.
+Proof using.
 intros x y Hxy.
 apply Zplus_le_reg_r with (-x - y)%Z.
 now ring_simplify.
@@ -38,7 +38,7 @@ Qed.
 Theorem Zgt_not_eq :
   forall x y : Z,
   (y < x)%Z -> (x <> y)%Z.
-Proof.
+Proof using.
 intros x y H Hn.
 apply Z.lt_irrefl with x.
 now rewrite Hn at 1.
@@ -57,7 +57,7 @@ Definition eqbool_dep P (h1 : P true) b :=
   end.
 
 Lemma eqbool_irrelevance : forall (b : bool) (h1 h2 : b = true), h1 = h2.
-Proof.
+Proof using.
 assert (forall (h : true = true), refl_equal true = h).
 apply (eq_dep_elim bool true (eqbool_dep _ _) (refl_equal _)).
 intros b.
@@ -74,7 +74,7 @@ Section Even_Odd.
 
 Theorem Zeven_ex :
   forall x, exists p, x = (2 * p + if Z.even x then 0 else 1)%Z.
-Proof.
+Proof using.
 intros [|[n|n|]|[n|n|]].
 now exists Z0.
 now exists (Zpos n).
@@ -94,7 +94,7 @@ Section Zpower.
 Theorem Zpower_plus :
   forall n k1 k2, (0 <= k1)%Z -> (0 <= k2)%Z ->
   Zpower n (k1 + k2) = (Zpower n k1 * Zpower n k2)%Z.
-Proof.
+Proof using.
 intros n k1 k2 H1 H2.
 now apply Zpower_exp ; apply Z.le_ge.
 Qed.
@@ -102,7 +102,7 @@ Qed.
 Theorem Zpower_Zpower_nat :
   forall b e, (0 <= e)%Z ->
   Zpower b e = Zpower_nat b (Z.abs_nat e).
-Proof.
+Proof using.
 intros b [|e|e] He.
 apply refl_equal.
 apply Zpower_pos_nat.
@@ -113,7 +113,7 @@ Qed.
 Theorem Zpower_nat_S :
   forall b e,
   Zpower_nat b (S e) = (b * Zpower_nat b e)%Z.
-Proof.
+Proof using.
 intros b e.
 rewrite (Zpower_nat_is_exp 1 e).
 apply (f_equal (fun x => x * _)%Z).
@@ -123,7 +123,7 @@ Qed.
 Theorem Zpower_pos_gt_0 :
   forall b p, (0 < b)%Z ->
   (0 < Zpower_pos b p)%Z.
-Proof.
+Proof using.
 intros b p Hb.
 rewrite Zpower_pos_nat.
 induction (nat_of_P p).
@@ -135,7 +135,7 @@ Qed.
 Theorem Zeven_Zpower_odd :
   forall b e, (0 <= e)%Z -> Z.even b = false ->
   Z.even (Zpower b e) = false.
-Proof.
+Proof using.
 intros b e He Hb.
 destruct (Z_le_lt_eq_dec _ _ He) as [He'|He'].
 rewrite <- Hb.
@@ -148,7 +148,7 @@ Record radix := { radix_val :> Z ; radix_prop : Zle_bool 2 radix_val = true }.
 
 Theorem radix_val_inj :
   forall r1 r2, radix_val r1 = radix_val r2 -> r1 = r2.
-Proof.
+Proof using.
 intros (r1, H1) (r2, H2) H.
 simpl in H.
 revert H1.
@@ -163,7 +163,7 @@ Definition radix2 := Build_radix 2 (refl_equal _).
 Variable r : radix.
 
 Theorem radix_gt_0 : (0 < r)%Z.
-Proof.
+Proof using.
 apply Z.lt_le_trans with 2%Z.
 easy.
 apply Zle_bool_imp_le.
@@ -171,7 +171,7 @@ apply r.
 Qed.
 
 Theorem radix_gt_1 : (1 < r)%Z.
-Proof.
+Proof using.
 destruct r as (v, Hr). simpl.
 apply Z.lt_le_trans with 2%Z.
 easy.
@@ -182,7 +182,7 @@ Theorem Zpower_gt_1 :
   forall p,
   (0 < p)%Z ->
   (1 < Zpower r p)%Z.
-Proof.
+Proof using.
 intros [|p|p] Hp ; try easy.
 simpl.
 rewrite Zpower_pos_nat.
@@ -209,7 +209,7 @@ Theorem Zpower_gt_0 :
   forall p,
   (0 <= p)%Z ->
   (0 < Zpower r p)%Z.
-Proof.
+Proof using.
 intros p Hp.
 rewrite Zpower_Zpower_nat with (1 := Hp).
 induction (Z.abs_nat p).
@@ -222,7 +222,7 @@ Qed.
 Theorem Zpower_ge_0 :
   forall e,
   (0 <= Zpower r e)%Z.
-Proof.
+Proof using.
 intros [|e|e] ; try easy.
 apply Zlt_le_weak.
 now apply Zpower_gt_0.
@@ -231,7 +231,7 @@ Qed.
 Theorem Zpower_le :
   forall e1 e2, (e1 <= e2)%Z ->
   (Zpower r e1 <= Zpower r e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 He.
 destruct (Zle_or_lt 0 e1)%Z as [H1|H1].
 replace e2 with (e2 - e1 + e1)%Z by ring.
@@ -251,7 +251,7 @@ Qed.
 Theorem Zpower_lt :
   forall e1 e2, (0 <= e2)%Z -> (e1 < e2)%Z ->
   (Zpower r e1 < Zpower r e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 He2 He.
 destruct (Zle_or_lt 0 e1)%Z as [H1|H1].
 replace e2 with (e2 - e1 + e1)%Z by ring.
@@ -279,7 +279,7 @@ Theorem Zpower_lt_Zpower :
   forall e1 e2,
   (Zpower r (e1 - 1) < Zpower r e2)%Z ->
   (e1 <= e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 He.
 apply Znot_gt_le.
 intros H.
@@ -290,7 +290,7 @@ Qed.
 
 Theorem Zpower_gt_id :
   forall n, (n < Zpower r n)%Z.
-Proof.
+Proof using.
 intros [|n|n] ; try easy.
 simpl.
 rewrite Zpower_pos_nat.
@@ -325,7 +325,7 @@ Section Div_Mod.
 Theorem Zmod_mod_mult :
   forall n a b, (0 < a)%Z -> (0 <= b)%Z ->
   Zmod (Zmod n (a * b)) b = Zmod n b.
-Proof.
+Proof using.
   intros n a b Ha Hb. destruct (Zle_lt_or_eq _ _ Hb) as [H'b|H'b].
   - rewrite (Z.mul_comm a b), Z.rem_mul_r, Z.add_mod, Z.mul_mod, Z.mod_same,
       Z.mul_0_l, Z.mod_0_l, Z.add_0_r, !Z.mod_mod; lia.
@@ -335,7 +335,7 @@ Qed.
 Theorem ZOmod_eq :
   forall a b,
   Z.rem a b = (a - Z.quot a b * b)%Z.
-Proof.
+Proof using.
 intros a b.
 rewrite (Z.quot_rem' a b) at 2.
 ring.
@@ -344,7 +344,7 @@ Qed.
 Theorem ZOmod_mod_mult :
   forall n a b,
   Z.rem (Z.rem n (a * b)) b = Z.rem n b.
-Proof.
+Proof using.
 intros n a b.
 assert (Z.rem n (a * b) = n + - (Z.quot n (a * b) * a) * b)%Z.
 rewrite <- Zopp_mult_distr_l.
@@ -359,7 +359,7 @@ Qed.
 Theorem Zdiv_mod_mult :
   forall n a b, (0 <= a)%Z -> (0 <= b)%Z ->
   (Z.div (Zmod n (a * b)) a) = Zmod (Z.div n a) b.
-Proof.
+Proof using.
 intros n a b Ha Hb.
 destruct (Zle_lt_or_eq _ _ Ha) as [Ha'|<-].
 - destruct (Zle_lt_or_eq _ _ Hb) as [Hb'|<-].
@@ -374,7 +374,7 @@ Qed.
 Theorem ZOdiv_mod_mult :
   forall n a b,
   (Z.quot (Z.rem n (a * b)) a) = Z.rem (Z.quot n a) b.
-Proof.
+Proof using.
 intros n a b.
 destruct (Z.eq_dec a 0) as [Za|Za].
 rewrite Za.
@@ -394,7 +394,7 @@ Qed.
 Theorem ZOdiv_small_abs :
   forall a b,
   (Z.abs a < b)%Z -> Z.quot a b = Z0.
-Proof.
+Proof using.
 intros a b Ha.
 destruct (Zle_or_lt 0 a) as [H|H].
 apply Z.quot_small.
@@ -411,7 +411,7 @@ Qed.
 Theorem ZOmod_small_abs :
   forall a b,
   (Z.abs a < b)%Z -> Z.rem a b = a.
-Proof.
+Proof using.
 intros a b Ha.
 destruct (Zle_or_lt 0 a) as [H|H].
 apply Z.rem_small.
@@ -428,7 +428,7 @@ Qed.
 Theorem ZOdiv_plus :
   forall a b c, (0 <= a * b)%Z ->
   (Z.quot (a + b) c = Z.quot a c + Z.quot b c + Z.quot (Z.rem a c + Z.rem b c) c)%Z.
-Proof.
+Proof using.
 intros a b c Hab.
 destruct (Z.eq_dec c 0) as [Zc|Zc].
 now rewrite Zc, 4!Zquot_0_r.
@@ -450,14 +450,14 @@ Section Same_sign.
 Theorem Zsame_sign_trans :
   forall v u w, v <> Z0 ->
   (0 <= u * v)%Z -> (0 <= v * w)%Z -> (0 <= u * w)%Z.
-Proof.
+Proof using.
 intros [|v|v] [|u|u] [|w|w] Zv Huv Hvw ; try easy ; now elim Zv.
 Qed.
 
 Theorem Zsame_sign_trans_weak :
   forall v u w, (v = Z0 -> w = Z0) ->
   (0 <= u * v)%Z -> (0 <= v * w)%Z -> (0 <= u * w)%Z.
-Proof.
+Proof using.
 intros [|v|v] [|u|u] [|w|w] Zv Huv Hvw ; try easy ; now discriminate Zv.
 Qed.
 
@@ -466,7 +466,7 @@ Theorem Zsame_sign_imp :
   (0 < u -> 0 <= v)%Z ->
   (0 < -u -> 0 <= -v)%Z ->
   (0 <= u * v)%Z.
-Proof.
+Proof using.
 intros [|u|u] v Hp Hn.
 easy.
 apply Zmult_le_0_compat.
@@ -483,7 +483,7 @@ Qed.
 Theorem Zsame_sign_odiv :
   forall u v, (0 <= v)%Z ->
   (0 <= u * Z.quot u v)%Z.
-Proof.
+Proof using.
 intros u v Hv.
 apply Zsame_sign_imp ; intros Hu.
 apply Z_quot_pos with (2 := Hv).
@@ -505,7 +505,7 @@ Inductive Zeq_bool_prop (x y : Z) : bool -> Prop :=
 
 Theorem Zeq_bool_spec :
   forall x y, Zeq_bool_prop x y (Zeq_bool x y).
-Proof.
+Proof using.
 intros x y.
 generalize (Zeq_is_eq_bool x y).
 case (Zeq_bool x y) ; intros (H1, H2) ; constructor.
@@ -517,14 +517,14 @@ Qed.
 
 Theorem Zeq_bool_true :
   forall x y, x = y -> Zeq_bool x y = true.
-Proof.
+Proof using.
 intros x y.
 apply -> Zeq_is_eq_bool.
 Qed.
 
 Theorem Zeq_bool_false :
   forall x y, x <> y -> Zeq_bool x y = false.
-Proof.
+Proof using.
 intros x y.
 generalize (proj2 (Zeq_is_eq_bool x y)).
 case Zeq_bool.
@@ -536,7 +536,7 @@ Qed.
 
 Theorem Zeq_bool_diag :
   forall x, Zeq_bool x x = true.
-Proof.
+Proof using.
 intros x.
 now apply Zeq_bool_true.
 Qed.
@@ -544,7 +544,7 @@ Qed.
 Theorem Zeq_bool_opp :
   forall x y,
   Zeq_bool (Z.opp x) y = Zeq_bool x (Z.opp y).
-Proof.
+Proof using.
 intros x y.
 case Zeq_bool_spec.
 - intros <-.
@@ -561,7 +561,7 @@ Qed.
 Theorem Zeq_bool_opp' :
   forall x y,
   Zeq_bool (Z.opp x) (Z.opp y) = Zeq_bool x y.
-Proof.
+Proof using.
 intros x y.
 rewrite Zeq_bool_opp.
 apply f_equal, Z.opp_involutive.
@@ -577,7 +577,7 @@ Inductive Zle_bool_prop (x y : Z) : bool -> Prop :=
 
 Theorem Zle_bool_spec :
   forall x y, Zle_bool_prop x y (Zle_bool x y).
-Proof.
+Proof using.
 intros x y.
 generalize (Zle_is_le_bool x y).
 case Zle_bool ; intros (H1, H2) ; constructor.
@@ -590,7 +590,7 @@ Qed.
 Theorem Zle_bool_true :
   forall x y : Z,
   (x <= y)%Z -> Zle_bool x y = true.
-Proof.
+Proof using.
 intros x y.
 apply (proj1 (Zle_is_le_bool x y)).
 Qed.
@@ -598,7 +598,7 @@ Qed.
 Theorem Zle_bool_false :
   forall x y : Z,
   (y < x)%Z -> Zle_bool x y = false.
-Proof.
+Proof using.
 intros x y Hxy.
 generalize (Zle_cases x y).
 case Zle_bool ; intros H.
@@ -610,7 +610,7 @@ Qed.
 Theorem Zle_bool_opp_l :
   forall x y,
   Zle_bool (Z.opp x) y = Zle_bool (Z.opp y) x.
-Proof.
+Proof using.
 intros x y.
 case Zle_bool_spec ; intros Hxy ;
   case Zle_bool_spec ; intros Hyx ; try easy ; lia.
@@ -619,7 +619,7 @@ Qed.
 Theorem Zle_bool_opp :
   forall x y,
   Zle_bool (Z.opp x) (Z.opp y) = Zle_bool y x.
-Proof.
+Proof using.
 intros x y.
 now rewrite Zle_bool_opp_l, Z.opp_involutive.
 Qed.
@@ -627,7 +627,7 @@ Qed.
 Theorem Zle_bool_opp_r :
   forall x y,
   Zle_bool x (Z.opp y) = Zle_bool y (Z.opp x).
-Proof.
+Proof using.
 intros x y.
 rewrite <- (Z.opp_involutive x) at 1.
 apply Zle_bool_opp.
@@ -643,7 +643,7 @@ Inductive Zlt_bool_prop (x y : Z) : bool -> Prop :=
 
 Theorem Zlt_bool_spec :
   forall x y, Zlt_bool_prop x y (Zlt_bool x y).
-Proof.
+Proof using.
 intros x y.
 generalize (Zlt_is_lt_bool x y).
 case Zlt_bool ; intros (H1, H2) ; constructor.
@@ -656,7 +656,7 @@ Qed.
 Theorem Zlt_bool_true :
   forall x y : Z,
   (x < y)%Z -> Zlt_bool x y = true.
-Proof.
+Proof using.
 intros x y.
 apply (proj1 (Zlt_is_lt_bool x y)).
 Qed.
@@ -664,7 +664,7 @@ Qed.
 Theorem Zlt_bool_false :
   forall x y : Z,
   (y <= x)%Z -> Zlt_bool x y = false.
-Proof.
+Proof using.
 intros x y Hxy.
 generalize (Zlt_cases x y).
 case Zlt_bool ; intros H.
@@ -676,7 +676,7 @@ Qed.
 Theorem negb_Zle_bool :
   forall x y : Z,
   negb (Zle_bool x y) = Zlt_bool y x.
-Proof.
+Proof using.
 intros x y.
 case Zle_bool_spec ; intros H.
 now rewrite Zlt_bool_false.
@@ -686,7 +686,7 @@ Qed.
 Theorem negb_Zlt_bool :
   forall x y : Z,
   negb (Zlt_bool x y) = Zle_bool y x.
-Proof.
+Proof using.
 intros x y.
 case Zlt_bool_spec ; intros H.
 now rewrite Zle_bool_false.
@@ -696,7 +696,7 @@ Qed.
 Theorem Zlt_bool_opp_l :
   forall x y,
   Zlt_bool (Z.opp x) y = Zlt_bool (Z.opp y) x.
-Proof.
+Proof using.
 intros x y.
 rewrite <- 2! negb_Zle_bool.
 apply f_equal, Zle_bool_opp_r.
@@ -705,7 +705,7 @@ Qed.
 Theorem Zlt_bool_opp_r :
   forall x y,
   Zlt_bool x (Z.opp y) = Zlt_bool y (Z.opp x).
-Proof.
+Proof using.
 intros x y.
 rewrite <- 2! negb_Zle_bool.
 apply f_equal, Zle_bool_opp_l.
@@ -714,7 +714,7 @@ Qed.
 Theorem Zlt_bool_opp :
   forall x y,
   Zlt_bool (Z.opp x) (Z.opp y) = Zlt_bool y x.
-Proof.
+Proof using.
 intros x y.
 rewrite <- 2! negb_Zle_bool.
 apply f_equal, Zle_bool_opp.
@@ -731,7 +731,7 @@ Inductive Zcompare_prop (x y : Z) : comparison -> Prop :=
 
 Theorem Zcompare_spec :
   forall x y, Zcompare_prop x y (Z.compare x y).
-Proof.
+Proof using.
 intros x y.
 destruct (Z_dec x y) as [[H|H]|H].
 generalize (Zlt_compare _ _ H).
@@ -749,14 +749,14 @@ Qed.
 Theorem Zcompare_Lt :
   forall x y,
   (x < y)%Z -> Z.compare x y = Lt.
-Proof.
+Proof using.
 easy.
 Qed.
 
 Theorem Zcompare_Eq :
   forall x y,
   (x = y)%Z -> Z.compare x y = Eq.
-Proof.
+Proof using.
 intros x y.
 apply <- Zcompare_Eq_iff_eq.
 Qed.
@@ -764,7 +764,7 @@ Qed.
 Theorem Zcompare_Gt :
   forall x y,
   (y < x)%Z -> Z.compare x y = Gt.
-Proof.
+Proof using.
 intros x y.
 apply Z.lt_gt.
 Qed.
@@ -775,13 +775,13 @@ Section cond_Zopp.
 
 Theorem cond_Zopp_0 :
   forall sx, cond_Zopp sx 0 = 0%Z.
-Proof.
+Proof using.
 now intros [|].
 Qed.
 
 Theorem cond_Zopp_negb :
   forall x y, cond_Zopp (negb x) y = Z.opp (cond_Zopp x y).
-Proof.
+Proof using.
 intros [|] y.
 apply sym_eq, Z.opp_involutive.
 easy.
@@ -790,7 +790,7 @@ Qed.
 Theorem abs_cond_Zopp :
   forall b m,
   Z.abs (cond_Zopp b m) = Z.abs m.
-Proof.
+Proof using.
 intros [|] m.
 apply Zabs_Zopp.
 apply refl_equal.
@@ -799,7 +799,7 @@ Qed.
 Theorem cond_Zopp_Zlt_bool :
   forall m,
   cond_Zopp (Zlt_bool m 0) m = Z.abs m.
-Proof.
+Proof using.
 intros m.
 apply sym_eq.
 case Zlt_bool_spec ; intros Hm.
@@ -811,7 +811,7 @@ Qed.
 Theorem Zeq_bool_cond_Zopp :
   forall s m n,
   Zeq_bool (cond_Zopp s m) n = Zeq_bool m (cond_Zopp s n).
-Proof.
+Proof using.
 intros [|] m n ; simpl.
 apply Zeq_bool_opp.
 easy.
@@ -830,7 +830,7 @@ Fixpoint Zfast_pow_pos (v : Z) (e : positive) : Z :=
 
 Theorem Zfast_pow_pos_correct :
   forall v e, Zfast_pow_pos v e = Zpower_pos v e.
-Proof.
+Proof using.
 intros v e.
 rewrite <- (Zmult_1_r (Zfast_pow_pos v e)).
 unfold Z.pow_pos.
@@ -853,7 +853,7 @@ Section faster_div.
 Lemma Zdiv_eucl_unique :
   forall a b,
   Z.div_eucl a b = (Z.div a b, Zmod a b).
-Proof.
+Proof using.
 intros a b.
 unfold Z.div, Zmod.
 now case Z.div_eucl.
@@ -874,7 +874,7 @@ Fixpoint Zpos_div_eucl_aux1 (a b : positive) {struct b} :=
 Lemma Zpos_div_eucl_aux1_correct :
   forall a b,
   Zpos_div_eucl_aux1 a b = Z.pos_div_eucl a (Zpos b).
-Proof.
+Proof using.
 intros a b.
 revert a.
 induction b ; intros a.
@@ -920,7 +920,7 @@ Definition Zpos_div_eucl_aux (a b : positive) :=
 Lemma Zpos_div_eucl_aux_correct :
   forall a b,
   Zpos_div_eucl_aux a b = Z.pos_div_eucl a (Zpos b).
-Proof.
+Proof using.
 intros a b.
 unfold Zpos_div_eucl_aux.
 change (Z.pos_div_eucl a (Zpos b)) with (Z.div_eucl (Zpos a) (Zpos b)).
@@ -965,7 +965,7 @@ Definition Zfast_div_eucl (a b : Z) :=
 Theorem Zfast_div_eucl_correct :
   forall a b : Z,
   Zfast_div_eucl a b = Z.div_eucl a b.
-Proof.
+Proof using.
 unfold Zfast_div_eucl.
 intros [|a|a] [|b|b] ; try rewrite Zpos_div_eucl_aux_correct ; easy.
 Qed.
@@ -986,7 +986,7 @@ Fixpoint iter_nat (n : nat) (x : A) {struct n} : A :=
 Lemma iter_nat_plus :
   forall (p q : nat) (x : A),
   iter_nat (p + q) x = iter_nat p (iter_nat q x).
-Proof.
+Proof using.
 induction q.
 now rewrite Nat.add_0_r.
 intros x.
@@ -997,7 +997,7 @@ Qed.
 Lemma iter_nat_S :
   forall (p : nat) (x : A),
   iter_nat (S p) x = f (iter_nat p x).
-Proof.
+Proof using.
 induction p.
 easy.
 simpl.
@@ -1008,7 +1008,7 @@ Qed.
 Lemma iter_pos_nat :
   forall (p : positive) (x : A),
   iter_pos f p x = iter_nat (Pos.to_nat p) x.
-Proof.
+Proof using.
 induction p ; intros x.
 rewrite Pos2Nat.inj_xI.
 simpl.

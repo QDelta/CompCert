@@ -24,7 +24,7 @@ Definition match_prog (prog tprog: RTL.program) :=
 
 Lemma transf_program_match:
   forall prog tprog, transf_program prog = OK tprog -> match_prog prog tprog.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program_contextual; eauto.
 Qed.
 
@@ -33,7 +33,7 @@ Qed.
 Remark wf_equation_incr:
   forall next1 next2 e,
   wf_equation next1 e -> Ple next1 next2 -> wf_equation next2 e.
-Proof.
+Proof using.
   unfold wf_equation; intros; destruct e. destruct H. split.
   apply Pos.lt_le_trans with next1; auto.
   red; intros. apply Pos.lt_le_trans with next1; auto. apply H1; auto.
@@ -59,7 +59,7 @@ Lemma valnums_val_exten:
   forall vl,
   (forall v, In v vl -> Plt v upto) ->
   map valu2 vl = map valu1 vl.
-Proof.
+Proof using AGREE.
   intros. apply list_map_exten. intros. symmetry. auto.
 Qed.
 
@@ -68,7 +68,7 @@ Lemma rhs_eval_to_exten:
   rhs_eval_to valu1 ge sp m r v ->
   (forall v, In v (valnums_rhs r) -> Plt v upto) ->
   rhs_eval_to valu2 ge sp m r v.
-Proof.
+Proof using AGREE.
   intros. inv H; simpl in *.
 - constructor. rewrite valnums_val_exten by assumption. auto.
 - econstructor; eauto. rewrite valnums_val_exten by assumption. auto.
@@ -79,7 +79,7 @@ Lemma rhs_valid_exten:
   rhs_valid valu1 ge sp r ->
   (forall v, In v (valnums_rhs r) -> Plt v upto) ->
   rhs_valid valu2 ge sp r.
-Proof.
+Proof using AGREE.
   intros. inv H; simpl in *.
 - constructor.
 - econstructor; eauto. rewrite valnums_val_exten by assumption. auto.
@@ -90,7 +90,7 @@ Lemma equation_holds_exten:
   equation_holds valu1 ge sp m e ->
   wf_equation upto e ->
   equation_holds valu2 ge sp m e.
-Proof.
+Proof using AGREE.
   intros. destruct e. destruct H0. inv H.
 - constructor. rewrite AGREE by auto. apply rhs_eval_to_exten; auto.
   apply rhs_valid_exten; auto.
@@ -103,7 +103,7 @@ Lemma numbering_holds_exten:
   numbering_holds valu1 ge sp rs m n ->
   Ple n.(num_next) upto ->
   numbering_holds valu2 ge sp rs m n.
-Proof.
+Proof using AGREE.
   intros. destruct H. constructor; intros.
 - auto.
 - apply equation_holds_exten. auto.
@@ -125,7 +125,7 @@ Lemma valnum_reg_holds:
   /\ valu_agree valu1 valu2 n.(num_next)
   /\ Plt v n'.(num_next)
   /\ Ple n.(num_next) n'.(num_next).
-Proof.
+Proof using.
   unfold valnum_reg; intros.
   destruct (num_reg n)!r as [v'|] eqn:NR.
 - inv H0. exists valu1; splitall.
@@ -169,7 +169,7 @@ Lemma valnum_regs_holds:
   /\ valu_agree valu1 valu2 n.(num_next)
   /\ (forall v, In v vl -> Plt v n'.(num_next))
   /\ Ple n.(num_next) n'.(num_next).
-Proof.
+Proof using.
   induction rl; simpl; intros.
 - inv H0. exists valu1; splitall; auto. red; auto. simpl; tauto. extlia.
 - destruct (valnum_reg n a) as [n1 v1] eqn:V1.
@@ -191,7 +191,7 @@ Lemma find_valnum_rhs_charact:
   forall rh v eqs,
     find_valnum_rhs rh eqs = Some v ->
     exists rh', In (Eq v true rh') eqs /\ rhs_compat rh rh'.
-Proof.
+Proof using.
   induction eqs; simpl; intros.
 - inv H.
 - destruct a. destruct (strict && compat_rhs rh r) eqn:T.
@@ -203,7 +203,7 @@ Lemma find_valnum_rhs'_charact:
   forall rh v eqs,
     find_valnum_rhs' rh eqs = Some v ->
     exists strict rh', In (Eq v strict rh') eqs /\ rhs_compat rh rh'.
-Proof.
+Proof using.
   induction eqs; simpl; intros.
 - inv H.
 - destruct a. destruct (compat_rhs rh r) eqn:T.
@@ -213,7 +213,7 @@ Qed.
 
 Lemma find_valnum_num_charact:
   forall v r eqs, find_valnum_num v eqs = Some r -> In (Eq v true r) eqs.
-Proof.
+Proof using.
   induction eqs; simpl; intros.
 - inv H.
 - destruct a. destruct (strict && peq v v0) eqn:T.
@@ -226,7 +226,7 @@ Lemma reg_valnum_sound:
   reg_valnum n v = Some r ->
   numbering_holds valu ge sp rs m n ->
   rs#r = valu v.
-Proof.
+Proof using.
   unfold reg_valnum; intros. destruct (num_val n)#v as [ | r1 rl] eqn:E; inv H.
   eapply num_holds_reg; eauto. eapply wf_num_val; eauto with cse.
   rewrite E; auto with coqlib.
@@ -238,7 +238,7 @@ Lemma regs_valnums_sound:
   forall vl rl,
   regs_valnums n vl = Some rl ->
   rs##rl = map valu vl.
-Proof.
+Proof using.
   induction vl; simpl; intros.
 - inv H0; auto.
 - destruct (reg_valnum n a) as [r1|] eqn:RV1; try discriminate.
@@ -251,7 +251,7 @@ Lemma find_rhs_sound:
   find_rhs n rh = Some r ->
   numbering_holds valu ge sp rs m n ->
   exists v, rhs_eval_to valu ge sp m rh v /\ Val.lessdef v rs#r.
-Proof.
+Proof using.
   unfold find_rhs; intros. destruct (find_valnum_rhs' rh (num_eqs n)) as [vres|] eqn:E; try discriminate.
   exploit find_valnum_rhs'_charact; eauto. intros (strict & rh' & IN & COMPAT).
   erewrite reg_valnum_sound by eauto.
@@ -264,7 +264,7 @@ Lemma forget_reg_charact:
   forall n rd r v,
   wf_numbering n ->
   In r (PMap.get v (forget_reg n rd)) -> r <> rd /\ In r (PMap.get v n.(num_val)).
-Proof.
+Proof using.
   unfold forget_reg; intros.
   destruct (PTree.get rd n.(num_reg)) as [vd|] eqn:GET.
 - rewrite PMap.gsspec in H0. destruct (peq v vd).
@@ -278,7 +278,7 @@ Lemma update_reg_charact:
   wf_numbering n ->
   In r (PMap.get v (update_reg n rd vd)) ->
   PTree.get r (PTree.set rd vd n.(num_reg)) = Some v.
-Proof.
+Proof using.
   unfold update_reg; intros.
   rewrite PMap.gsspec in H0.
   destruct (peq v vd).
@@ -293,7 +293,7 @@ Qed.
 Lemma rhs_eval_to_inj:
   forall valu ge sp m rh v1 v2,
   rhs_eval_to valu ge sp m rh v1 -> rhs_eval_to valu ge sp m rh v2 -> v1 = v2.
-Proof.
+Proof using.
   intros. inv H; inv H0; congruence.
 Qed.
 
@@ -305,7 +305,7 @@ Lemma add_rhs_holds:
   wf_rhs n.(num_next) rh ->
   (forall r, r <> rd -> rs'#r = rs#r) ->
   exists valu2, numbering_holds valu2 ge sp rs' m (add_rhs n rd rh).
-Proof.
+Proof using.
   unfold add_rhs; intros.
   destruct (find_valnum_rhs rh n.(num_eqs)) as [vres|] eqn:FIND.
 
@@ -356,7 +356,7 @@ Lemma add_op_holds:
   numbering_holds valu1 ge sp rs m n ->
   eval_operation ge sp op rs##args m = Some v ->
   exists valu2, numbering_holds valu2 ge sp (rs#dst <- v) m (add_op n dst op args).
-Proof.
+Proof using.
   unfold add_op; intros.
   destruct (is_move_operation op args) as [src|] eqn:ISMOVE.
 - (* special case for moves *)
@@ -392,7 +392,7 @@ Lemma add_load_holds:
   Mem.loadv chunk m (Vptr b ofs) = Some v ->
   pmatch bc b ofs ap -> genv_match bc ge -> bc sp = BCstack ->
   exists valu2, numbering_holds valu2 ge (Vptr sp Ptrofs.zero) (rs#dst <- v) m (add_load n dst chunk addr args ap).
-Proof.
+Proof using.
   unfold add_load; intros.
   destruct (valnum_regs n args) as [n1 vl] eqn:VN.
   exploit valnum_regs_holds; eauto.
@@ -407,7 +407,7 @@ Lemma set_unknown_holds:
   forall valu ge sp rs m n r v,
   numbering_holds valu ge sp rs m n ->
   numbering_holds valu ge sp (rs#r <- v) m (set_unknown n r).
-Proof.
+Proof using.
   intros; constructor; simpl; intros.
 - constructor; simpl; intros.
   + eauto with cse.
@@ -426,7 +426,7 @@ Lemma set_res_unknown_holds:
   forall valu ge sp rs m n r v,
   numbering_holds valu ge sp rs m n ->
   numbering_holds valu ge sp (regmap_setres r v rs) m (set_res_unknown n r).
-Proof.
+Proof using.
   intros. destruct r; simpl; auto. apply set_unknown_holds; auto.
 Qed.
 
@@ -434,7 +434,7 @@ Lemma kill_eqs_charact:
   forall pred l strict r eqs,
   In (Eq l strict r) (kill_eqs pred eqs) ->
   pred r = false /\ In (Eq l strict r) eqs.
-Proof.
+Proof using.
   induction eqs; simpl; intros.
 - tauto.
 - destruct a. destruct (pred r0) eqn:PRED.
@@ -451,7 +451,7 @@ Lemma kill_equations_hold:
       rhs_eval_to valu ge sp m r v ->
       rhs_eval_to valu ge sp m' r v) ->
   numbering_holds valu ge sp rs m' (kill_equations pred n).
-Proof.
+Proof using.
   intros; constructor; simpl; intros.
 - constructor; simpl; intros; eauto with cse.
   destruct e. exploit kill_eqs_charact; eauto. intros [A B]. eauto with cse.
@@ -464,7 +464,7 @@ Lemma kill_all_loads_hold:
   forall valu ge sp rs m n m',
   numbering_holds valu ge sp rs m n ->
   numbering_holds valu ge sp rs m' (kill_all_loads n).
-Proof.
+Proof using.
   intros. eapply kill_equations_hold; eauto.
   unfold filter_loads; intros. inv H2.
   constructor. rewrite <- H3. apply op_depends_on_memory_correct; auto.
@@ -482,7 +482,7 @@ Lemma kill_loads_after_store_holds:
   approx = VA.State ae am ->
   numbering_holds valu ge (Vptr sp Ptrofs.zero) rs m'
                            (kill_loads_after_store approx n chunk addr args).
-Proof.
+Proof using.
   intros. apply kill_equations_hold with m; auto.
   intros. unfold filter_after_store in H6; inv H8.
 - constructor. rewrite <- H9. apply op_depends_on_memory_correct; auto.
@@ -502,7 +502,7 @@ Lemma store_normalized_range_sound:
   forall bc chunk v,
   vmatch bc v (store_normalized_range chunk) ->
   Val.lessdef (Val.load_result chunk v) v.
-Proof.
+Proof using.
   intros. unfold Val.load_result; remember Archi.ptr64 as ptr64.
   destruct chunk; simpl in *; destruct v; auto.
 - inv H. apply is_uns_1 in H4; destruct H4; subst i; auto.
@@ -525,7 +525,7 @@ Lemma add_store_result_hold:
   ematch bc rs ae ->
   approx = VA.State ae am ->
   exists valu2, numbering_holds valu2 ge (Vptr sp Ptrofs.zero) rs m' (add_store_result approx n chunk addr args src).
-Proof.
+Proof using.
   unfold add_store_result; intros.
   unfold avalue; rewrite H5.
   destruct (vincl (AE.get src ae) (store_normalized_range chunk)) eqn:INCL.
@@ -559,7 +559,7 @@ Lemma kill_loads_after_storebytes_holds:
   length bytes = Z.to_nat sz -> sz >= 0 ->
   numbering_holds valu ge (Vptr sp Ptrofs.zero) rs m'
                            (kill_loads_after_storebytes n dst sz).
-Proof.
+Proof using.
   intros. apply kill_equations_hold with m; auto.
   intros. unfold filter_after_store in H6; inv H8.
 - constructor. rewrite <- H9. apply op_depends_on_memory_correct; auto.
@@ -579,7 +579,7 @@ Lemma load_memcpy:
   ofs1 <= i -> i + size_chunk chunk <= ofs1 + sz ->
   (align_chunk chunk | ofs2 - ofs1) ->
   Mem.load chunk m' b2 (i + (ofs2 - ofs1)) = Some v.
-Proof.
+Proof using.
   intros.
   generalize (size_chunk_pos chunk); intros SPOS.
   set (n1 := i - ofs1).
@@ -627,7 +627,7 @@ Lemma shift_memcpy_eq_wf:
   shift_memcpy_eq src sz delta e = Some e' ->
   wf_equation next e ->
   wf_equation next e'.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold shift_memcpy_eq; intros.
   destruct e. destruct r... destruct a...
   try (rename i into ofs).
@@ -645,7 +645,7 @@ Lemma shift_memcpy_eq_holds:
   Mem.storebytes m sp dst bytes = Some m' ->
   equation_holds valu ge (Vptr sp Ptrofs.zero) m e ->
   equation_holds valu ge (Vptr sp Ptrofs.zero) m' e'.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   intros. set (delta := dst - src) in *. unfold shift_memcpy_eq in H.
   destruct e as [l strict rhs] eqn:E.
   destruct rhs as [op vl | chunk addr vl]...
@@ -686,7 +686,7 @@ Lemma add_memcpy_eqs_charact:
   forall e' src sz delta eqs2 eqs1,
   In e' (add_memcpy_eqs src sz delta eqs1 eqs2) ->
   In e' eqs2 \/ exists e, In e eqs1 /\ shift_memcpy_eq src sz delta e = Some e'.
-Proof.
+Proof using.
   induction eqs1; simpl; intros.
 - auto.
 - destruct (shift_memcpy_eq src sz delta a) as [e''|] eqn:SHIFT.
@@ -706,7 +706,7 @@ Lemma add_memcpy_holds:
   bc sp = BCstack ->
   Ple (num_next n1) (num_next n2) ->
   numbering_holds valu ge (Vptr sp Ptrofs.zero) rs m' (add_memcpy n1 n2 asrc adst sz).
-Proof.
+Proof using.
   intros. unfold add_memcpy.
   destruct asrc; auto; destruct adst; auto.
   assert (A: forall b o i, pmatch bc b o (Stk i) -> b = sp /\ i = o).
@@ -752,7 +752,7 @@ Lemma reduce_rec_sound:
   reduce_rec A f n niter op args = Some(op', rl') ->
   sem op (map valu args) = Some res ->
   sem op' (rs##rl') = Some res.
-Proof.
+Proof using sp n_holds m ge f_sound.
   induction niter; simpl; intros.
   discriminate.
   destruct (f (fun v : valnum => find_valnum_num v (num_eqs n)) op args)
@@ -777,7 +777,7 @@ Lemma reduce_sound:
   map valu vl = rs##rl ->
   sem op rs##rl = Some res ->
   sem op' rs##rl' = Some res.
-Proof.
+Proof using sp n_holds m ge f_sound.
   unfold reduce; intros.
   destruct (reduce_rec A f n 4%nat op vl) as [[op1 rl1] | ] eqn:?; inv H.
   eapply reduce_rec_sound; eauto. congruence.
@@ -813,7 +813,7 @@ Lemma reduce_rec_lessdef_sound:
   sem op (map valu args) = Some r ->
   exists r',
   sem op' (rs##rl') = Some r' /\ Val.lessdef r r'.
-Proof.
+Proof using sp n_holds m ge f_sound.
   induction niter; simpl; intros.
   discriminate.
   destruct (f (fun v : valnum => find_valnum_num v (num_eqs n)) op args)
@@ -841,7 +841,7 @@ Lemma reduce_lessdef_sound:
   map valu vl = rs##rl ->
   sem op rs##rl = Some r ->
   exists r', sem op' rs##rl' = Some r' /\ Val.lessdef r r'.
-Proof.
+Proof using sp n_holds m ge f_sound.
   unfold reduce; intros.
   destruct (reduce_rec A f n 4%nat op vl) as [[op1 rl1] | ] eqn:?.
   eapply reduce_rec_lessdef_sound; eauto. inv H. eexact Heqo. congruence.
@@ -863,7 +863,7 @@ Theorem analysis_correct_1:
   f.(fn_code)!pc = Some i -> In pc' (successors_instr i) ->
   (exists valu, numbering_holds valu ge sp rs m (transfer f vapprox pc approx!!pc)) ->
   (exists valu, numbering_holds valu ge sp rs m approx!!pc').
-Proof.
+Proof using.
   intros.
   assert (Numbering.ge approx!!pc' (transfer f vapprox pc approx!!pc)).
     eapply Solver.fixpoint_solution; eauto.
@@ -874,7 +874,7 @@ Theorem analysis_correct_entry:
   forall ge sp rs m f vapprox approx,
   analyze f vapprox = Some approx ->
   exists valu, numbering_holds valu ge sp rs m approx!!(f.(fn_entrypoint)).
-Proof.
+Proof using.
   intros.
   replace (approx!!(f.(fn_entrypoint))) with Solver.L.top.
   exists (fun v => Vundef). apply empty_numbering_holds.
@@ -913,7 +913,7 @@ Proof (Genv.find_funct_ptr_match TRANSF).
 
 Lemma sig_preserved:
   forall rm f tf, transf_fundef rm f = OK tf -> funsig tf = funsig f.
-Proof.
+Proof using.
   unfold transf_fundef; intros. destruct f; monadInv H; auto.
   unfold transf_function in EQ.
   destruct (analyze f (vanalyze rm f)); try discriminate. inv EQ; auto.
@@ -933,14 +933,14 @@ Definition regs_lessdef (rs1 rs2: regset) : Prop :=
 Lemma regs_lessdef_regs:
   forall rs1 rs2, regs_lessdef rs1 rs2 ->
   forall rl, Val.lessdef_list rs1##rl rs2##rl.
-Proof.
+Proof using.
   induction rl; constructor; auto.
 Qed.
 
 Lemma set_reg_lessdef:
   forall r v1 v2 rs1 rs2,
   Val.lessdef v1 v2 -> regs_lessdef rs1 rs2 -> regs_lessdef (rs1#r <- v1) (rs2#r <- v2).
-Proof.
+Proof using.
   intros; red; intros. repeat rewrite Regmap.gsspec.
   destruct (peq r0 r); auto.
 Qed.
@@ -949,7 +949,7 @@ Lemma init_regs_lessdef:
   forall rl vl1 vl2,
   Val.lessdef_list vl1 vl2 ->
   regs_lessdef (init_regs vl1 rl) (init_regs vl2 rl).
-Proof.
+Proof using.
   induction rl; simpl; intros.
   red; intros. rewrite Regmap.gi. auto.
   inv H. red; intros. rewrite Regmap.gi. auto.
@@ -963,7 +963,7 @@ Lemma find_function_translated:
   exists cu tfd, find_function tge ros rs' = Some tfd
               /\ transf_fundef (romem_for cu) fd = OK tfd
               /\ linkorder cu prog.
-Proof.
+Proof using TRANSF.
   unfold find_function; intros; destruct ros.
 - specialize (H0 r). inv H0.
   apply functions_translated; auto.
@@ -1050,7 +1050,7 @@ Lemma transf_step_correct:
   forall s1 t s2, step ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1') (SOUND: sound_state prog s1),
   exists s2', step tge s1' t s2' /\ match_states s2 s2'.
-Proof.
+Proof using TRANSF.
   induction 1; intros; inv MS; try (TransfInstr; intro C).
 
   (* Inop *)
@@ -1306,7 +1306,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inversion H.
   exploit funct_ptr_translated; eauto. intros (cu & tf & A & B & C).
   exists (Callstate nil tf nil m0); split.
@@ -1322,13 +1322,13 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv RES. inv STACK. constructor.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSF.
   eapply forward_simulation_step with
     (match_states := fun s1 s2 => sound_state prog s1 /\ match_states s1 s2).
 - apply senv_preserved.

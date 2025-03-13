@@ -351,23 +351,23 @@ Module PTree <: TREE.
 
   Theorem gempty:
     forall (A: Type) (i: positive), get i (empty A) = None.
-  Proof. reflexivity. Qed.
+  Proof using. reflexivity. Qed.
 
   Lemma gEmpty:
     forall (A: Type) (i: positive), get i (@Empty A) = None.
-  Proof. reflexivity. Qed.
+  Proof using. reflexivity. Qed.
 
   Lemma gss0: forall {A} p (x: A), get' p (set0 p x) = Some x.
-  Proof. induction p; simpl; auto. Qed.
+  Proof using. induction p; simpl; auto. Qed.
 
   Lemma gso0: forall {A} p q (x: A), p<>q -> get' p (set0 q x) = None.
-  Proof.
+  Proof using.
     induction p; destruct q; simpl; intros; auto; try apply IHp; congruence.
   Qed.
 
   Theorem gss:
     forall (A: Type) (i: positive) (x: A) (m: tree A), get i (set i x m) = Some x.
-  Proof.
+  Proof using.
    intros. destruct m as [|m]; simpl.
    - apply gss0.
    - revert m; induction i; destruct m; simpl; intros; auto using gss0.
@@ -376,7 +376,7 @@ Module PTree <: TREE.
   Theorem gso:
     forall (A: Type) (i j: positive) (x: A) (m: tree A),
     i <> j -> get i (set j x m) = get i m.
-  Proof.
+  Proof using.
    intros. destruct m as [|m]; simpl.
    - apply gso0; auto.
    - revert m j H; induction i; destruct j,m; simpl; intros; auto;
@@ -386,7 +386,7 @@ Module PTree <: TREE.
   Theorem gsspec:
     forall (A: Type) (i j: positive) (x: A) (m: t A),
     get i (set j x m) = if peq i j then Some x else get i m.
-  Proof.
+  Proof using.
     intros.
     destruct (peq i j); [ rewrite e; apply gss | apply gso; auto ].
   Qed.
@@ -394,13 +394,13 @@ Module PTree <: TREE.
   Lemma gNode:
     forall {A} (i: positive) (l: tree A) (x: option A) (r: tree A),
     get i (Node l x r) = match i with xH => x | xO j => get j l | xI j => get j r end.
-  Proof.
+  Proof using.
     intros. destruct l, x, r; simpl; auto; destruct i; auto.
   Qed.
 
   Theorem grs:
     forall (A: Type) (i: positive) (m: tree A), get i (remove i m) = None.
-  Proof.
+  Proof using.
     Local Opaque Node.
     destruct m as [ |m]; simpl. auto.
     change (remove' i m) with (rem' i m).
@@ -410,7 +410,7 @@ Module PTree <: TREE.
   Theorem gro:
     forall (A: Type) (i j: positive) (m: tree A),
     i <> j -> get i (remove j m) = get i m.
-  Proof.
+  Proof using.
     Local Opaque Node.
     destruct m as [ |m]; simpl. auto.
     change (remove' j m) with (rem' j m).
@@ -422,7 +422,7 @@ Module PTree <: TREE.
   Theorem grspec:
     forall (A: Type) (i j: elt) (m: t A),
     get i (remove j m) = if elt_eq i j then None else get i m.
-  Proof.
+  Proof using.
     intros. destruct (elt_eq i j). subst j. apply grs. apply gro; auto.
   Qed.
 
@@ -468,7 +468,7 @@ Module PTree <: TREE.
   Lemma unroll_tree_case: forall l o r,
     not_trivially_empty l o r ->
     tree_case (Node l o r) = node l o r.
-  Proof.
+  Proof using.
     destruct l, o, r; simpl; intros; auto. contradiction.
   Qed.
 
@@ -502,7 +502,7 @@ Module PTree <: TREE.
   Lemma unroll_tree_rec: forall l o r,
     not_trivially_empty l o r ->
     tree_rec (Node l o r) = node l (tree_rec l) o r (tree_rec r).
-  Proof.
+  Proof using.
     destruct l, o, r; simpl; intros; auto. contradiction.
   Qed.
 
@@ -521,7 +521,7 @@ Module PTree <: TREE.
                          (lrec: C) (rrec: C), C).
 
   Fixpoint tree_rec2' (m1: tree' A) (m2: tree' B) : C.
-  Proof.
+  Proof using base base1 base2 nodes.
     destruct m1 as [ r1 | x1 | x1 r1 | l1 | l1 r1 | l1 x1 | l1 x1 r1 ];
     destruct m2 as [ r2 | x2 | x2 r2 | l2 | l2 r2 | l2 x2 | l2 x2 r2 ];
     (apply nodes;
@@ -548,7 +548,7 @@ Module PTree <: TREE.
     forall l1 o1 r1,
     not_trivially_empty l1 o1 r1 ->
     tree_rec2 (Node l1 o1 r1) Empty = base2 (Node l1 o1 r1).
-  Proof.
+  Proof using.
     intros. destruct l1, o1, r1; try contradiction; reflexivity.
   Qed.
 
@@ -556,7 +556,7 @@ Module PTree <: TREE.
     forall l2 o2 r2,
     not_trivially_empty l2 o2 r2 ->
     tree_rec2 Empty (Node l2 o2 r2) = base1 (Node l2 o2 r2).
-  Proof.
+  Proof using.
     intros. destruct l2, o2, r2; try contradiction; reflexivity.
   Qed.
 
@@ -565,7 +565,7 @@ Module PTree <: TREE.
     not_trivially_empty l1 o1 r1 -> not_trivially_empty l2 o2 r2 ->
     tree_rec2 (Node l1 o1 r1) (Node l2 o2 r2) =
     nodes l1 o1 r1 l2 o2 r2 (tree_rec2 l1 l2) (tree_rec2 r1 r2).
-  Proof.
+  Proof using.
     intros.
     destruct l1, o1, r1; try contradiction; destruct l2, o2, r2; try contradiction; reflexivity.
   Qed.
@@ -604,7 +604,7 @@ Module PTree <: TREE.
 
   Lemma tree'_not_empty:
     forall {A} (m: tree' A), exists i, get' i m <> None.
-  Proof.
+  Proof using.
    induction m; simpl; try destruct IHm as [p H].
    - exists (xI p); auto.
    - exists xH; simpl; congruence.
@@ -618,7 +618,7 @@ Module PTree <: TREE.
   Corollary extensionality_empty:
     forall {A} (m: tree A),
     (forall i, get i m = None) -> m = Empty.
-  Proof.
+  Proof using.
     intros. destruct m as [ | m]; auto. destruct (tree'_not_empty m) as [i GET].
     elim GET. apply H.
   Qed.
@@ -626,7 +626,7 @@ Module PTree <: TREE.
   Theorem extensionality:
     forall (A: Type) (m1 m2: tree A),
     (forall i, get i m1 = get i m2) -> m1 = m2.
-  Proof.
+  Proof using.
     intros A. induction m1 using tree_ind; induction m2 using tree_ind; intros.
   - auto.
   - symmetry. apply extensionality_empty. intros; symmetry; apply H0.
@@ -642,7 +642,7 @@ Module PTree <: TREE.
   Theorem gsident:
     forall {A} (i: positive) (m: t A) (v: A),
     get i m = Some v -> set i v m = m.
-  Proof.
+  Proof using.
     intros; apply extensionality; intros j.
     rewrite gsspec. destruct (peq j i); congruence.
   Qed.
@@ -650,7 +650,7 @@ Module PTree <: TREE.
   Theorem set2:
     forall {A} (i: elt) (m: t A) (v1 v2: A),
     set i v2 (set i v1 m) = set i v2 m.
-  Proof.
+  Proof using.
     intros; apply extensionality; intros j.
     rewrite ! gsspec. destruct (peq j i); auto.
   Qed.
@@ -691,7 +691,7 @@ Module PTree <: TREE.
     Lemma beq_correct_bool:
       forall m1 m2,
       beq m1 m2 = true <-> (forall x, beq_optA (get x m1) (get x m2) = true).
-    Proof.
+    Proof using.
       Local Transparent Node.
       assert (beq_NN: forall l1 o1 r1 l2 o2 r2,
               not_trivially_empty l1 o1 r1 ->
@@ -732,7 +732,7 @@ Module PTree <: TREE.
        | Some y1, Some y2 => beqA y1 y2 = true
        | _, _ => False
        end).
-    Proof.
+    Proof using.
       intros. rewrite beq_correct_bool. unfold beq_optA. split; intros.
     - specialize (H x). destruct (get x m1), (get x m2); intuition congruence.
     - specialize (H x). destruct (get x m1), (get x m2); intuition auto.
@@ -754,7 +754,7 @@ Module PTree <: TREE.
 
   Lemma prev_append_prev i j:
     prev (prev_append i j) = prev_append j i.
-  Proof.
+  Proof using.
     revert j. unfold prev.
     induction i as [i IH|i IH|]. 3: reflexivity.
     intros j. simpl. rewrite IH. reflexivity.
@@ -767,7 +767,7 @@ Module PTree <: TREE.
 
   Lemma prev_append_inj i j j' :
     prev_append i j = prev_append i j' -> j = j'.
-  Proof.
+  Proof using.
     revert j j'.
     induction i as [i Hi|i Hi|]; intros j j' H; auto;
     specialize (Hi _ _ H); congruence.
@@ -794,14 +794,14 @@ Module PTree <: TREE.
   Lemma gmap':
     forall {A B} (f: positive -> A -> B) (i j : positive) (m: tree' A),
     get' i (map' f m j) = option_map (f (prev (prev_append i j))) (get' i m).
-  Proof.
+  Proof using.
     induction i; intros; destruct m; simpl; auto.
   Qed.
 
   Theorem gmap:
     forall {A B} (f: positive -> A -> B) (i: positive) (m: t A),
     get i (map f m) = option_map (f i) (get i m).
-  Proof.
+  Proof using.
     intros; destruct m as [|m]; simpl. auto. rewrite gmap'. repeat f_equal. exact (prev_involutive i).
   Qed.
 
@@ -825,7 +825,7 @@ Module PTree <: TREE.
   Theorem gmap1:
     forall {A B} (f: A -> B) (i: elt) (m: t A),
     get i (map1 f m) = option_map f (get i m).
-  Proof.
+  Proof using.
     intros. destruct m as [|m]; simpl. auto.
     revert i; induction m; destruct i; simpl; auto.
   Qed.
@@ -844,7 +844,7 @@ Module PTree <: TREE.
   Lemma gmap_filter1:
     forall {A B} (f: A -> option B) (m: tree A) (i: positive),
     get i (map_filter1 f m) = match get i m with None => None | Some a => f a end.
-  Proof.
+  Proof using.
     change @map_filter1 with @map_filter1_nonopt. unfold map_filter1_nonopt.
     intros until f. induction m using tree_ind; intros.
   - auto.
@@ -858,7 +858,7 @@ Module PTree <: TREE.
     forall {A} (pred: A -> bool) (i: elt) (m: t A),
     get i (filter1 pred m) =
     match get i m with None => None | Some x => if pred x then Some x else None end.
-  Proof.
+  Proof using.
     intros. apply gmap_filter1.
   Qed. 
 
@@ -886,19 +886,19 @@ Module PTree <: TREE.
     Eval cbv [combine_nonopt tree_rec2 tree_rec2'] in combine_nonopt.
 
   Lemma gcombine_l: forall m i, get i (combine_l m) = f (get i m) None.
-  Proof.
+  Proof using f_none_none.
     intros; unfold combine_l; rewrite gmap_filter1. destruct (get i m); auto.
   Qed.
 
   Lemma gcombine_r: forall m i, get i (combine_r m) = f None (get i m).
-  Proof.
+  Proof using f_none_none.
     intros; unfold combine_r; rewrite gmap_filter1. destruct (get i m); auto.
   Qed.
 
   Theorem gcombine:
       forall (m1: t A) (m2: t B) (i: positive),
       get i (combine m1 m2) = f (get i m1) (get i m2).
-  Proof.
+  Proof using f_none_none.
     change combine with combine_nonopt.
     induction m1 using tree_ind; induction m2 using tree_ind; intros.
   - auto.
@@ -916,7 +916,7 @@ Module PTree <: TREE.
     (forall (i j: option A), f i j = g j i) ->
     forall (m1 m2: t A),
     combine f m1 m2 = combine g m2 m1.
-  Proof.
+  Proof using.
     intros. apply extensionality; intros i. rewrite ! gcombine by auto. auto.
   Qed.
 
@@ -943,7 +943,7 @@ Module PTree <: TREE.
   Lemma xelements'_append:
     forall A (m: tree' A) i k1 k2,
     xelements' m i (k1 ++ k2) = xelements' m i k1 ++ k2.
-  Proof.
+  Proof using.
     induction m; intros; simpl; auto.
   - f_equal; auto.
   - rewrite IHm2, IHm1. auto.
@@ -957,7 +957,7 @@ Module PTree <: TREE.
        xelements l (xO i)
     ++ match o with None => nil | Some v => (prev i, v) :: nil end
     ++ xelements r (xI i).
-  Proof.
+  Proof using.
     Local Transparent Node.
     intros; destruct l, o, r; simpl; rewrite <- ? xelements'_append; auto.
   Qed.
@@ -965,7 +965,7 @@ Module PTree <: TREE.
   Lemma xelements_correct:
     forall A (m: tree A) i j v,
     get i m = Some v -> In (prev (prev_append i j), v) (xelements m j).
-  Proof.
+  Proof using.
     intros A. induction m using tree_ind; intros.
   - discriminate.
   - rewrite xelements_Node, ! in_app. rewrite gNode in H0. destruct i.
@@ -977,7 +977,7 @@ Module PTree <: TREE.
   Theorem elements_correct:
     forall A (m: t A) (i: positive) (v: A),
     get i m = Some v -> In (i, v) (elements m).
-  Proof.
+  Proof using.
     intros A m i v H.
     generalize (xelements_correct m i xH H). rewrite prev_append_prev. auto.
   Qed.
@@ -986,7 +986,7 @@ Module PTree <: TREE.
     forall A (m: tree A) (i k: positive) (v: A) ,
     In (k, v) (xelements m i) ->
     exists j, k = prev (prev_append j i) /\ get j m = Some v.
-  Proof.
+  Proof using.
     intros A. induction m using tree_ind; intros.
   - elim H.
   - rewrite xelements_Node, ! in_app in H0. destruct H0 as [P | [P | P]].
@@ -998,7 +998,7 @@ Module PTree <: TREE.
   Theorem elements_complete:
     forall A (m: t A) (i: positive) (v: A),
     In (i, v) (elements m) -> get i m = Some v.
-  Proof.
+  Proof using.
     intros A m i v H. exploit in_xelements; eauto. intros (j & P & Q).
     rewrite prev_append_prev in P. change i with (prev_append 1 i) in P.
     exploit prev_append_inj; eauto. intros; congruence.
@@ -1012,7 +1012,7 @@ Module PTree <: TREE.
        xkeys m1 (xO i)
     ++ match o with None => nil | Some v => prev i :: nil end
     ++ xkeys m2 (xI i).
-  Proof.
+  Proof using.
     intros. unfold xkeys. rewrite xelements_Node, ! map_app. destruct o; auto.
   Qed.
 
@@ -1020,7 +1020,7 @@ Module PTree <: TREE.
     forall (A: Type) (m: t A) (i k: positive),
     In k (xkeys m i) ->
     (exists j, k = prev (prev_append j i)).
-  Proof.
+  Proof using.
     unfold xkeys; intros.
     apply (list_in_map_inv) in H. destruct H as ((j, v) & -> & H).
     exploit in_xelements; eauto. intros (k & P & Q). exists k; auto.
@@ -1029,7 +1029,7 @@ Module PTree <: TREE.
   Lemma xelements_keys_norepet:
     forall (A: Type) (m: t A) (i: positive),
     list_norepet (xkeys m i).
-  Proof.
+  Proof using.
     intros A; induction m using tree_ind; intros.
   - constructor.
   - assert (NOTIN1: ~ In (prev i) (xkeys l (xO i))).
@@ -1051,13 +1051,13 @@ Module PTree <: TREE.
   Theorem elements_keys_norepet:
     forall A (m: t A),
     list_norepet (List.map (@fst elt A) (elements m)).
-  Proof.
+  Proof using.
     intros. apply (xelements_keys_norepet m xH).
   Qed.
 
   Remark xelements_empty:
     forall A (m: t A) i, (forall i, get i m = None) -> xelements m i = nil.
-  Proof.
+  Proof using.
     intros. replace m with (@Empty A). auto.
     apply extensionality; intros. symmetry; auto.
   Qed.
@@ -1068,7 +1068,7 @@ Module PTree <: TREE.
     list_forall2
       (fun i_x i_y => fst i_x = fst i_y /\ R (snd i_x) (snd i_y))
       (elements m) (elements n).
-  Proof.
+  Proof using.
     intros until n.
     change (elements m) with (xelements m xH). change (elements n) with (xelements n xH).
     generalize 1%positive. revert m n.
@@ -1090,7 +1090,7 @@ Module PTree <: TREE.
     list_forall2
       (fun i_x i_y => fst i_x = fst i_y /\ R (snd i_x) (snd i_y))
       (elements m) (elements n).
-  Proof.
+  Proof using.
     intros. apply elements_canonical_order'.
     intros. destruct (get i m) as [x|] eqn:GM.
     exploit H; eauto. intros (y & P & Q). rewrite P; constructor; auto.
@@ -1103,7 +1103,7 @@ Module PTree <: TREE.
     forall (A: Type) (m n: t A),
     (forall i, get i m = get i n) ->
     elements m = elements n.
-  Proof.
+  Proof using.
     intros. replace n with m; auto. apply extensionality; auto.
   Qed.
 
@@ -1113,7 +1113,7 @@ Module PTree <: TREE.
     exists l1 l2,
     xelements m j = l1 ++ (prev (prev_append i j), v) :: l2
     /\ xelements (remove i m) j = l1 ++ l2.
-  Proof.
+  Proof using.
     intros A; induction m using tree_ind; intros.
   - discriminate.
   - assert (REMOVE: remove i (Node l o r) =
@@ -1148,7 +1148,7 @@ Module PTree <: TREE.
     forall A i v (m: t A),
     get i m = Some v ->
     exists l1 l2, elements m = l1 ++ (i,v) :: l2 /\ elements (remove i m) = l1 ++ l2.
-  Proof.
+  Proof using.
     intros. exploit xelements_remove. eauto. instantiate (1 := xH).
     rewrite prev_append_prev. auto.
   Qed.
@@ -1174,7 +1174,7 @@ Module PTree <: TREE.
     forall A B (f: B -> positive -> A -> B) m i v l,
     List.fold_left (fun a p => f a (fst p) (snd p)) l (fold' f i m v) =
     List.fold_left (fun a p => f a (fst p) (snd p)) (xelements' m i l) v.
-  Proof.
+  Proof using.
     induction m; intros; simpl; auto.
     rewrite <- IHm1, <- IHm2; auto.
     rewrite <- IHm; auto.
@@ -1185,7 +1185,7 @@ Module PTree <: TREE.
     forall A B (f: B -> positive -> A -> B) (v: B) (m: t A),
     fold f m v =
     List.fold_left (fun a p => f a (fst p) (snd p)) (elements m) v.
-  Proof.
+  Proof using.
     intros. unfold fold, elements. destruct m; auto. rewrite <- fold'_xelements'. auto.
   Qed.
 
@@ -1208,7 +1208,7 @@ Module PTree <: TREE.
     forall A B (f: B -> A -> B) m i v l,
     List.fold_left (fun a p => f a (snd p)) l (fold1' f m v) =
     List.fold_left (fun a p => f a (snd p)) (xelements' m i l) v.
-  Proof.
+  Proof using.
     induction m; simpl; intros; auto.
     rewrite <- IHm1. rewrite <- IHm2. auto.
     rewrite <- IHm. auto. 
@@ -1219,7 +1219,7 @@ Module PTree <: TREE.
     forall A B (f: B -> A -> B) (v: B) (m: t A),
     fold1 f m v =
     List.fold_left (fun a p => f a (snd p)) (elements m) v.
-  Proof.
+  Proof using.
     intros. destruct m as [|m]. reflexivity.
     apply fold1'_xelements' with (l := @nil (positive * A)).
   Qed.
@@ -1253,27 +1253,27 @@ Module PMap <: MAP.
 
   Theorem gi:
     forall (A: Type) (i: positive) (x: A), get i (init x) = x.
-  Proof.
+  Proof using.
     intros. reflexivity.
   Qed.
 
   Theorem gss:
     forall (A: Type) (i: positive) (x: A) (m: t A), get i (set i x m) = x.
-  Proof.
+  Proof using.
     intros. unfold get. unfold set. simpl. rewrite PTree.gss. auto.
   Qed.
 
   Theorem gso:
     forall (A: Type) (i j: positive) (x: A) (m: t A),
     i <> j -> get i (set j x m) = get i m.
-  Proof.
+  Proof using.
     intros. unfold get. unfold set. simpl. rewrite PTree.gso; auto.
   Qed.
 
   Theorem gsspec:
     forall (A: Type) (i j: positive) (x: A) (m: t A),
     get i (set j x m) = if peq i j then x else get i m.
-  Proof.
+  Proof using.
     intros. destruct (peq i j).
      rewrite e. apply gss. auto.
      apply gso. auto.
@@ -1282,7 +1282,7 @@ Module PMap <: MAP.
   Theorem gsident:
     forall (A: Type) (i j: positive) (m: t A),
     get j (set i (get i m) m) = get j m.
-  Proof.
+  Proof using.
     intros. destruct (peq i j).
      rewrite e. rewrite gss. auto.
      rewrite gso; auto.
@@ -1294,7 +1294,7 @@ Module PMap <: MAP.
   Theorem gmap:
     forall (A B: Type) (f: A -> B) (i: positive) (m: t A),
     get i (map f m) = f(get i m).
-  Proof.
+  Proof using.
     intros. unfold map. unfold get. simpl. rewrite PTree.gmap1.
     unfold option_map. destruct (PTree.get i (snd m)); auto.
   Qed.
@@ -1302,7 +1302,7 @@ Module PMap <: MAP.
   Theorem set2:
     forall (A: Type) (i: elt) (x y: A) (m: t A),
     set i y (set i x m) = set i y m.
-  Proof.
+  Proof using.
     intros. unfold set. simpl. decEq. apply PTree.set2.
   Qed.
 
@@ -1329,20 +1329,20 @@ Module IMap(X: INDEXED_TYPE).
 
   Lemma gi:
     forall (A: Type) (x: A) (i: X.t), get i (init x) = x.
-  Proof.
+  Proof using.
     intros. unfold get, init. apply PMap.gi.
   Qed.
 
   Lemma gss:
     forall (A: Type) (i: X.t) (x: A) (m: t A), get i (set i x m) = x.
-  Proof.
+  Proof using.
     intros. unfold get, set. apply PMap.gss.
   Qed.
 
   Lemma gso:
     forall (A: Type) (i j: X.t) (x: A) (m: t A),
     i <> j -> get i (set j x m) = get i m.
-  Proof.
+  Proof using.
     intros. unfold get, set. apply PMap.gso.
     red. intro. apply H. apply X.index_inj; auto.
   Qed.
@@ -1350,7 +1350,7 @@ Module IMap(X: INDEXED_TYPE).
   Lemma gsspec:
     forall (A: Type) (i j: X.t) (x: A) (m: t A),
     get i (set j x m) = if X.eq i j then x else get i m.
-  Proof.
+  Proof using.
     intros. unfold get, set.
     rewrite PMap.gsspec.
     case (X.eq i j); intro.
@@ -1362,14 +1362,14 @@ Module IMap(X: INDEXED_TYPE).
   Lemma gmap:
     forall (A B: Type) (f: A -> B) (i: X.t) (m: t A),
     get i (map f m) = f(get i m).
-  Proof.
+  Proof using.
     intros. unfold map, get. apply PMap.gmap.
   Qed.
 
   Lemma set2:
     forall (A: Type) (i: elt) (x y: A) (m: t A),
     set i y (set i x m) = set i y m.
-  Proof.
+  Proof using.
     intros. unfold set. apply PMap.set2.
   Qed.
 
@@ -1384,7 +1384,7 @@ Module ZIndexed.
     | Zneg p => xI p
     end.
   Lemma index_inj: forall (x y: Z), index x = index y -> x = y.
-  Proof.
+  Proof using.
     unfold index; destruct x; destruct y; intros;
     try discriminate; try reflexivity.
     congruence.
@@ -1403,13 +1403,13 @@ Module NIndexed.
     | Npos p => xO p
     end.
   Lemma index_inj: forall (x y: N), index x = index y -> x = y.
-  Proof.
+  Proof using.
     unfold index; destruct x; destruct y; intros;
     try discriminate; try reflexivity.
     congruence.
   Qed.
   Lemma eq: forall (x y: N), {x = y} + {x <> y}.
-  Proof.
+  Proof using.
     decide equality. apply peq.
   Qed.
 End NIndexed.
@@ -1434,31 +1434,31 @@ Module EMap(X: EQUALITY_TYPE) <: MAP.
     fun (y: X.t) => if X.eq y x then v else m y.
   Lemma gi:
     forall (A: Type) (i: elt) (x: A), init x i = x.
-  Proof.
+  Proof using.
     intros. reflexivity.
   Qed.
   Lemma gss:
     forall (A: Type) (i: elt) (x: A) (m: t A), (set i x m) i = x.
-  Proof.
+  Proof using.
     intros. unfold set. case (X.eq i i); intro.
     reflexivity. tauto.
   Qed.
   Lemma gso:
     forall (A: Type) (i j: elt) (x: A) (m: t A),
     i <> j -> (set j x m) i = m i.
-  Proof.
+  Proof using.
     intros. unfold set. case (X.eq i j); intro.
     congruence. reflexivity.
   Qed.
   Lemma gsspec:
     forall (A: Type) (i j: elt) (x: A) (m: t A),
     get i (set j x m) = if elt_eq i j then x else get i m.
-  Proof.
+  Proof using.
     intros. unfold get, set, elt_eq. reflexivity.
   Qed.
   Lemma gsident:
     forall (A: Type) (i j: elt) (m: t A), get j (set i (get i m) m) = get j m.
-  Proof.
+  Proof using.
     intros. unfold get, set. case (X.eq j i); intro.
     congruence. reflexivity.
   Qed.
@@ -1467,7 +1467,7 @@ Module EMap(X: EQUALITY_TYPE) <: MAP.
   Lemma gmap:
     forall (A B: Type) (f: A -> B) (i: elt) (m: t A),
     get i (map f m) = f(get i m).
-  Proof.
+  Proof using.
     intros. unfold get, map. reflexivity.
   Qed.
 End EMap.
@@ -1487,41 +1487,41 @@ Module ITree(X: INDEXED_TYPE).
 
   Theorem gempty:
     forall (A: Type) (i: elt), get i (empty A) = None.
-  Proof.
+  Proof using.
     intros. apply PTree.gempty.
   Qed.
   Theorem gss:
     forall (A: Type) (i: elt) (x: A) (m: t A), get i (set i x m) = Some x.
-  Proof.
+  Proof using.
     intros. apply PTree.gss.
   Qed.
   Theorem gso:
     forall (A: Type) (i j: elt) (x: A) (m: t A),
     i <> j -> get i (set j x m) = get i m.
-  Proof.
+  Proof using.
     intros. apply PTree.gso. red; intros; elim H; apply X.index_inj; auto.
   Qed.
   Theorem gsspec:
     forall (A: Type) (i j: elt) (x: A) (m: t A),
     get i (set j x m) = if elt_eq i j then Some x else get i m.
-  Proof.
+  Proof using.
     intros. destruct (elt_eq i j). subst j; apply gss. apply gso; auto.
   Qed.
   Theorem grs:
     forall (A: Type) (i: elt) (m: t A), get i (remove i m) = None.
-  Proof.
+  Proof using.
     intros. apply PTree.grs.
   Qed.
   Theorem gro:
     forall (A: Type) (i j: elt) (m: t A),
     i <> j -> get i (remove j m) = get i m.
-  Proof.
+  Proof using.
     intros. apply PTree.gro. red; intros; elim H; apply X.index_inj; auto.
   Qed.
   Theorem grspec:
     forall (A: Type) (i j: elt) (m: t A),
     get i (remove j m) = if elt_eq i j then None else get i m.
-  Proof.
+  Proof using.
     intros. destruct (elt_eq i j). subst j; apply grs. apply gro; auto.
   Qed.
 
@@ -1535,7 +1535,7 @@ Module ITree(X: INDEXED_TYPE).
      | Some y1, Some y2 => eqA y1 y2 = true
      | _, _ => False
     end.
-  Proof.
+  Proof using.
     unfold beq, get. intros. rewrite PTree.beq_correct in H. apply H.
   Qed.
 
@@ -1545,7 +1545,7 @@ Module ITree(X: INDEXED_TYPE).
     f None None = None ->
     forall (m1: t A) (m2: t B) (i: elt),
     get i (combine f m1 m2) = f (get i m1) (get i m2).
-  Proof.
+  Proof using.
     intros. apply PTree.gcombine. auto.
   Qed.
 End ITree.
@@ -1585,7 +1585,7 @@ Let P' (l: list (T.elt * V)) (a: A) : Type :=
 
 Let H_base':
   P' nil init.
-Proof.
+Proof using.
   intros m EQV. apply H_base.
   intros. destruct (T.get k m) as [v|] eqn:G; auto.
   apply EQV in G. contradiction.
@@ -1597,7 +1597,7 @@ Let H_rec':
   T.get k m_final = Some v ->
   P' l a ->
   P' ((k, v) :: l) (f a k v).
-Proof.
+Proof using.
   unfold P'; intros k v l a NOTIN FINAL HR m EQV.
   set (m0 := T.remove k m).
   apply H_rec.
@@ -1615,7 +1615,7 @@ Lemma fold_ind_aux:
   (forall k v, In (k, v) l -> T.get k m_final = Some v) ->
   list_norepet (List.map fst l) ->
   P' l (List.fold_right f' init l).
-Proof.
+Proof using H_rec' H_rec H_base' H_base.
   induction l as [ | [k v] l ]; simpl; intros FINAL NOREPET.
 - apply H_base'.
 - apply H_rec'.
@@ -1626,7 +1626,7 @@ Defined.
 
 Theorem fold_ind:
   P m_final (T.fold f m_final init).
-Proof.
+Proof using H_rec' H_rec H_base' H_base.
   intros.
   set (l' := List.rev (T.elements m_final)).
   assert (P' l' (List.fold_right f' init l')).
@@ -1663,7 +1663,7 @@ Hypothesis H_rec:
 
 Theorem fold_rec:
   P m_final (T.fold f m_final init).
-Proof.
+Proof using P_compat H_rec H_base.
   apply fold_ind. 
 - intros. apply P_compat with (T.empty V); auto.
   + intros. rewrite T.gempty. auto.
@@ -1684,7 +1684,7 @@ Definition cardinal (x: T.t V) : nat := List.length (T.elements x).
 
 Theorem cardinal_remove:
   forall x m y, T.get x m = Some y -> (cardinal (T.remove x m) < cardinal m)%nat.
-Proof.
+Proof using.
   unfold cardinal; intros.
   exploit T.elements_remove; eauto. intros (l1 & l2 & P & Q).
   rewrite P, Q. rewrite ! app_length. simpl. lia.
@@ -1692,7 +1692,7 @@ Qed.
 
 Theorem cardinal_set:
   forall x m y, T.get x m = None -> (cardinal m < cardinal (T.set x y m))%nat.
-Proof.
+Proof using.
   intros. set (m' := T.set x y m).
   replace (cardinal m) with (cardinal (T.remove x m')).
   apply cardinal_remove with y. unfold m'; apply T.gss.
@@ -1715,7 +1715,7 @@ Definition for_all (m: T.t A) (f: T.elt -> A -> bool) : bool :=
 Lemma for_all_correct:
   forall m f,
   for_all m f = true <-> (forall x a, T.get x m = Some a -> f x a = true).
-Proof.
+Proof using.
   intros m0 f.
   unfold for_all. apply fold_rec; intros.
 - (* Extensionality *)
@@ -1738,7 +1738,7 @@ Definition exists_ (m: T.t A) (f: T.elt -> A -> bool) : bool :=
 Lemma exists_correct:
   forall m f,
   exists_ m f = true <-> (exists x a, T.get x m = Some a /\ f x a = true).
-Proof.
+Proof using.
   intros m0 f.
   unfold exists_. apply fold_rec; intros.
 - (* Extensionality *)
@@ -1760,7 +1760,7 @@ Qed.
 Remark exists_for_all:
   forall m f,
   exists_ m f = negb (for_all m (fun x a => negb (f x a))).
-Proof.
+Proof using.
   intros. unfold exists_, for_all. rewrite ! T.fold_spec.
   change false with (negb true). generalize (T.elements m) true.
   induction l; simpl; intros.
@@ -1772,7 +1772,7 @@ Qed.
 Remark for_all_exists:
   forall m f,
   for_all m f = negb (exists_ m (fun x a => negb (f x a))).
-Proof.
+Proof using.
   intros. unfold exists_, for_all. rewrite ! T.fold_spec.
   change true with (negb false). generalize (T.elements m) false.
   induction l; simpl; intros.
@@ -1784,7 +1784,7 @@ Qed.
 Lemma for_all_false:
   forall m f,
   for_all m f = false <-> (exists x a, T.get x m = Some a /\ f x a = false).
-Proof.
+Proof using.
   intros. rewrite for_all_exists.
   rewrite negb_false_iff. rewrite exists_correct.
   split; intros (x & a & P & Q); exists x; exists a; split; auto.
@@ -1795,7 +1795,7 @@ Qed.
 Lemma exists_false:
   forall m f,
   exists_ m f = false <-> (forall x a, T.get x m = Some a -> f x a = false).
-Proof.
+Proof using.
   intros. rewrite exists_for_all.
   rewrite negb_false_iff. rewrite for_all_correct.
   split; intros. apply H in H0. rewrite negb_true_iff in H0. auto. rewrite H; auto.
@@ -1818,7 +1818,7 @@ Theorem beq_false:
             | Some a1, Some a2 => beqA a1 a2 = false
             | _, _ => True
             end.
-Proof.
+Proof using.
   intros; split; intros.
 - (* beq = false -> existence *)
   set (p1 := fun x a1 => match T.get x m2 with None => false | Some a2 => beqA a1 a2 end).
@@ -1859,17 +1859,17 @@ Definition Equal (m1 m2: T.t A) : Prop :=
             end.
 
 Lemma Equal_refl: forall m, Equal m m.
-Proof.
+Proof using.
   intros; red; intros. destruct (T.get x m); auto. reflexivity.
 Qed.
 
 Lemma Equal_sym: forall m1 m2, Equal m1 m2 -> Equal m2 m1.
-Proof.
+Proof using.
   intros; red; intros. generalize (H x). destruct (T.get x m1); destruct (T.get x m2); auto. intros; symmetry; auto.
 Qed.
 
 Lemma Equal_trans: forall m1 m2 m3, Equal m1 m2 -> Equal m2 m3 -> Equal m1 m3.
-Proof.
+Proof using.
   intros; red; intros. generalize (H x) (H0 x).
   destruct (T.get x m1); destruct (T.get x m2); try tauto;
   destruct (T.get x m3); try tauto.
@@ -1922,7 +1922,7 @@ Definition of_list (l: list (T.elt * A)) : T.t A :=
 
 Lemma in_of_list:
   forall l k v, T.get k (of_list l) = Some v -> In (k, v) l.
-Proof.
+Proof using.
   assert (REC: forall k v l m,
            T.get k (fold_left f l m) = Some v -> In (k, v) l \/ T.get k m = Some v).
   { induction l as [ | [k1 v1] l]; simpl; intros.
@@ -1936,7 +1936,7 @@ Qed.
 
 Lemma of_list_dom:
   forall l k, In k (map fst l) -> exists v, T.get k (of_list l) = Some v.
-Proof.
+Proof using.
   assert (REC: forall k l m,
             In k (map fst l) \/ (exists v, T.get k m = Some v) ->
             exists v, T.get k (fold_left f l m) = Some v).
@@ -1951,7 +1951,7 @@ Qed.
 
 Remark of_list_unchanged:
   forall k l m, ~In k (map fst l) -> T.get k (List.fold_left f l m) = T.get k m.
-Proof.
+Proof using.
   induction l as [ | [k1 v1] l]; simpl; intros.
 - auto.
 - rewrite IHl by tauto. unfold f; apply T.gso; intuition auto.
@@ -1960,14 +1960,14 @@ Qed.
 Lemma of_list_unique:
   forall k v l1 l2,
   ~In k (map fst l2) -> T.get k (of_list (l1 ++ (k, v) :: l2)) = Some v.
-Proof.
+Proof using.
   intros. unfold of_list. rewrite fold_left_app. simpl.
   rewrite of_list_unchanged by auto. unfold f; apply T.gss.
 Qed.
 
 Lemma of_list_norepet:
   forall l k v, list_norepet (map fst l) -> In (k, v) l -> T.get k (of_list l) = Some v.
-Proof.
+Proof using.
   assert (REC: forall k v l m,
             list_norepet (map fst l) ->
             In (k, v) l ->
@@ -1983,7 +1983,7 @@ Qed.
 
 Lemma of_list_elements:
   forall m k, T.get k (of_list (T.elements m)) = T.get k m.
-Proof.
+Proof using.
   intros. destruct (T.get k m) as [v|] eqn:M.
 - apply of_list_norepet. apply T.elements_keys_norepet. apply T.elements_correct; auto.
 - destruct (T.get k (of_list (T.elements m))) as [v|] eqn:M'; auto.
@@ -1996,7 +1996,7 @@ Lemma of_list_related:
   forall (A B: Type) (R: A -> B -> Prop) k l1 l2,
   list_forall2 (fun ka kb => fst ka = fst kb /\ R (snd ka) (snd kb)) l1 l2 ->
   option_rel R (T.get k (of_list l1)) (T.get k (of_list l2)).
-Proof.
+Proof using.
   intros until k. unfold of_list.
   set (R' := fun ka kb => fst ka = fst kb /\ R (snd ka) (snd kb)).
   set (fa := fun (m : T.t A) (k_v : T.elt * A) => T.set (fst k_v) (snd k_v) m).

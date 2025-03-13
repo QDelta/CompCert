@@ -361,7 +361,7 @@ with tr_exprlist_invariant:
   forall le rl sl al tmps, tr_exprlist le rl sl al tmps ->
   forall le', (forall x, In x tmps -> le'!x = le!x) ->
   tr_exprlist le' rl sl al tmps.
-Proof.
+Proof using.
   induction 1; intros; econstructor; eauto.
     intros. apply H0. intros. transitivity (le'!id); auto.
     intros. apply H0. auto. intros. transitivity (le'!id); auto.
@@ -371,7 +371,7 @@ Qed.
 Lemma tr_rvalof_monotone:
   forall ty a sl b tmps, tr_rvalof ty a sl b tmps ->
   forall tmps', incl tmps tmps' -> tr_rvalof ty a sl b tmps'.
-Proof.
+Proof using.
   induction 1; intros; econstructor; unfold incl in *; eauto.
 Qed.
 
@@ -381,7 +381,7 @@ Lemma tr_expr_monotone:
 with tr_exprlist_monotone:
   forall le rl sl al tmps, tr_exprlist le rl sl al tmps ->
   forall tmps', incl tmps tmps' -> tr_exprlist le rl sl al tmps'.
-Proof.
+Proof using.
   specialize tr_rvalof_monotone. intros RVALOF.
   induction 1; intros; econstructor; unfold incl in *; eauto.
   induction 1; intros; econstructor; unfold incl in *; eauto.
@@ -506,7 +506,7 @@ Remark bind_inversion:
   bind f g z1 = Res y z3 I ->
   exists x, exists z2, exists I1, exists I2,
   f z1 = Res x z2 I1 /\ g x z2 = Res y z3 I2.
-Proof.
+Proof using.
   intros until I. unfold bind. destruct (f z1).
   congruence.
   caseEq (g a g'); intros; inv H0.
@@ -518,7 +518,7 @@ Remark bind2_inversion:
   bind2 f g z1 = Res y z3 I ->
   exists x1, exists x2, exists z2, exists I1, exists I2,
   f z1 = Res (x1,x2) z2 I1 /\ g x1 x2 z2 = Res y z3 I2.
-Proof.
+Proof using.
   unfold bind2. intros.
   exploit bind_inversion; eauto.
   intros [[x1 x2] [z2 [I1 [I2 [P Q]]]]]. simpl in Q.
@@ -588,7 +588,7 @@ Definition within (id: ident) (g1 g2: generator) : Prop :=
 Lemma gensym_within:
   forall ty g1 id g2 I,
   gensym ty g1 = Res id g2 I -> within id g1 g2.
-Proof.
+Proof using.
   intros. monadInv H. split. apply Ple_refl. apply Plt_succ.
 Qed.
 
@@ -598,7 +598,7 @@ Lemma within_widen:
   Ple (gen_next g1') (gen_next g1) ->
   Ple (gen_next g2) (gen_next g2') ->
   within id g1' g2'.
-Proof.
+Proof using.
   intros. destruct H. split.
   eapply Ple_trans; eauto.
   eapply Plt_Ple_trans; eauto.
@@ -609,7 +609,7 @@ Definition contained (l: list ident) (g1 g2: generator) : Prop :=
 
 Lemma contained_nil:
   forall g1 g2, contained nil g1 g2.
-Proof.
+Proof using.
   intros; red; intros; contradiction.
 Qed.
 
@@ -619,28 +619,28 @@ Lemma contained_widen:
   Ple (gen_next g1') (gen_next g1) ->
   Ple (gen_next g2) (gen_next g2') ->
   contained l g1' g2'.
-Proof.
+Proof using.
   intros; red; intros. eapply within_widen; eauto.
 Qed.
 
 Lemma contained_cons:
   forall id l g1 g2,
   within id g1 g2 -> contained l g1 g2 -> contained (id :: l) g1 g2.
-Proof.
+Proof using.
   intros; red; intros. simpl in H1; destruct H1. subst id0. auto. auto.
 Qed.
 
 Lemma contained_app:
   forall l1 l2 g1 g2,
   contained l1 g1 g2 -> contained l2 g1 g2 -> contained (l1 ++ l2) g1 g2.
-Proof.
+Proof using.
   intros; red; intros. destruct (in_app_or _ _ _ H1); auto.
 Qed.
 
 Lemma contained_disjoint:
   forall g1 l1 g2 l2 g3,
   contained l1 g1 g2 -> contained l2 g2 g3 -> list_disjoint l1 l2.
-Proof.
+Proof using.
   intros; red; intros. red; intro; subst y.
   exploit H; eauto. intros [A B]. exploit H0; eauto. intros [C D].
   elim (Plt_strict x). apply Plt_Ple_trans with (gen_next g2); auto.
@@ -649,7 +649,7 @@ Qed.
 Lemma contained_notin:
   forall g1 l g2 id g3,
   contained l g1 g2 -> within id g2 g3 -> ~In id l.
-Proof.
+Proof using.
   intros; red; intros. exploit H; eauto. intros [C D]. destruct H0 as [A B].
   elim (Plt_strict id). apply Plt_Ple_trans with (gen_next g2); auto.
 Qed.
@@ -672,19 +672,19 @@ Definition dest_below (dst: destination) (g: generator) : Prop :=
 Lemma dest_below_le:
   forall dst g1 g2,
   dest_below dst g1 -> Ple g1.(gen_next) g2.(gen_next) -> dest_below dst g2.
-Proof.
+Proof using.
   intros. destruct dst; simpl in *; eauto using Plt_Ple_trans.
 Qed.
 
 Remark dest_for_val_below: forall g, dest_below For_val g.
-Proof. intros; simpl; auto. Qed.
+Proof using. intros; simpl; auto. Qed.
 
 Remark dest_for_effect_below: forall g, dest_below For_effects g.
-Proof. intros; simpl; auto. Qed.
+Proof using. intros; simpl; auto. Qed.
 
 Lemma dest_for_set_base_below: forall tmp tycast ty g1 g2,
   within tmp g1 g2 -> dest_below (For_set (SDbase tycast ty tmp)) g2.
-Proof.
+Proof using.
   intros. destruct H. auto.
 Qed.
 
@@ -704,7 +704,7 @@ Lemma temp_for_sd_charact: forall ty tmp sd g1 g2 g3 I,
   temp_for_sd ty sd g2 = Res tmp g3 I ->
   Ple g1.(gen_next) g2.(gen_next) ->
   good_temp_for_sd ty tmp sd g1 g2 g3.
-Proof.
+Proof using.
   unfold temp_for_sd, good_temp_for_sd; intros. destruct type_eq.
 - inv H0. tauto.
 - eauto with gensym.
@@ -713,7 +713,7 @@ Qed.
 Lemma dest_for_set_cons_below: forall tycast ty tmp sd g1 g2 g3,
   good_temp_for_sd ty tmp sd g1 g2 g3 ->
   dest_below (For_set (SDcons tycast ty tmp sd)) g3.
-Proof.
+Proof using.
   intros until g3; intros (P & Q & R & S). simpl. destruct type_eq.
 - subst tmp. unfold Ple, Plt in *; lia.
 - destruct S; auto.
@@ -721,7 +721,7 @@ Qed.
 
 Lemma sd_temp_notin:
   forall sd g1 g2 l, dest_below (For_set sd) g1 -> contained l g1 g2 -> ~In (sd_temp sd) l.
-Proof.
+Proof using.
   intros. simpl in H. red; intros. exploit H0; eauto. intros [A B].
   elim (Plt_strict (sd_temp sd)). apply Plt_Ple_trans with (gen_next g1); auto.
 Qed.
@@ -734,7 +734,7 @@ Lemma temp_for_sd_disj: forall tmp1 tmp2 ty t sd g1 g2 g3 g4,
   contained tmp1 g1 g2 ->
   contained tmp2 g3 g4 ->
   list_disjoint tmp1 (t :: tmp2).
-Proof.
+Proof using.
   intros. destruct H as (P & Q & R & S).
   apply list_disjoint_cons_r; eauto with gensym.
   destruct type_eq.
@@ -745,7 +745,7 @@ Qed.
 Lemma temp_for_sd_in: forall tmp ty t sd g1 g2 g3,
   good_temp_for_sd ty t sd g1 g2 g3 ->
   In t (sd_temp sd :: used_temp_for_sd ty t sd ++ tmp).
-Proof.
+Proof using.
   intros. destruct H as (P & Q & R & S). unfold used_temp_for_sd. destruct type_eq.
 - subst t. auto with coqlib.
 - simpl; auto.
@@ -754,7 +754,7 @@ Qed.
 Lemma temp_for_sd_contained: forall ty t sd g1 g2 g3,
   good_temp_for_sd ty t sd g1 g2 g3 ->
   contained (used_temp_for_sd ty t sd) g2 g3.
-Proof.
+Proof using.
   intros. destruct H as (P & Q & R & S). unfold used_temp_for_sd.
   destruct type_eq; eauto with gensym.
 Qed.
@@ -767,14 +767,14 @@ Hint Resolve temp_for_sd_charact dest_for_set_cons_below
 Lemma finish_meets_spec_1:
   forall dst sl a sl' a',
   finish dst sl a = (sl', a') -> sl' = sl ++ final dst a.
-Proof.
+Proof using.
   intros. destruct dst; simpl in *; inv H; rewrite ? app_nil_r; auto.
 Qed.
 
 Lemma finish_meets_spec_2:
   forall dst sl a sl' a',
   finish dst sl a = (sl', a') -> a' = a.
-Proof.
+Proof using.
   intros. destruct dst; simpl in *; inv H; auto.
 Qed.
 
@@ -794,7 +794,7 @@ Definition add_dest (dst: destination) (tmps: list ident) :=
 
 Lemma add_dest_incl:
   forall dst tmps, incl tmps (add_dest dst tmps).
-Proof.
+Proof using.
   intros. destruct dst; simpl; eauto with coqlib.
 Qed.
 
@@ -802,7 +802,7 @@ Lemma tr_expr_add_dest:
   forall le dst r sl a tmps,
   tr_expr le dst r sl a tmps ->
   tr_expr le dst r sl a (add_dest dst tmps).
-Proof.
+Proof using.
   intros. apply tr_expr_monotone with tmps; auto. apply add_dest_incl.
 Qed.
 
@@ -810,7 +810,7 @@ Qed.
 Lemma is_bitfield_access_meets_spec: forall l g bf g' I,
   is_bitfield_access ce l g = Res bf g' I ->
   tr_is_bitfield_access l bf.
-Proof.
+Proof using.
   unfold is_bitfield_access; intros; red. destruct l; try (monadInv H; auto).
   assert (AUX: forall fn id,
                is_bitfield_access_aux ce fn id i g = Res bf g' I ->
@@ -827,7 +827,7 @@ Lemma transl_valof_meets_spec:
   forall ty a g sl b g' I,
   transl_valof ce ty a g = Res (sl, b) g' I ->
   exists tmps, tr_rvalof ty a sl b tmps /\ contained tmps g g'.
-Proof.
+Proof using.
   unfold transl_valof; intros.
   destruct (type_is_volatile ty) eqn:?; monadInv H.
   exists (x :: nil); split; eauto with gensym.
@@ -848,7 +848,7 @@ Lemma transl_meets_spec:
    (forall rl g sl al g' I,
     transl_exprlist ce rl g = Res (sl, al) g' I ->
     exists tmps, (forall le, tr_exprlist le rl sl al tmps) /\ contained tmps g g').
-Proof.
+Proof using.
   apply expr_exprlist_ind; simpl add_dest; intros.
 - (* val *)
   simpl in H. destruct v; monadInv H; exists (@nil ident); split; auto with gensym.
@@ -1116,7 +1116,7 @@ Lemma transl_expr_meets_spec:
    transl_expr ce dst r g = Res (sl, a) g' I ->
    dest_below dst g ->
    exists tmps, forall ge e le m, tr_top ge e le m dst r sl a tmps.
-Proof.
+Proof using.
   intros. exploit (proj1 transl_meets_spec); eauto. intros [tmps [A B]].
   exists (add_dest dst tmps); intros. apply tr_top_base. auto.
 Qed.
@@ -1125,7 +1125,7 @@ Lemma transl_expression_meets_spec:
   forall r g s a g' I,
   transl_expression ce r g = Res (s, a) g' I ->
   tr_expression r s a.
-Proof.
+Proof using.
   intros. monadInv H. exploit transl_expr_meets_spec; eauto.
   intros [tmps A]. econstructor; eauto.
 Qed.
@@ -1134,7 +1134,7 @@ Lemma transl_expr_stmt_meets_spec:
   forall r g s g' I,
   transl_expr_stmt ce r g = Res s g' I ->
   tr_expr_stmt r s.
-Proof.
+Proof using.
   intros. monadInv H. exploit transl_expr_meets_spec; eauto.
   intros [tmps A]. econstructor; eauto.
 Qed.
@@ -1143,7 +1143,7 @@ Lemma transl_if_meets_spec:
   forall r s1 s2 g s g' I,
   transl_if ce r s1 s2 g = Res s g' I ->
   tr_if r s1 s2 s.
-Proof.
+Proof using.
   intros. monadInv H. exploit transl_expr_meets_spec; eauto.
   intros [tmps A]. econstructor; eauto.
 Qed.
@@ -1152,7 +1152,7 @@ Lemma transl_stmt_meets_spec:
   forall s g ts g' I, transl_stmt ce s g = Res ts g' I -> tr_stmt s ts
 with transl_lblstmt_meets_spec:
   forall s g ts g' I, transl_lblstmt ce s g = Res ts g' I -> tr_lblstmts s ts.
-Proof.
+Proof using.
   generalize transl_expression_meets_spec transl_expr_stmt_meets_spec transl_if_meets_spec; intros T1 T2 T3.
 Opaque transl_expression transl_expr_stmt.
   clear transl_stmt_meets_spec.
@@ -1184,7 +1184,7 @@ Lemma transl_function_spec:
   forall f tf,
   transl_function ce f = OK tf ->
   tr_function f tf.
-Proof.
+Proof using.
   unfold transl_function; intros.
   destruct (transl_stmt ce (Csyntax.fn_body f) (initial_generator tt)) eqn:T; inv H.
   constructor; auto. simpl. eapply transl_stmt_meets_spec; eauto.
@@ -1203,7 +1203,7 @@ Lemma transl_fundef_spec:
   forall p fd tfd,
   transl_fundef p.(prog_comp_env) fd = OK tfd ->
   tr_fundef p fd tfd.
-Proof.
+Proof using.
   unfold transl_fundef; intros.
   destruct fd; Errors.monadInv H.
 + constructor. eapply transl_function_spec; eauto.

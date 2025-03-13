@@ -189,7 +189,7 @@ Lemma validate_wf:
   forall default t cases lo hi,
   validate default cases t lo hi = true ->
   wf_comptree t.
-Proof.
+Proof using.
   induction t; simpl; intros; InvBooleans.
 - constructor.
 - destruct (split_eq key cases) as [[act'|] others]; try discriminate; InvBooleans.
@@ -209,7 +209,7 @@ Lemma split_eq_prop:
    (if zeq v n
     then match optact with Some act => act | None => default end
     else switch_target v default cases').
-Proof.
+Proof using.
   induction cases; simpl; intros until cases'.
 - intros. inv H. simpl. destruct (zeq v n); auto.
 - destruct a as [key act].
@@ -229,7 +229,7 @@ Lemma split_lt_prop:
     (if zlt v n
      then switch_target v default lcases
      else switch_target v default rcases).
-Proof.
+Proof using.
   induction cases; intros until rcases; simpl.
 - intros. inv H. simpl. destruct (zlt v n); auto.
 - destruct a as [key act].
@@ -247,7 +247,7 @@ Lemma split_between_prop:
     (if zlt ((v - ofs) mod modulus) sz
      then ZMap.get v inside
      else switch_target v default outside).
-Proof.
+Proof using.
   induction cases; intros until outside; simpl; intros SEQ.
 - inv SEQ. rewrite ZMap.gi. simpl. destruct (zlt ((v - ofs) mod modulus) sz); auto.
 - destruct a as [key act].
@@ -268,7 +268,7 @@ Lemma validate_jumptable_correct_rec:
   validate_jumptable cases tbl base = true ->
   0 <= v < list_length_z tbl ->
   list_nth_z tbl v = Some(ZMap.get (base + v) cases).
-Proof.
+Proof using.
   induction tbl; simpl; intros.
 - unfold list_length_z in H0. simpl in H0. extlia.
 - InvBooleans. rewrite list_length_z_cons in H0. apply Nat.eqb_eq in H1.
@@ -286,7 +286,7 @@ Lemma validate_jumptable_correct:
   0 <= v < modulus ->
   sz <= list_length_z tbl ->
   list_nth_z tbl ((v - ofs) mod modulus) = Some(ZMap.get v cases).
-Proof.
+Proof using modulus_pos.
   intros.
   rewrite (validate_jumptable_correct_rec cases tbl ofs); auto.
 - f_equal. f_equal. rewrite Z.mod_small. lia.
@@ -304,7 +304,7 @@ Lemma validate_correct_rec:
   validate default cases t lo hi = true ->
   lo <= v <= hi ->
   comptree_match v t = Some (switch_target v default cases).
-Proof.
+Proof using modulus_pos.
   intros default v VRANGE. induction t; simpl; intros until hi.
 - (* base case *)
   destruct cases as [ | [key1 act1] cases1]; intros.
@@ -344,7 +344,7 @@ Theorem validate_switch_correct:
   forall default t cases,
   validate_switch default cases t = true ->
   wf_comptree t /\ table_tree_agree default cases t.
-Proof.
+Proof using modulus_pos.
   unfold validate_switch, table_tree_agree; split.
   eapply validate_wf; eauto.
   intros; eapply validate_correct_rec; eauto. lia.

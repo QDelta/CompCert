@@ -41,7 +41,7 @@ Inductive mreg: Type :=
   | F12: mreg | F13: mreg | F14: mreg | F15: mreg.
 
 Lemma mreg_eq: forall (r1 r2: mreg), {r1 = r2} + {r1 <> r2}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 Global Opaque mreg_eq.
 
 Definition all_mregs :=
@@ -52,7 +52,7 @@ Definition all_mregs :=
 
 Lemma all_mregs_complete:
   forall (r: mreg), In r all_mregs.
-Proof.
+Proof using.
   assert (forall r, proj_sumbool (In_dec mreg_eq r all_mregs) = true) by (destruct r; reflexivity).
   intros. specialize (H r). InvBooleans. auto.
 Qed.
@@ -90,7 +90,7 @@ Module IndexedMreg <: INDEXED_TYPE.
     end.
   Lemma index_inj:
     forall r1 r2, index r1 = index r2 -> r1 = r2.
-  Proof.
+  Proof using.
     decide_goal.
   Qed.
 End IndexedMreg.

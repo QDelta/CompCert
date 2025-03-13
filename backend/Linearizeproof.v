@@ -26,7 +26,7 @@ Definition match_prog (p: LTL.program) (tp: Linear.program) :=
 
 Lemma transf_program_match:
   forall p tp, transf_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program; eauto.
 Qed.
 
@@ -67,7 +67,7 @@ Lemma sig_preserved:
   forall f tf,
   transf_fundef f = OK tf ->
   Linear.funsig tf = LTL.funsig f.
-Proof.
+Proof using.
   unfold transf_fundef, transf_partial_fundef; intros.
   destruct f. monadInv H. monadInv EQ. reflexivity.
   inv H. reflexivity.
@@ -77,7 +77,7 @@ Lemma stacksize_preserved:
   forall f tf,
   transf_function f = OK tf ->
   Linear.fn_stacksize tf = LTL.fn_stacksize f.
-Proof.
+Proof using.
   intros. monadInv H. auto.
 Qed.
 
@@ -86,7 +86,7 @@ Lemma find_function_translated:
   LTL.find_function ge ros ls = Some f ->
   exists tf,
   find_function tge ros ls = Some tf /\ transf_fundef f = OK tf.
-Proof.
+Proof using TRANSF.
   unfold LTL.find_function; intros; destruct ros; simpl.
   apply functions_translated; auto.
   rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
@@ -100,7 +100,7 @@ Qed.
 
 Lemma reachable_entrypoint:
   forall f, (reachable f)!!(f.(fn_entrypoint)) = true.
-Proof.
+Proof using.
   intros. unfold reachable.
   caseEq (reachable_aux f).
   unfold reachable_aux; intros reach A.
@@ -117,7 +117,7 @@ Lemma reachable_successors:
   f.(LTL.fn_code)!pc = Some b -> In pc' (successors_block b) ->
   (reachable f)!!pc = true ->
   (reachable f)!!pc' = true.
-Proof.
+Proof using.
   intro f. unfold reachable.
   caseEq (reachable_aux f).
   unfold reachable_aux. intro reach; intros.
@@ -143,7 +143,7 @@ Lemma nodeset_of_list_correct:
   list_norepet l
   /\ (forall pc, Nodeset.In pc s' <-> Nodeset.In pc s \/ In pc l)
   /\ (forall pc, In pc l -> ~Nodeset.In pc s).
-Proof.
+Proof using.
   induction l; simpl; intros.
   inv H. split. constructor. split. intro; tauto. intros; tauto.
   generalize H; clear H; caseEq (Nodeset.mem a s); intros.
@@ -162,7 +162,7 @@ Lemma check_reachable_correct:
   f.(LTL.fn_code)!pc = Some i ->
   reach!!pc = true ->
   Nodeset.In pc s.
-Proof.
+Proof using.
   intros f reach s.
   assert (forall l ok,
     List.fold_left (fun a p => check_reachable_aux reach s a (fst p) (snd p)) l ok = true ->
@@ -192,7 +192,7 @@ Lemma enumerate_complete:
   f.(LTL.fn_code)!pc = Some i ->
   (reachable f)!!pc = true ->
   In pc enum.
-Proof.
+Proof using.
   intros until i. unfold enumerate.
   set (reach := reachable f).
   intros. monadInv H.
@@ -206,7 +206,7 @@ Lemma enumerate_norepet:
   forall f enum,
   enumerate f = OK enum ->
   list_norepet enum.
-Proof.
+Proof using.
   intros until enum. unfold enumerate.
   set (reach := reachable f).
   intros. monadInv H.
@@ -233,7 +233,7 @@ Lemma find_label_unique:
   unique_labels c2 ->
   find_label lbl c2 = Some c3 ->
   c1 = c3.
-Proof.
+Proof using.
   induction c2.
   simpl; intros; discriminate.
   intros c3 TAIL UNIQ. simpl.
@@ -254,7 +254,7 @@ Lemma starts_with_correct:
   find_label lbl c2 = Some c3 ->
   plus step tge (State s f sp c1 ls m)
              E0 (State s f sp c3 ls m).
-Proof.
+Proof using.
   induction c1.
   simpl; intros; discriminate.
   simpl starts_with. destruct a; try (intros; discriminate).
@@ -274,14 +274,14 @@ Qed.
 Lemma find_label_add_branch:
   forall lbl k s,
   find_label lbl (add_branch s k) = find_label lbl k.
-Proof.
+Proof using.
   intros. unfold add_branch. destruct (starts_with s k); auto.
 Qed.
 
 Lemma find_label_lin_block:
   forall lbl k b,
   find_label lbl (linearize_block b k) = find_label lbl k.
-Proof.
+Proof using.
   intros lbl k. generalize (find_label_add_branch lbl k); intro.
   induction b; simpl; auto. destruct a; simpl; auto.
   case (starts_with s1 k); simpl; auto.
@@ -294,7 +294,7 @@ Remark linearize_body_cons:
   | None => linearize_body f enum
   | Some b => Llabel pc :: linearize_block b (linearize_body f enum)
   end.
-Proof.
+Proof using.
   intros. unfold linearize_body. rewrite list_fold_right_eq.
   unfold linearize_node. destruct (LTL.fn_code f)!pc; auto.
 Qed.
@@ -304,7 +304,7 @@ Lemma find_label_lin_rec:
   In pc enum ->
   f.(LTL.fn_code)!pc = Some b ->
   exists k, find_label pc (linearize_body f enum) = Some (linearize_block b k).
-Proof.
+Proof using.
   induction enum; intros.
   elim H.
   rewrite linearize_body_cons.
@@ -325,7 +325,7 @@ Lemma find_label_lin:
   (reachable f)!!pc = true ->
   exists k,
   find_label pc (fn_code tf) = Some (linearize_block b k).
-Proof.
+Proof using.
   intros. monadInv H. simpl.
   rewrite find_label_add_branch. apply find_label_lin_rec.
   eapply enumerate_complete; eauto. auto.
@@ -338,7 +338,7 @@ Lemma find_label_lin_inv:
   (reachable f)!!pc = true ->
   find_label pc (fn_code tf) = Some k ->
   exists k', k = linearize_block b k'.
-Proof.
+Proof using.
   intros. exploit find_label_lin; eauto. intros [k' FIND].
   exists k'. congruence.
 Qed.
@@ -348,7 +348,7 @@ Qed.
 Lemma label_in_add_branch:
   forall lbl s k,
   In (Llabel lbl) (add_branch s k) -> In (Llabel lbl) k.
-Proof.
+Proof using.
   intros until k; unfold add_branch.
   destruct (starts_with s k); simpl; intuition congruence.
 Qed.
@@ -356,7 +356,7 @@ Qed.
 Lemma label_in_lin_block:
   forall lbl k b,
   In (Llabel lbl) (linearize_block b k) -> In (Llabel lbl) k.
-Proof.
+Proof using.
   induction b; simpl; intros. auto.
   destruct a; simpl in H; try (intuition congruence).
   apply label_in_add_branch with s; intuition congruence.
@@ -368,7 +368,7 @@ Qed.
 Lemma label_in_lin_rec:
   forall f lbl enum,
   In (Llabel lbl) (linearize_body f enum) -> In lbl enum.
-Proof.
+Proof using.
   induction enum.
   simpl; auto.
   rewrite linearize_body_cons. destruct (LTL.fn_code f)!a.
@@ -380,7 +380,7 @@ Qed.
 Lemma unique_labels_add_branch:
   forall lbl k,
   unique_labels k -> unique_labels (add_branch lbl k).
-Proof.
+Proof using.
   intros; unfold add_branch.
   destruct (starts_with lbl k); simpl; intuition.
 Qed.
@@ -388,7 +388,7 @@ Qed.
 Lemma unique_labels_lin_block:
   forall k b,
   unique_labels k -> unique_labels (linearize_block b k).
-Proof.
+Proof using.
   induction b; intros; simpl. auto.
   destruct a; auto; try (apply unique_labels_add_branch; auto).
   case (starts_with s1 k); simpl; apply unique_labels_add_branch; auto.
@@ -398,7 +398,7 @@ Lemma unique_labels_lin_rec:
   forall f enum,
   list_norepet enum ->
   unique_labels (linearize_body f enum).
-Proof.
+Proof using.
   induction enum.
   simpl; auto.
   rewrite linearize_body_cons.
@@ -414,7 +414,7 @@ Lemma unique_labels_transf_function:
   forall f tf,
   transf_function f = OK tf ->
   unique_labels (fn_code tf).
-Proof.
+Proof using.
   intros. monadInv H. simpl.
   apply unique_labels_add_branch.
   apply unique_labels_lin_rec. eapply enumerate_norepet; eauto.
@@ -425,7 +425,7 @@ Qed.
 Lemma is_tail_find_label:
   forall lbl c2 c1,
   find_label lbl c1 = Some c2 -> is_tail c2 c1.
-Proof.
+Proof using.
   induction c1; simpl.
   intros; discriminate.
   case (is_label lbl a). intro. injection H; intro. subst c2.
@@ -435,7 +435,7 @@ Qed.
 
 Lemma is_tail_add_branch:
   forall lbl c1 c2, is_tail (add_branch lbl c1) c2 -> is_tail c1 c2.
-Proof.
+Proof using.
   intros until c2. unfold add_branch. destruct (starts_with lbl c1).
   auto. eauto with coqlib.
 Qed.
@@ -443,7 +443,7 @@ Qed.
 Lemma is_tail_lin_block:
   forall b c1 c2,
   is_tail (linearize_block b c1) c2 -> is_tail c1 c2.
-Proof.
+Proof using.
   induction b; simpl; intros.
   auto.
   destruct a; eauto with coqlib.
@@ -458,7 +458,7 @@ Lemma add_branch_correct:
   find_label lbl tf.(fn_code) = Some c ->
   plus step tge (State s tf sp (add_branch lbl k) ls m)
              E0 (State s tf sp c ls m).
-Proof.
+Proof using.
   intros. unfold add_branch.
   caseEq (starts_with lbl k); intro SW.
   eapply starts_with_correct; eauto.
@@ -549,7 +549,7 @@ Definition measure (S: LTL.state) : nat :=
 
 Remark match_parent_locset:
   forall s ts, list_forall2 match_stackframes s ts -> parent_locset ts = LTL.parent_locset s.
-Proof.
+Proof using.
   induction 1; simpl. auto. inv H; auto.
 Qed.
 
@@ -558,7 +558,7 @@ Theorem transf_step_correct:
   forall s1' (MS: match_states s1 s1'),
   (exists s2', plus Linear.step tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
-Proof.
+Proof using TRANSF.
   induction 1; intros; try (inv MS).
 
   (* start of block, at an [add_branch] *)
@@ -707,7 +707,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, LTL.initial_state prog st1 ->
   exists st2, Linear.initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inversion H.
   exploit function_ptr_translated; eauto. intros [tf [A B]].
   exists (Callstate nil tf (Locmap.init Vundef) m0); split.
@@ -721,13 +721,13 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> LTL.final_state st1 r -> Linear.final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv H5. econstructor; eauto.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (LTL.semantics prog) (Linear.semantics tprog).
-Proof.
+Proof using TRANSF.
   eapply forward_simulation_star.
   apply senv_preserved.
   eexact transf_initial_states.

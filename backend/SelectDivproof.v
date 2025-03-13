@@ -37,7 +37,7 @@ Lemma Zdiv_mul_pos:
   forall n,
   0 <= n < two_p N ->
   Z.div n d = Z.div (m * n) (two_p (N + l)).
-Proof.
+Proof using d_pos N_pos.
   intros m l l_pos [LO HI] n RANGE.
   exploit (Z_div_mod_eq n d). auto.
   set (q := n / d).
@@ -90,7 +90,7 @@ Qed.
 
 Lemma Zdiv_unique_2:
   forall x y q, y > 0 -> 0 < y * q - x <= y -> Z.div x y = q - 1.
-Proof.
+Proof using.
   intros. apply Zdiv_unique with (x - (q - 1) * y). ring.
   replace ((q - 1) * y) with (y * q - y) by ring. lia.
 Qed.
@@ -102,7 +102,7 @@ Lemma Zdiv_mul_opp:
   forall n,
   0 < n <= two_p N ->
   Z.div n d = - Z.div (m * (-n)) (two_p (N + l)) - 1.
-Proof.
+Proof using d_pos N_pos.
   intros m l l_pos [LO HI] n RANGE.
   replace (m * (-n)) with (- (m * n)) by ring.
   exploit (Z_div_mod_eq n d). auto.
@@ -157,7 +157,7 @@ Lemma Zquot_mul:
   forall n,
   - two_p N <= n < two_p N ->
   Z.quot n d = Z.div (m * n) (two_p (N + l)) + (if zlt n 0 then 1 else 0).
-Proof.
+Proof using d_pos N_pos.
   intros. destruct (zlt n 0).
   exploit (Zdiv_mul_opp m l H H0 (-n)). lia.
   replace (- - n) with n by ring.
@@ -179,7 +179,7 @@ Lemma divs_mul_params_sound:
   forall n,
   Int.min_signed <= n <= Int.max_signed ->
   Z.quot n d = Z.div (m * n) (two_p (32 + p)) + (if zlt n 0 then 1 else 0).
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold divs_mul_params; intros d m' p'.
   destruct (find_div_mul_params Int.wordsize
                (Int.half_modulus - Int.half_modulus mod d - 1) d 32)
@@ -208,7 +208,7 @@ Lemma divu_mul_params_sound:
   forall n,
   0 <= n < Int.modulus ->
   Z.div n d = Z.div (m * n) (two_p (32 + p)).
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold divu_mul_params; intros d m' p'.
   destruct (find_div_mul_params Int.wordsize
                (Int.modulus - Int.modulus mod d - 1) d 32)
@@ -232,7 +232,7 @@ Lemma divs_mul_shift_gen:
   0 <= m < Int.modulus /\ 0 <= p < 32 /\
   Int.divs x y = Int.add (Int.shr (Int.repr ((Int.signed x * m) / Int.modulus)) (Int.repr p))
                          (Int.shru x (Int.repr 31)).
-Proof.
+Proof using.
   intros. set (n := Int.signed x). set (d := Int.signed y) in *.
   exploit divs_mul_params_sound; eauto. intros (A & B & C).
   split. auto. split. auto.
@@ -265,7 +265,7 @@ Theorem divs_mul_shift_1:
   0 <= p < 32 /\
   Int.divs x y = Int.add (Int.shr (Int.mulhs x (Int.repr m)) (Int.repr p))
                          (Int.shru x (Int.repr 31)).
-Proof.
+Proof using.
   intros. exploit divs_mul_shift_gen; eauto. instantiate (1 := x).
   intros (A & B & C). split. auto. rewrite C.
   unfold Int.mulhs. rewrite Int.signed_repr. auto.
@@ -279,7 +279,7 @@ Theorem divs_mul_shift_2:
   0 <= p < 32 /\
   Int.divs x y = Int.add (Int.shr (Int.add (Int.mulhs x (Int.repr m)) x) (Int.repr p))
                          (Int.shru x (Int.repr 31)).
-Proof.
+Proof using.
   intros. exploit divs_mul_shift_gen; eauto. instantiate (1 := x).
   intros (A & B & C). split. auto. rewrite C. f_equal. f_equal.
   rewrite Int.add_signed. unfold Int.mulhs. set (n := Int.signed x).
@@ -300,7 +300,7 @@ Theorem divu_mul_shift:
   divu_mul_params (Int.unsigned y) = Some(p, m) ->
   0 <= p < 32 /\
   Int.divu x y = Int.shru (Int.mulhu x (Int.repr m)) (Int.repr p).
-Proof.
+Proof using.
   intros. exploit divu_mul_params_sound; eauto. intros (A & B & C).
   split. auto.
   rewrite Int.shru_div_two_p. rewrite Int.unsigned_repr.
@@ -328,7 +328,7 @@ Lemma divls_mul_params_sound:
   forall n,
   Int64.min_signed <= n <= Int64.max_signed ->
   Z.quot n d = Z.div (m * n) (two_p (64 + p)) + (if zlt n 0 then 1 else 0).
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold divls_mul_params; intros d m' p'.
   destruct (find_div_mul_params Int64.wordsize
                (Int64.half_modulus - Int64.half_modulus mod d - 1) d 64)
@@ -357,7 +357,7 @@ Lemma divlu_mul_params_sound:
   forall n,
   0 <= n < Int64.modulus ->
   Z.div n d = Z.div (m * n) (two_p (64 + p)).
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   unfold divlu_mul_params; intros d m' p'.
   destruct (find_div_mul_params Int64.wordsize
                (Int64.modulus - Int64.modulus mod d - 1) d 64)
@@ -377,7 +377,7 @@ Qed.
 
 Remark int64_shr'_div_two_p:
   forall x y, Int64.shr' x y = Int64.repr (Int64.signed x / two_p (Int.unsigned y)).
-Proof.
+Proof using.
   intros; unfold Int64.shr'. rewrite Zshiftr_div_two_p; auto. generalize (Int.unsigned_range y); lia.
 Qed.
 
@@ -387,7 +387,7 @@ Lemma divls_mul_shift_gen:
   0 <= m < Int64.modulus /\ 0 <= p < 64 /\
   Int64.divs x y = Int64.add (Int64.shr' (Int64.repr ((Int64.signed x * m) / Int64.modulus)) (Int.repr p))
                              (Int64.shru x (Int64.repr 63)).
-Proof.
+Proof using.
   intros. set (n := Int64.signed x). set (d := Int64.signed y) in *.
   exploit divls_mul_params_sound; eauto. intros (A & B & C).
   split. auto. split. auto.
@@ -420,7 +420,7 @@ Theorem divls_mul_shift_1:
   0 <= p < 64 /\
   Int64.divs x y = Int64.add (Int64.shr' (Int64.mulhs x (Int64.repr m)) (Int.repr p))
                              (Int64.shru' x (Int.repr 63)).
-Proof.
+Proof using.
   intros. exploit divls_mul_shift_gen; eauto. instantiate (1 := x).
   intros (A & B & C). split. auto. rewrite C.
   unfold Int64.mulhs. rewrite Int64.signed_repr. auto.
@@ -434,7 +434,7 @@ Theorem divls_mul_shift_2:
   0 <= p < 64 /\
   Int64.divs x y = Int64.add (Int64.shr' (Int64.add (Int64.mulhs x (Int64.repr m)) x) (Int.repr p))
                              (Int64.shru' x (Int.repr 63)).
-Proof.
+Proof using.
   intros. exploit divls_mul_shift_gen; eauto. instantiate (1 := x).
   intros (A & B & C). split. auto. rewrite C. f_equal. f_equal.
   rewrite Int64.add_signed. unfold Int64.mulhs. set (n := Int64.signed x).
@@ -452,7 +452,7 @@ Qed.
 
 Remark int64_shru'_div_two_p:
   forall x y, Int64.shru' x y = Int64.repr (Int64.unsigned x / two_p (Int.unsigned y)).
-Proof.
+Proof using.
   intros; unfold Int64.shru'. rewrite Zshiftr_div_two_p; auto. generalize (Int.unsigned_range y); lia.
 Qed.
 
@@ -461,7 +461,7 @@ Theorem divlu_mul_shift:
   divlu_mul_params (Int64.unsigned y) = Some(p, m) ->
   0 <= p < 64 /\
   Int64.divu x y = Int64.shru' (Int64.mulhu x (Int64.repr m)) (Int.repr p).
-Proof.
+Proof using.
   intros. exploit divlu_mul_params_sound; eauto. intros (A & B & C).
   split. auto.
   rewrite int64_shru'_div_two_p. rewrite Int.unsigned_repr.
@@ -495,7 +495,7 @@ Variable m: mem.
 Lemma is_intconst_sound:
   forall v a n le,
   is_intconst a = Some n -> eval_expr ge sp e m le a v -> v = Vint n.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   intros. unfold is_intconst in *.
   destruct a... destruct o... inv H. inv H0. destruct vl; inv H5. auto.
 Qed.
@@ -505,7 +505,7 @@ Lemma eval_divu_mul:
   divu_mul_params (Int.unsigned y) = Some(p, M) ->
   nth_error le O = Some (Vint x) ->
   eval_expr ge sp e m le (divu_mul p M) (Vint (Int.divu x y)).
-Proof.
+Proof using.
   intros. unfold divu_mul. exploit (divu_mul_shift x); eauto. intros [A B].
   assert (C: eval_expr ge sp e m le (Eletvar 0) (Vint x)) by (apply eval_Eletvar; eauto).
   assert (D: eval_expr ge sp e m le (Eop (Ointconst (Int.repr M)) Enil) (Vint (Int.repr M))) by EvalOp.
@@ -523,7 +523,7 @@ Theorem eval_divuimm:
   eval_expr ge sp e m le e1 x ->
   Val.divu x (Vint n2) = Some z ->
   exists v, eval_expr ge sp e m le (divuimm e1 n2) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold divuimm; intros. generalize H0; intros DIV.
   destruct x; simpl in DIV; try discriminate.
   destruct (Int.eq n2 Int.zero) eqn:Z2; inv DIV.
@@ -546,7 +546,7 @@ Theorem eval_divu:
   eval_expr ge sp e m le b y ->
   Val.divu x y = Some z ->
   exists v, eval_expr ge sp e m le (divu a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold divu; intros.
   destruct (is_intconst b) as [n2|] eqn:B.
 - exploit is_intconst_sound; eauto. intros EB; clear B.
@@ -564,7 +564,7 @@ Lemma eval_mod_from_div:
   eval_expr ge sp e m le a (Vint y) ->
   nth_error le O = Some (Vint x) ->
   eval_expr ge sp e m le (mod_from_div a n) (Vint (Int.sub x (Int.mul y n))).
-Proof.
+Proof using.
   unfold mod_from_div; intros.
   exploit eval_mulimm; eauto. instantiate (1 := n). intros [v [A B]].
   simpl in B. inv B. EvalOp.
@@ -575,7 +575,7 @@ Theorem eval_moduimm:
   eval_expr ge sp e m le e1 x ->
   Val.modu x (Vint n2) = Some z ->
   exists v, eval_expr ge sp e m le (moduimm e1 n2) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold moduimm; intros. generalize H0; intros MOD.
   destruct x; simpl in MOD; try discriminate.
   destruct (Int.eq n2 Int.zero) eqn:Z2; inv MOD.
@@ -601,7 +601,7 @@ Theorem eval_modu:
   eval_expr ge sp e m le b y ->
   Val.modu x y = Some z ->
   exists v, eval_expr ge sp e m le (modu a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold modu; intros.
   destruct (is_intconst b) as [n2|] eqn:B.
 - exploit is_intconst_sound; eauto. intros EB; clear B.
@@ -619,7 +619,7 @@ Lemma eval_divs_mul:
   divs_mul_params (Int.signed y) = Some(p, M) ->
   nth_error le O = Some (Vint x) ->
   eval_expr ge sp e m le (divs_mul p M) (Vint (Int.divs x y)).
-Proof.
+Proof using.
   intros. unfold divs_mul.
   assert (C: eval_expr ge sp e m le (Eletvar 0) (Vint x)) by (apply eval_Eletvar; eauto).
   assert (D: eval_expr ge sp e m le (Eop (Ointconst (Int.repr M)) Enil) (Vint (Int.repr M))) by EvalOp.
@@ -653,7 +653,7 @@ Theorem eval_divsimm:
   eval_expr ge sp e m le e1 x ->
   Val.divs x (Vint n2) = Some z ->
   exists v, eval_expr ge sp e m le (divsimm e1 n2) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold divsimm; intros. generalize H0; intros DIV.
   destruct x; simpl in DIV; try discriminate.
   destruct (Int.eq n2 Int.zero
@@ -676,7 +676,7 @@ Theorem eval_divs:
   eval_expr ge sp e m le b y ->
   Val.divs x y = Some z ->
   exists v, eval_expr ge sp e m le (divs a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold divs; intros.
   destruct (is_intconst b) as [n2|] eqn:B.
 - exploit is_intconst_sound; eauto. intros EB; clear B.
@@ -695,7 +695,7 @@ Theorem eval_modsimm:
   eval_expr ge sp e m le e1 x ->
   Val.mods x (Vint n2) = Some z ->
   exists v, eval_expr ge sp e m le (modsimm e1 n2) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold modsimm; intros.
   exploit Val.mods_divs; eauto. intros [y [A B]].
   generalize A; intros DIV.
@@ -727,7 +727,7 @@ Theorem eval_mods:
   eval_expr ge sp e m le b y ->
   Val.mods x y = Some z ->
   exists v, eval_expr ge sp e m le (mods a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   unfold mods; intros.
   destruct (is_intconst b) as [n2|] eqn:B.
 - exploit is_intconst_sound; eauto. intros EB; clear B.
@@ -746,7 +746,7 @@ Lemma eval_modl_from_divl:
   eval_expr ge sp e m le a (Vlong y) ->
   nth_error le O = Some (Vlong x) ->
   eval_expr ge sp e m le (modl_from_divl a n) (Vlong (Int64.sub x (Int64.mul y n))).
-Proof.
+Proof using HELPERS.
   unfold modl_from_divl; intros.
   exploit eval_mullimm; eauto. instantiate (1 := n). intros (v1 & A1 & B1).
   assert (A0: eval_expr ge sp e m le (Eletvar O) (Vlong x)) by (constructor; auto).
@@ -760,7 +760,7 @@ Lemma eval_divlu_mull:
   divlu_mul_params (Int64.unsigned y) = Some(p, M) ->
   nth_error le O = Some (Vlong x) ->
   eval_expr ge sp e m le (divlu_mull p M) (Vlong (Int64.divu x y)).
-Proof.
+Proof using HELPERS.
   intros. unfold divlu_mull. exploit (divlu_mul_shift x); eauto. intros [A B].
   assert (A0: eval_expr ge sp e m le (Eletvar O) (Vlong x)) by (constructor; auto).
   exploit eval_mullhu. try apply HELPERS. eexact A0. instantiate (1 := Int64.repr M). intros (v1 & A1 & B1).
@@ -777,7 +777,7 @@ Theorem eval_divlu:
   eval_expr ge sp e m le b y ->
   Val.divlu x y = Some z ->
   exists v, eval_expr ge sp e m le (divlu a b) v /\ Val.lessdef z v.
-Proof.
+Proof using HELPERS.
   unfold divlu; intros.
   destruct (is_longconst b) as [n2|] eqn:N2.
 - assert (y = Vlong n2) by (eapply is_longconst_sound; eauto). subst y.
@@ -802,7 +802,7 @@ Theorem eval_modlu:
   eval_expr ge sp e m le b y ->
   Val.modlu x y = Some z ->
   exists v, eval_expr ge sp e m le (modlu a b) v /\ Val.lessdef z v.
-Proof.
+Proof using HELPERS.
   unfold modlu; intros.
   destruct (is_longconst b) as [n2|] eqn:N2.
 - assert (y = Vlong n2) by (eapply is_longconst_sound; eauto). subst y.
@@ -830,7 +830,7 @@ Lemma eval_divls_mull:
   divls_mul_params (Int64.signed y) = Some(p, M) ->
   nth_error le O = Some (Vlong x) ->
   eval_expr ge sp e m le (divls_mull p M) (Vlong (Int64.divs x y)).
-Proof.
+Proof using HELPERS.
   intros. unfold divls_mull.
   assert (A0: eval_expr ge sp e m le (Eletvar O) (Vlong x)).
   { constructor; auto. }
@@ -868,7 +868,7 @@ Theorem eval_divls:
   eval_expr ge sp e m le b y ->
   Val.divls x y = Some z ->
   exists v, eval_expr ge sp e m le (divls a b) v /\ Val.lessdef z v.
-Proof.
+Proof using HELPERS.
   unfold divls; intros.
   destruct (is_longconst b) as [n2|] eqn:N2.
 - assert (y = Vlong n2) by (eapply is_longconst_sound; eauto). subst y.
@@ -899,7 +899,7 @@ Theorem eval_modls:
   eval_expr ge sp e m le b y ->
   Val.modls x y = Some z ->
   exists v, eval_expr ge sp e m le (modls a b) v /\ Val.lessdef z v.
-Proof.
+Proof using HELPERS.
   unfold modls; intros.
   destruct (is_longconst b) as [n2|] eqn:N2.
 - assert (y = Vlong n2) by (eapply is_longconst_sound; eauto). subst y.
@@ -944,7 +944,7 @@ Theorem eval_divf:
   eval_expr ge sp e m le a x ->
   eval_expr ge sp e m le b y ->
   exists v, eval_expr ge sp e m le (divf a b) v /\ Val.lessdef (Val.divf x y) v.
-Proof.
+Proof using.
   intros until y. unfold divf. destruct (divf_match b); intros.
 - unfold divfimm. destruct (Float.exact_inverse n2) as [n2' | ] eqn:EINV.
   + inv H0. inv H4. simpl in H6. inv H6. econstructor; split.
@@ -959,7 +959,7 @@ Theorem eval_divfs:
   eval_expr ge sp e m le a x ->
   eval_expr ge sp e m le b y ->
   exists v, eval_expr ge sp e m le (divfs a b) v /\ Val.lessdef (Val.divfs x y) v.
-Proof.
+Proof using.
   intros until y. unfold divfs. destruct (divfs_match b); intros.
 - unfold divfsimm. destruct (Float32.exact_inverse n2) as [n2' | ] eqn:EINV.
   + inv H0. inv H4. simpl in H6. inv H6. econstructor; split.

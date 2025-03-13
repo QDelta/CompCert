@@ -154,7 +154,7 @@ Definition loc_result :=
 Lemma loc_result_type:
   forall sig,
   subtype (proj_sig_res sig) (typ_rpair mreg_type (loc_result sig)) = true.
-Proof.
+Proof using.
   intros. unfold loc_result, loc_result_32, loc_result_64, mreg_type.
   destruct Archi.ptr64 eqn:?; destruct (proj_sig_res sig); destruct Archi.ppc64; simpl; auto.
 Qed.
@@ -164,7 +164,7 @@ Qed.
 Lemma loc_result_caller_save:
   forall (s: signature),
   forall_rpair (fun r => is_callee_save r = false) (loc_result s).
-Proof.
+Proof using.
   intros. unfold loc_result, loc_result_32, loc_result_64, is_callee_save;
   destruct Archi.ptr64; destruct (proj_sig_res s); simpl; auto.
 Qed.
@@ -180,7 +180,7 @@ Lemma loc_result_pair:
      /\ subtype Tint (mreg_type r1) = true /\ subtype Tint (mreg_type r2) = true
      /\ Archi.ptr64 = false
   end.
-Proof.
+Proof using.
   intros; unfold loc_result, loc_result_32, loc_result_64, mreg_type;
   destruct Archi.ptr64; destruct (proj_sig_res sg); destruct Archi.ppc64; simpl; auto.
   split; auto. congruence.
@@ -191,7 +191,7 @@ Qed.
 
 Lemma loc_result_exten:
   forall s1 s2, s1.(sig_res) = s2.(sig_res) -> loc_result s1 = loc_result s2.
-Proof.
+Proof using.
   intros. unfold loc_result, loc_result_32, loc_result_64, proj_sig_res.
   destruct Archi.ptr64; rewrite H; auto.
 Qed.
@@ -283,7 +283,7 @@ Remark loc_arguments_rec_charact:
   forall tyl ir fr ofs p,
   In p (loc_arguments_rec tyl ir fr ofs) ->
   forall_rpair (loc_argument_charact ofs) p.
-Proof.
+Proof using.
   assert (X: forall ofs1 ofs2 l, loc_argument_charact ofs2 l -> ofs1 <= ofs2 -> loc_argument_charact ofs1 l).
   { destruct l; simpl; intros; auto. destruct sl; auto. intuition lia. }
   assert (Y: forall ofs1 ofs2 p, forall_rpair (loc_argument_charact ofs2) p -> ofs1 <= ofs2 -> forall_rpair (loc_argument_charact ofs1) p).
@@ -347,7 +347,7 @@ Qed.
 Lemma loc_arguments_acceptable:
   forall (s: signature) (p: rpair loc),
   In p (loc_arguments s) -> forall_rpair loc_argument_acceptable p.
-Proof.
+Proof using.
   unfold loc_arguments; intros.
   exploit loc_arguments_rec_charact; eauto.
   assert (A: forall r, In r int_param_regs -> is_callee_save r = false) by decide_goal.
@@ -362,7 +362,7 @@ Global Hint Resolve loc_arguments_acceptable: locs.
 
 Lemma loc_arguments_main:
   loc_arguments signature_main = nil.
-Proof.
+Proof using.
   reflexivity.
 Qed.
 

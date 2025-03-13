@@ -92,7 +92,7 @@ Lemma possible_trace_app:
   forall t2 w2 w0 t1 w1,
   possible_trace w0 t1 w1 -> possible_trace w1 t2 w2 ->
   possible_trace w0 (t1 ** t2) w2.
-Proof.
+Proof using.
   induction 1; simpl; intros.
   auto.
   econstructor; eauto.
@@ -102,7 +102,7 @@ Lemma possible_trace_app_inv:
   forall t2 w2 t1 w0,
   possible_trace w0 (t1 ** t2) w2 ->
   exists w1, possible_trace w0 t1 w1 /\ possible_trace w1 t2 w2.
-Proof.
+Proof using.
   induction t1; simpl; intros.
   exists w0; split. constructor. auto.
   inv H. exploit IHt1; eauto. intros [w1 [A B]].
@@ -113,7 +113,7 @@ Lemma match_possible_traces:
   forall ge t1 t2 w0 w1 w2,
   match_traces ge t1 t2 -> possible_trace w0 t1 w1 -> possible_trace w0 t2 w2 ->
   t1 = t2 /\ w1 = w2.
-Proof.
+Proof using.
   intros. inv H; inv H1; inv H0.
   auto.
   inv H7; inv H6. inv H9; inv H10. split; congruence.
@@ -132,7 +132,7 @@ Lemma possible_traceinf_app:
   forall t2 w0 t1 w1,
   possible_trace w0 t1 w1 -> possible_traceinf w1 t2 ->
   possible_traceinf w0 (t1 *** t2).
-Proof.
+Proof using.
   induction 1; simpl; intros.
   auto.
   econstructor; eauto.
@@ -142,7 +142,7 @@ Lemma possible_traceinf_app_inv:
   forall t2 t1 w0,
   possible_traceinf w0 (t1 *** t2) ->
   exists w1, possible_trace w0 t1 w1 /\ possible_traceinf w1 t2.
-Proof.
+Proof using.
   induction t1; simpl; intros.
   exists w0; split. constructor. auto.
   inv H. exploit IHt1; eauto. intros [w1 [A B]].
@@ -189,7 +189,7 @@ CoInductive possible_traceinf': world -> traceinf -> Prop :=
 
 Lemma possible_traceinf'_traceinf:
   forall w T, possible_traceinf' w T -> possible_traceinf w T.
-Proof.
+Proof using.
   cofix COINDHYP; intros. inv H. inv H0. congruence.
   simpl. econstructor. eauto. apply COINDHYP.
   inv H3. simpl. auto. econstructor; eauto. econstructor; eauto. unfold E0; congruence.
@@ -227,7 +227,7 @@ Lemma star_step_diamond:
   exists t,
      (Star L s1 t s2 /\ t2 = t1 ** t)
   \/ (Star L s2 t s1 /\ t1 = t2 ** t).
-Proof.
+Proof using DET.
   induction 1; intros.
   exists t2; auto.
   inv H2. exists (t1 ** t2); right.
@@ -257,7 +257,7 @@ Lemma star_step_triangle:
   Nostep L s2 ->
   exists t,
   Star L s1 t s2 /\ t2 = t1 ** t.
-Proof.
+Proof using DET.
   intros. use_star_step_diamond.
   exists t; auto.
   inv P. exists E0. split. constructor. traceEq.
@@ -277,7 +277,7 @@ Lemma steps_deterministic:
   Star L s0 t1 s1 -> Star L s0 t2 s2 ->
   Nostep L s1 -> Nostep L s2 ->
   t1 = t2 /\ s1 = s2.
-Proof.
+Proof using DET.
   intros. use_star_step_triangle. inv P.
   split; auto; traceEq. use_nostep.
 Qed.
@@ -287,7 +287,7 @@ Lemma terminates_not_goes_wrong:
   Star L s t1 s1 -> final_state L s1 r ->
   Star L s t2 s2 -> Nostep L s2 ->
   (forall r, ~final_state L s2 r) -> False.
-Proof.
+Proof using DET.
   intros.
   assert (t1 = t2 /\ s1 = s2).
     eapply steps_deterministic; eauto. eapply det_final_nostep; eauto.
@@ -300,7 +300,7 @@ Lemma star_final_not_forever_silent:
   forall s t s', Star L s t s' ->
   Nostep L s' ->
   Forever_silent L s -> False.
-Proof.
+Proof using DET.
   induction 1; intros.
   inv H0. use_nostep.
   inv H3. use_step_deterministic. eauto.
@@ -311,7 +311,7 @@ Lemma star2_final_not_forever_silent:
   Star L s t1 s1 -> Nostep L s1 ->
   Star L s t2 s2 -> Forever_silent L s2 ->
   False.
-Proof.
+Proof using DET.
   intros. use_star_step_triangle.
   eapply star_final_not_forever_silent. eexact P. eauto. auto.
 Qed.
@@ -319,7 +319,7 @@ Qed.
 Lemma star_final_not_forever_reactive:
   forall s t s', Star L s t s' ->
   forall T, Nostep L s' -> Forever_reactive L s T -> False.
-Proof.
+Proof using DET.
   induction 1; intros.
   inv H0. inv H1. congruence. use_nostep.
   inv H3. inv H4. congruence.
@@ -332,7 +332,7 @@ Lemma star_forever_silent_inv:
   forall s t s', Star L s t s' ->
   Forever_silent L s ->
   t = E0 /\ Forever_silent L s'.
-Proof.
+Proof using DET.
   induction 1; intros.
   auto.
   subst. inv H2. use_step_deterministic. eauto.
@@ -341,7 +341,7 @@ Qed.
 Lemma forever_silent_reactive_exclusive:
   forall s T,
   Forever_silent L s -> Forever_reactive L s T -> False.
-Proof.
+Proof using DET.
   intros. inv H0. exploit star_forever_silent_inv; eauto.
   intros [A B]. contradiction.
 Qed.
@@ -359,7 +359,7 @@ Lemma forever_reactive_inv2:
   Forever_reactive L s' T2' /\
   t1 *** T1 = t *** T1' /\
   t2 *** T2 = t *** T2'.
-Proof.
+Proof using DET.
   induction 1; intros.
   congruence.
   inv H2. congruence. use_step_deterministic.
@@ -380,7 +380,7 @@ Lemma forever_reactive_determ':
   Forever_reactive L s T1 ->
   Forever_reactive L s T2 ->
   traceinf_sim' T1 T2.
-Proof.
+Proof using DET.
   cofix COINDHYP; intros.
   inv H. inv H0.
   destruct (forever_reactive_inv2 _ _ _ H t s2 T0 T)
@@ -394,7 +394,7 @@ Lemma forever_reactive_determ:
   Forever_reactive L s T1 ->
   Forever_reactive L s T2 ->
   traceinf_sim T1 T2.
-Proof.
+Proof using DET.
   intros. apply traceinf_sim'_sim. eapply forever_reactive_determ'; eauto.
 Qed.
 
@@ -402,7 +402,7 @@ Lemma star_forever_reactive_inv:
   forall s t s', Star L s t s' ->
   forall T, Forever_reactive L s T ->
   exists T', Forever_reactive L s' T' /\ T = t *** T'.
-Proof.
+Proof using DET.
   induction 1; intros.
   exists T; auto.
   inv H2. inv H3. congruence.
@@ -416,7 +416,7 @@ Lemma forever_silent_reactive_exclusive2:
   Star L s t s' -> Forever_silent L s' ->
   Forever_reactive L s T ->
   False.
-Proof.
+Proof using DET.
   intros. exploit star_forever_reactive_inv; eauto.
   intros [T' [A B]]. subst T.
   eapply forever_silent_reactive_exclusive; eauto.
@@ -436,7 +436,7 @@ Definition same_behaviors (beh1 beh2: program_behavior) : Prop :=
 Lemma state_behaves_deterministic:
   forall s beh1 beh2,
   state_behaves L s beh1 -> state_behaves L s beh2 -> same_behaviors beh1 beh2.
-Proof.
+Proof using DET.
   generalize (det_final_nostep L DET); intro dfns.
   intros until beh2; intros BEH1 BEH2.
   inv BEH1; inv BEH2; red.
@@ -484,7 +484,7 @@ Theorem program_behaves_deterministic:
   forall beh1 beh2,
   program_behaves L beh1 -> program_behaves L beh2 ->
   same_behaviors beh1 beh2.
-Proof.
+Proof using DET.
   intros until beh2; intros BEH1 BEH2. inv BEH1; inv BEH2.
 (* both initial states defined *)
   assert (s = s0) by (eapply det_initial_state; eauto). subst s0.
@@ -527,7 +527,7 @@ Definition world_sem : semantics := @Semantics_gen
 Hypothesis D: determinate L.
 
 Theorem world_sem_deterministic: sem_deterministic world_sem.
-Proof.
+Proof using D.
   constructor; simpl; intros.
 (* steps *)
   destruct H; destruct H0.

@@ -43,7 +43,7 @@ Inductive typ : Type :=
   | Tany64.             (**r any 64-bit value, i.e. any value *)
 
 Lemma typ_eq: forall (t1 t2: typ), {t1=t2} + {t1<>t2}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 Global Opaque typ_eq.
 
 Definition list_typ_eq: forall (l1 l2: list typ), {l1=l2} + {l1<>l2}
@@ -62,10 +62,10 @@ Definition typesize (ty: typ) : Z :=
   end.
 
 Lemma typesize_pos: forall ty, typesize ty > 0.
-Proof. destruct ty; simpl; lia. Qed.
+Proof using. destruct ty; simpl; lia. Qed.
 
 Lemma typesize_Tptr: typesize Tptr = if Archi.ptr64 then 8 else 4.
-Proof. unfold Tptr; destruct Archi.ptr64; auto. Qed.
+Proof using. unfold Tptr; destruct Archi.ptr64; auto. Qed.
 
 (** All values of size 32 bits are also of type [Tany32].  All values
   are of type [Tany64].  This corresponds to the following subtyping
@@ -110,7 +110,7 @@ Inductive xtype : Type :=
 Definition Xsize_t := if Archi.ptr64 then Xlong else Xint.
 
 Lemma xtype_eq: forall (t1 t2: xtype), {t1=t2} + {t1<>t2}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 Global Opaque xtype_eq.
 
 Definition inj_type (t: typ) : xtype :=
@@ -136,7 +136,7 @@ Definition proj_xtype (x: xtype) : typ :=
   end.
 
 Lemma proj_inj_type: forall t, proj_xtype (inj_type t) = t.
-Proof.
+Proof using.
   destruct t; auto.
 Qed.
 
@@ -159,7 +159,7 @@ Definition cc_default :=
   {| cc_vararg := None; cc_unproto := false; cc_structret := false |}.
 
 Definition calling_convention_eq (x y: calling_convention) : {x=y} + {x<>y}.
-Proof.
+Proof using.
   decide equality; try (apply bool_dec). decide equality; apply Z.eq_dec.
 Defined.
 Global Opaque calling_convention_eq.
@@ -174,7 +174,7 @@ Definition proj_sig_args (s: signature) : list typ := List.map proj_xtype s.(sig
 Definition proj_sig_res (s: signature) : typ := proj_xtype s.(sig_res).
 
 Definition signature_eq: forall (s1 s2: signature), {s1=s2} + {s1<>s2}.
-Proof.
+Proof using.
   generalize xtype_eq, list_eq_dec, calling_convention_eq; decide equality.
 Defined.
 Global Opaque signature_eq.
@@ -209,7 +209,7 @@ Inductive memory_chunk : Type :=
   | Many64.         (**r any value *)
 
 Definition chunk_eq: forall (c1 c2: memory_chunk), {c1=c2} + {c1<>c2}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 Global Opaque chunk_eq.
 
 Definition Mptr : memory_chunk := if Archi.ptr64 then Mint64 else Mint32.
@@ -232,7 +232,7 @@ Definition type_of_chunk (c: memory_chunk) : typ :=
   end.
 
 Lemma type_of_Mptr: type_of_chunk Mptr = Tptr.
-Proof. unfold Mptr, Tptr; destruct Archi.ptr64; auto. Qed.
+Proof using. unfold Mptr, Tptr; destruct Archi.ptr64; auto. Qed.
 
 (** Same, as an extended type. *)
 
@@ -253,7 +253,7 @@ Definition xtype_of_chunk (c: memory_chunk) : xtype :=
 
 Lemma proj_xtype_of_chunk:
   forall chunk, proj_xtype (xtype_of_chunk chunk) = type_of_chunk chunk.
-Proof.
+Proof using.
   destruct chunk; auto.
 Qed.
 
@@ -271,7 +271,7 @@ Definition chunk_of_type (ty: typ) :=
   end.
 
 Lemma chunk_of_Tptr: chunk_of_type Tptr = Mptr.
-Proof. unfold Mptr, Tptr; destruct Archi.ptr64; auto. Qed.
+Proof using. unfold Mptr, Tptr; destruct Archi.ptr64; auto. Qed.
 
 (** Initialization data for global variables. *)
 
@@ -305,13 +305,13 @@ Fixpoint init_data_list_size (il: list init_data) {struct il} : Z :=
 
 Lemma init_data_size_pos:
   forall i, init_data_size i >= 0.
-Proof.
+Proof using.
   destruct i; simpl; try extlia. destruct Archi.ptr64; lia.
 Qed.
 
 Lemma init_data_list_size_pos:
   forall il, init_data_list_size il >= 0.
-Proof.
+Proof using.
   induction il; simpl. lia. generalize (init_data_size_pos a); lia.
 Qed.
 
@@ -365,13 +365,13 @@ Variable p: program F V.
 
 Lemma in_prog_defmap:
   forall id g, (prog_defmap p)!id = Some g -> In (id, g) (prog_defs p).
-Proof.
+Proof using.
   apply PTree_Properties.in_of_list.
 Qed.
 
 Lemma prog_defmap_dom:
   forall id, In id (prog_defs_names p) -> exists g, (prog_defmap p)!id = Some g.
-Proof.
+Proof using.
   apply PTree_Properties.of_list_dom.
 Qed.
 
@@ -380,7 +380,7 @@ Lemma prog_defmap_unique:
   prog_defs p = defs1 ++ (id, g) :: defs2 ->
   ~In id (map fst defs2) ->
   (prog_defmap p)!id = Some g.
-Proof.
+Proof using.
   unfold prog_defmap; intros. rewrite H. apply PTree_Properties.of_list_unique; auto.
 Qed.
 
@@ -389,7 +389,7 @@ Lemma prog_defmap_norepet:
   list_norepet (prog_defs_names p) ->
   In (id, g) (prog_defs p) ->
   (prog_defmap p)!id = Some g.
-Proof.
+Proof using.
   apply PTree_Properties.of_list_norepet.
 Qed.
 
@@ -481,7 +481,7 @@ End TRANSF_PARTIAL_PROGRAM.
 Lemma transform_program_partial_program:
   forall (A B V: Type) (transf_fun: A -> B) (p: program A V),
   transform_partial_program (fun f => OK (transf_fun f)) p = OK (transform_program transf_fun p).
-Proof.
+Proof using.
   intros. unfold transform_partial_program, transform_partial_program2.
   assert (EQ: forall l,
               transf_globdefs (fun i f => OK (transf_fun f)) (fun i (v: V) => OK v) l =
@@ -598,7 +598,7 @@ Definition ef_reloads (ef: external_function) : bool :=
 (** Equality between external functions.  Used in module [Allocation]. *)
 
 Definition external_function_eq: forall (ef1 ef2: external_function), {ef1=ef2} + {ef1<>ef2}.
-Proof.
+Proof using.
   generalize ident_eq string_dec signature_eq chunk_eq typ_eq xtype_eq list_eq_dec zeq Int.eq_dec; intros.
   decide equality.
 Defined.
@@ -676,13 +676,13 @@ Fixpoint regs_of_rpairs (A: Type) (l: list (rpair A)): list A :=
 
 Lemma in_regs_of_rpairs:
   forall (A: Type) (x: A) p, In x (regs_of_rpair p) -> forall l, In p l -> In x (regs_of_rpairs l).
-Proof.
+Proof using.
   induction l; simpl; intros. auto. apply in_app. destruct H0; auto. subst a. auto.
 Qed.
 
 Lemma in_regs_of_rpairs_inv:
   forall (A: Type) (x: A) l, In x (regs_of_rpairs l) -> exists p, In p l /\ In x (regs_of_rpair p).
-Proof.
+Proof using.
   induction l; simpl; intros. contradiction.
   rewrite in_app_iff in H; destruct H.
   exists a; auto.

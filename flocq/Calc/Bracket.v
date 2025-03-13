@@ -49,7 +49,7 @@ Inductive inbetween : location -> Prop :=
 
 Theorem inbetween_spec :
   (d <= x < u)%R -> inbetween inbetween_loc.
-Proof.
+Proof using.
 intros Hx.
 unfold inbetween_loc.
 destruct (Rcompare_spec x d) as [H|H|H].
@@ -63,7 +63,7 @@ Qed.
 Theorem inbetween_unique :
   forall l l',
   inbetween l -> inbetween l' -> l = l'.
-Proof.
+Proof using.
 intros l l' Hl Hl'.
 inversion_clear Hl ; inversion_clear Hl'.
 apply refl_equal.
@@ -82,7 +82,7 @@ Variable l : location.
 Theorem inbetween_bounds :
   inbetween l ->
   (d <= x < u)%R.
-Proof.
+Proof using Hdu.
 intros [Hx|l' Hx Hl] ; clear l.
 rewrite Hx.
 split.
@@ -95,7 +95,7 @@ Theorem inbetween_bounds_not_Eq :
   inbetween l ->
   l <> loc_Exact ->
   (d < x < u)%R.
-Proof.
+Proof using.
 intros [Hx|l' Hx Hl] H.
 now elim H.
 exact Hx.
@@ -107,7 +107,7 @@ Theorem inbetween_distance_inexact :
   forall l,
   inbetween (loc_Inexact l) ->
   Rcompare (x - d) (u - x) = l.
-Proof.
+Proof using.
 intros l Hl.
 inversion_clear Hl as [|l' Hl' Hx].
 now rewrite Rcompare_middle.
@@ -117,7 +117,7 @@ Theorem inbetween_distance_inexact_abs :
   forall l,
   inbetween (loc_Inexact l) ->
   Rcompare (Rabs (d - x)) (Rabs (u - x)) = l.
-Proof.
+Proof using Hdu.
 intros l Hl.
 rewrite Rabs_left1.
 rewrite Rabs_pos_eq.
@@ -137,7 +137,7 @@ Theorem inbetween_ex :
   (d < u)%R ->
   exists x,
   inbetween d u x l.
-Proof.
+Proof using.
 intros d u [|l] Hdu.
 exists d.
 now constructor.
@@ -196,7 +196,7 @@ Variable Hstep : (0 < step)%R.
 Lemma ordered_steps :
   forall k,
   (start + IZR k * step < start + IZR (k + 1) * step)%R.
-Proof.
+Proof using Hstep.
 intros k.
 apply Rplus_lt_compat_l.
 apply Rmult_lt_compat_r.
@@ -208,7 +208,7 @@ Qed.
 Lemma middle_range :
   forall k,
   ((start + (start + IZR k * step)) / 2 = start + (IZR k / 2 * step))%R.
-Proof.
+Proof using.
 intros k.
 field.
 Qed.
@@ -221,7 +221,7 @@ Lemma inbetween_step_not_Eq :
   (0 < k < nb_steps)%Z ->
   Rcompare x (start + (IZR nb_steps / 2 * step))%R = l' ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact l').
-Proof.
+Proof using Hstep.
 intros x k l l' Hx Hk Hl'.
 constructor.
 (* . *)
@@ -248,7 +248,7 @@ Theorem inbetween_step_Lo :
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x l ->
   (0 < k)%Z -> (2 * k + 1 < nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Lt).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k l Hx Hk1 Hk2.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -269,7 +269,7 @@ Theorem inbetween_step_Hi :
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x l ->
   (nb_steps < 2 * k)%Z -> (k < nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Gt).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k l Hx Hk1 Hk2.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -290,7 +290,7 @@ Theorem inbetween_step_Lo_not_Eq :
   inbetween start (start + step) x l ->
   l <> loc_Exact ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Lt).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x l Hx Hl.
 assert (Hx' := inbetween_bounds_not_Eq _ _ _ _ Hx Hl).
 constructor.
@@ -321,7 +321,7 @@ Lemma middle_odd :
   forall k,
   (2 * k + 1 = nb_steps)%Z ->
   (((start + IZR k * step) + (start + IZR (k + 1) * step))/2 = start + IZR nb_steps /2 * step)%R.
-Proof.
+Proof using.
 intros k Hk.
 rewrite <- Hk.
 rewrite 2!plus_IZR, mult_IZR.
@@ -333,7 +333,7 @@ Theorem inbetween_step_any_Mi_odd :
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x (loc_Inexact l) ->
   (2 * k + 1 = nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact l).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k l Hx Hk.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -346,7 +346,7 @@ Theorem inbetween_step_Lo_Mi_Eq_odd :
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x loc_Exact ->
   (2 * k + 1 = nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Lt).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k Hx Hk.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -367,7 +367,7 @@ Theorem inbetween_step_Hi_Mi_even :
   l <> loc_Exact ->
   (2 * k = nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Gt).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k l Hx Hl Hk.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -389,7 +389,7 @@ Theorem inbetween_step_Mi_Mi_even :
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x loc_Exact ->
   (2 * k = nb_steps)%Z ->
   inbetween start (start + IZR nb_steps * step) x (loc_Inexact Eq).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k Hx Hk.
 apply inbetween_step_not_Eq with (1 := Hx).
 lia.
@@ -419,7 +419,7 @@ Theorem new_location_even_correct :
   forall x k l, (0 <= k < nb_steps)%Z ->
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x l ->
   inbetween start (start + IZR nb_steps * step) x (new_location_even k l).
-Proof.
+Proof using Hstep Hnb_steps.
 intros He x k l Hk Hx.
 unfold new_location_even.
 destruct (Zeq_bool_spec k 0) as [Hk0|Hk0].
@@ -476,7 +476,7 @@ Theorem new_location_odd_correct :
   forall x k l, (0 <= k < nb_steps)%Z ->
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x l ->
   inbetween start (start + IZR nb_steps * step) x (new_location_odd k l).
-Proof.
+Proof using Hstep Hnb_steps.
 intros Ho x k l Hk Hx.
 unfold new_location_odd.
 destruct (Zeq_bool_spec k 0) as [Hk0|Hk0].
@@ -515,7 +515,7 @@ Theorem new_location_correct :
   forall x k l, (0 <= k < nb_steps)%Z ->
   inbetween (start + IZR k * step) (start + IZR (k + 1) * step) x l ->
   inbetween start (start + IZR nb_steps * step) x (new_location k l).
-Proof.
+Proof using Hstep Hnb_steps.
 intros x k l Hk Hx.
 unfold new_location.
 generalize (refl_equal nb_steps) (Z.le_lt_trans _ _ _ (proj1 Hk) (proj2 Hk)).
@@ -540,7 +540,7 @@ Theorem inbetween_plus_compat :
   forall x d u l t,
   inbetween x d u l ->
   inbetween (x + t) (d + t) (u + t) l.
-Proof.
+Proof using.
 intros x d u l t [Hx|l' Hx Hl] ; constructor.
 now rewrite Hx.
 now split ; apply Rplus_lt_compat_r.
@@ -552,7 +552,7 @@ Theorem inbetween_plus_reg :
   forall x d u l t,
   inbetween (x + t) (d + t) (u + t) l ->
   inbetween x d u l.
-Proof.
+Proof using.
 intros x d u l t H.
 generalize (inbetween_plus_compat _ _ _ _ (Ropp t) H).
 assert (K: forall y, (y + t + -t = y)%R) by (intros y ; ring).
@@ -568,7 +568,7 @@ Theorem inbetween_mult_compat :
   (0 < s)%R ->
   inbetween x d u l ->
   inbetween (x * s) (d * s) (u * s) l.
-Proof.
+Proof using.
 intros x d u l s Hs [Hx|l' Hx Hl] ; constructor.
 now rewrite Hx.
 now split ; apply Rmult_lt_compat_r.
@@ -581,7 +581,7 @@ Theorem inbetween_mult_reg :
   (0 < s)%R ->
   inbetween (x * s) (d * s) (u * s) l ->
   inbetween x d u l.
-Proof.
+Proof using.
 intros x d u l s Hs H.
 generalize (inbetween_mult_compat _ _ _ _ _ (Rinv_0_lt_compat s Hs) H).
 assert (K: forall y, (y * s * /s = y)%R).
@@ -605,7 +605,7 @@ Theorem inbetween_float_bounds :
   forall x m e l,
   inbetween_float m e x l ->
   (F2R (Float beta m e) <= x < F2R (Float beta (m + 1) e))%R.
-Proof.
+Proof using.
 intros x m e l [Hx|l' Hx Hl].
 rewrite Hx.
 split.
@@ -627,7 +627,7 @@ Theorem inbetween_float_new_location :
   (0 < k)%Z ->
   inbetween_float m e x l ->
   inbetween_float (Z.div m (Zpower beta k)) (e + k) x (new_location (Zpower beta k) (Zmod m (Zpower beta k)) l).
-Proof.
+Proof using.
 intros x m e l k Hk Hx.
 unfold inbetween_float in *.
 assert (Hr: forall m, F2R (Float beta m (e + k)) = F2R (Float beta (m * Zpower beta k) e)).
@@ -658,7 +658,7 @@ Theorem inbetween_float_new_location_single :
   forall x m e l,
   inbetween_float m e x l ->
   inbetween_float (Z.div m beta) (e + 1) x (new_location beta (Zmod m beta) l).
-Proof.
+Proof using.
 intros x m e l Hx.
 replace (radix_val beta) with (Zpower beta 1).
 now apply inbetween_float_new_location.
@@ -669,7 +669,7 @@ Theorem inbetween_float_ex :
   forall m e l,
   exists x,
   inbetween_float m e x l.
-Proof.
+Proof using.
 intros m e l.
 apply inbetween_ex.
 apply F2R_lt.
@@ -681,7 +681,7 @@ Theorem inbetween_float_unique :
   inbetween_float m e x l ->
   inbetween_float m' e x l' ->
   m = m' /\ l = l'.
-Proof.
+Proof using.
 intros x e m l m' l' H H'.
 refine ((fun Hm => conj Hm _) _).
 rewrite <- Hm in H'. clear -H H'.

@@ -1177,17 +1177,17 @@ Hypothesis valid_different_pointers_inj:
   Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr delta1)) <> Ptrofs.unsigned (Ptrofs.add ofs2 (Ptrofs.repr delta2)).
 
 Remark val_inject_vtrue: forall f, Val.inject f Vtrue Vtrue.
-Proof. unfold Vtrue; auto. Qed.
+Proof using. unfold Vtrue; auto. Qed.
 
 Remark val_inject_vfalse: forall f, Val.inject f Vfalse Vfalse.
-Proof. unfold Vfalse; auto. Qed.
+Proof using. unfold Vfalse; auto. Qed.
 
 Remark val_inject_of_bool: forall f b, Val.inject f (Val.of_bool b) (Val.of_bool b).
-Proof. intros. unfold Val.of_bool. destruct b; [apply val_inject_vtrue|apply val_inject_vfalse].
+Proof using. intros. unfold Val.of_bool. destruct b; [apply val_inject_vtrue|apply val_inject_vfalse].
 Qed.
 
 Remark val_inject_vptrofs: forall n, Val.inject f (Vptrofs n) (Vptrofs n).
-Proof. intros. unfold Vptrofs. destruct Archi.ptr64; auto. Qed.
+Proof using. intros. unfold Vptrofs. destruct Archi.ptr64; auto. Qed.
 
 Local Hint Resolve val_inject_vtrue val_inject_vfalse val_inject_of_bool val_inject_vptrofs : core.
 
@@ -1206,7 +1206,7 @@ Lemma sem_cast_inj:
   sem_cast v1 ty1 ty m = Some v ->
   Val.inject f v1 tv1 ->
   exists tv, sem_cast tv1 ty1 ty m'= Some tv /\ Val.inject f v tv.
-Proof.
+Proof using weak_valid_pointer_inj.
   unfold sem_cast; intros; destruct (classify_cast ty1 ty); inv H0; TrivialInject.
 - econstructor; eauto.
 - erewrite weak_valid_pointer_inj by eauto. TrivialInject. 
@@ -1221,7 +1221,7 @@ Lemma bool_val_inj:
   bool_val v ty m = Some b ->
   Val.inject f v tv ->
   bool_val tv ty m' = Some b.
-Proof.
+Proof using weak_valid_pointer_inj.
   unfold bool_val; intros.
   destruct (classify_bool ty); inv H0; try congruence.
   destruct Archi.ptr64; try discriminate.
@@ -1237,7 +1237,7 @@ Lemma sem_unary_operation_inj:
   sem_unary_operation op v1 ty m = Some v ->
   Val.inject f v1 tv1 ->
   exists tv, sem_unary_operation op tv1 ty m' = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using weak_valid_pointer_inj.
   unfold sem_unary_operation; intros. destruct op.
 - (* notbool *)
   unfold sem_notbool in *. destruct (bool_val v1 ty m) as [b|] eqn:BV; simpl in H; inv H.
@@ -1265,7 +1265,7 @@ Remark sem_binarith_inject:
   (forall n1 n2, optval_self_injects (sem_float n1 n2)) ->
   (forall n1 n2, optval_self_injects (sem_single n1 n2)) ->
   exists v', sem_binarith sem_int sem_long sem_float sem_single v1' t1 v2' t2 m' = Some v' /\ Val.inject f v v'.
-Proof.
+Proof using weak_valid_pointer_inj.
   intros.
   assert (SELF: forall ov v, ov = Some v -> optval_self_injects ov -> Val.inject f v v).
   {
@@ -1287,7 +1287,7 @@ Remark sem_shift_inject:
   sem_shift sem_int sem_long v1 t1 v2 t2 = Some v ->
   Val.inject f v1 v1' -> Val.inject f v2 v2' ->
   exists v', sem_shift sem_int sem_long v1' t1 v2' t2 = Some v' /\ Val.inject f v v'.
-Proof.
+Proof using.
   intros. exists v.
   unfold sem_shift in *; destruct (classify_shift t1 t2); inv H0; inv H1; try discriminate.
   destruct (Int.ltu i0 Int.iwordsize); inv H; auto.
@@ -1302,7 +1302,7 @@ Remark sem_cmp_ptr_inj:
   Val.inject f v1 tv1 ->
   Val.inject f v2 tv2 ->
   exists tv, cmp_ptr m' c tv1 tv2 = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using weak_valid_pointer_no_overflow weak_valid_pointer_inj valid_pointer_inj valid_different_pointers_inj.
   unfold cmp_ptr; intros. 
   remember (if Archi.ptr64
        then Val.cmplu_bool (Mem.valid_pointer m) c v1 v2
@@ -1320,7 +1320,7 @@ Remark sem_cmp_inj:
   Val.inject f v1 tv1 ->
   Val.inject f v2 tv2 ->
   exists tv, sem_cmp cmp tv1 ty1 tv2 ty2 m' = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using weak_valid_pointer_no_overflow weak_valid_pointer_inj valid_pointer_inj valid_different_pointers_inj.
   intros.
   unfold sem_cmp in *; destruct (classify_cmp ty1 ty2).
 - (* pointer - pointer *)
@@ -1346,7 +1346,7 @@ Lemma sem_binary_operation_inj:
   sem_binary_operation cenv op v1 ty1 v2 ty2 m = Some v ->
   Val.inject f v1 tv1 -> Val.inject f v2 tv2 ->
   exists tv, sem_binary_operation cenv op tv1 ty1 tv2 ty2 m' = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using weak_valid_pointer_no_overflow weak_valid_pointer_inj valid_pointer_inj valid_different_pointers_inj.
   unfold sem_binary_operation; intros; destruct op.
 - (* add *)
   assert (A: forall cenv ty si v1' v2' tv1' tv2',
@@ -1428,7 +1428,7 @@ Lemma sem_cast_inject:
   Val.inject f v1 tv1 ->
   Mem.inject f m tm ->
   exists tv, sem_cast tv1 ty1 ty tm = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using.
   intros. eapply sem_cast_inj; eauto.
   intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
 Qed.
@@ -1439,7 +1439,7 @@ Lemma sem_unary_operation_inject:
   Val.inject f v1 tv1 ->
   Mem.inject f m m' ->
   exists tv, sem_unary_operation op tv1 ty1 m' = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using.
   intros. eapply sem_unary_operation_inj; eauto.
   intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
 Qed.
@@ -1450,7 +1450,7 @@ Lemma sem_binary_operation_inject:
   Val.inject f v1 tv1 -> Val.inject f v2 tv2 ->
   Mem.inject f m m' ->
   exists tv, sem_binary_operation cenv op tv1 ty1 tv2 ty2 m' = Some tv /\ Val.inject f v tv.
-Proof.
+Proof using.
   intros. eapply sem_binary_operation_inj; eauto.
   intros; eapply Mem.valid_pointer_inject_val; eauto.
   intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
@@ -1464,7 +1464,7 @@ Lemma bool_val_inject:
   Val.inject f v tv ->
   Mem.inject f m m' ->
   bool_val tv ty m' = Some b.
-Proof.
+Proof using.
   intros. eapply bool_val_inj; eauto.
   intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
 Qed.
@@ -1540,7 +1540,7 @@ Lemma notbool_bool_val:
   forall v t m,
   sem_notbool v t m =
   match bool_val v t m with None => None | Some b => Some(Val.of_bool (negb b)) end.
-Proof.
+Proof using.
   intros. unfold sem_notbool. destruct (bool_val v t m) as [[] | ]; reflexivity.
 Qed.
 
@@ -1579,7 +1579,7 @@ Local Hint Constructors val_casted : core.
 
 Remark cast_int_int_idem:
   forall sz sg i, cast_int_int sz sg (cast_int_int sz sg i) = cast_int_int sz sg i.
-Proof.
+Proof using.
   intros. destruct sz; simpl; auto.
   destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; intuition congruence.
   destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; intuition congruence.
@@ -1601,7 +1601,7 @@ Ltac DestructCases :=
 
 Lemma cast_val_is_casted:
   forall v ty ty' v' m, sem_cast v ty ty' m = Some v' -> val_casted v' ty'.
-Proof.
+Proof using.
   unfold sem_cast; intros.
   destruct ty, ty'; simpl in H; DestructCases; InvBooleans; subst;
   try discriminate; constructor; auto.
@@ -1613,7 +1613,7 @@ End VAL_CASTED.
 
 Lemma cast_val_casted:
   forall v ty m, val_casted v ty -> sem_cast v ty ty m = Some v.
-Proof.
+Proof using.
   intros. unfold sem_cast; inversion H; clear H; subst v ty; simpl.
 - destruct sz.
   + congruence.
@@ -1635,7 +1635,7 @@ Qed.
 
 Lemma cast_idempotent:
   forall v ty ty' v' m, sem_cast v ty ty' m = Some v' -> sem_cast v' ty' ty' m = Some v'.
-Proof.
+Proof using.
   intros. apply cast_val_casted. eapply cast_val_is_casted; eauto.
 Qed.
 
@@ -1644,7 +1644,7 @@ Qed.
 
 Lemma val_casted_has_argtype:
   forall v ty, val_casted v ty -> Val.has_argtype v (argtype_of_type ty).
-Proof.
+Proof using.
   destruct 1; simpl; rewrite ? H; auto.
 - destruct sz; [destruct si | destruct si | | ]; simpl in *; auto.
   destruct (Int.eq n Int.zero); auto.
@@ -1655,7 +1655,7 @@ Qed.
 
 Lemma val_casted_has_type:
   forall v ty, val_casted v ty -> ty <> Tvoid -> Val.has_type v (typ_of_type ty).
-Proof.
+Proof using.
   intros. inv H; simpl typ_of_type.
 - exact I.
 - exact I.
@@ -1693,7 +1693,7 @@ Inductive arith_type : Type :=
   | Longdouble.
 
 Definition eq_int_type: forall (x y: int_type), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 
 Definition is_unsigned (t: int_type) : bool :=
   match t with
@@ -1827,7 +1827,7 @@ Definition proj_type (t: arith_type) : type :=
 
 Lemma typeconv_integer_promotion:
   forall i, typeconv (proj_type (I i)) = proj_type (I (integer_promotion i)).
-Proof.
+Proof using.
   destruct i; reflexivity.
 Qed.
 
@@ -1837,7 +1837,7 @@ Lemma classify_binarith_arithmetic_conversion:
   forall t1 t2,
   binarith_type (classify_binarith (proj_type t1) (proj_type t2)) =
   proj_type (usual_arithmetic_conversion t1 t2).
-Proof.
+Proof using.
   destruct t1; destruct t2; try reflexivity.
 - destruct it; destruct it0; reflexivity.
 - destruct it; reflexivity.

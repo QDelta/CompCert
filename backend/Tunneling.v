@@ -122,7 +122,7 @@ Definition measure_state (cu: code * U.t) : nat :=
 Function record_conds (cu: code * U.t) {measure measure_state cu} : U.t :=
   let (cu', changed) := record_conds_1 cu in
   if changed then record_conds cu' else snd cu.
-Proof.
+Proof using.
   intros [c0 u0] [c1 u1].
   set (P := fun (c: code) (s: code * U.t * bool) =>
               (forall pc, c!pc = None -> (fst (fst s))!pc = c0!pc) /\

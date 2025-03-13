@@ -29,7 +29,7 @@ Definition In (x: Z) (i: interv) : Prop := fst i <= x < snd i.
 
 Lemma In_dec:
   forall x i, {In x i} + {~In x i}.
-Proof.
+Proof using.
   unfold In; intros.
   case (zle (fst i) x); intros.
   case (zlt x (snd i)); intros.
@@ -41,14 +41,14 @@ Qed.
 Lemma notin_range:
   forall x i,
   x < fst i \/ x >= snd i -> ~In x i.
-Proof.
+Proof using.
   unfold In; intros; lia.
 Qed.
 
 Lemma range_notin:
   forall x i,
   ~In x i -> fst i < snd i -> x < fst i \/ x >= snd i.
-Proof.
+Proof using.
   unfold In; intros; lia.
 Qed.
 
@@ -58,7 +58,7 @@ Definition empty (i: interv) : Prop := fst i >= snd i.
 
 Lemma empty_dec:
   forall i, {empty i} + {~empty i}.
-Proof.
+Proof using.
   unfold empty; intros.
   case (zle (snd i) (fst i)); intros.
   left; lia.
@@ -67,19 +67,19 @@ Qed.
 
 Lemma is_notempty:
   forall i, fst i < snd i -> ~empty i.
-Proof.
+Proof using.
   unfold empty; intros; lia.
 Qed.
 
 Lemma empty_notin:
   forall x i, empty i -> ~In x i.
-Proof.
+Proof using.
   unfold empty, In; intros. lia.
 Qed.
 
 Lemma in_notempty:
   forall x i, In x i -> ~empty i.
-Proof.
+Proof using.
   unfold empty, In; intros. lia.
 Qed.
 
@@ -90,26 +90,26 @@ Definition disjoint (i j: interv) : Prop :=
 
 Lemma disjoint_sym:
   forall i j, disjoint i j -> disjoint j i.
-Proof.
+Proof using.
   unfold disjoint; intros; red; intros. elim (H x); auto.
 Qed.
 
 Lemma empty_disjoint_r:
   forall i j, empty j -> disjoint i j.
-Proof.
+Proof using.
   unfold disjoint; intros. apply empty_notin; auto.
 Qed.
 
 Lemma empty_disjoint_l:
   forall i j, empty i -> disjoint i j.
-Proof.
+Proof using.
   intros. apply disjoint_sym. apply empty_disjoint_r; auto.
 Qed.
 
 Lemma disjoint_range:
   forall i j,
   snd i <= fst j \/ snd j <= fst i -> disjoint i j.
-Proof.
+Proof using.
   unfold disjoint, In; intros. lia.
 Qed.
 
@@ -117,7 +117,7 @@ Lemma range_disjoint:
   forall i j,
   disjoint i j ->
   empty i \/ empty j \/ snd i <= fst j \/ snd j <= fst i.
-Proof.
+Proof using.
   unfold disjoint, empty; intros.
   destruct (zlt (fst i) (snd i)); auto.
   destruct (zlt (fst j) (snd j)); auto.
@@ -141,13 +141,13 @@ Lemma range_disjoint':
   forall i j,
   disjoint i j -> fst i < snd i -> fst j < snd j ->
   snd i <= fst j \/ snd j <= fst i.
-Proof.
+Proof using.
   intros. exploit range_disjoint; eauto. unfold empty; intuition lia.
 Qed.
 
 Lemma disjoint_dec:
   forall i j, {disjoint i j} + {~disjoint i j}.
-Proof.
+Proof using.
   intros.
   destruct (empty_dec i). left; apply empty_disjoint_l; auto.
   destruct (empty_dec j). left; apply empty_disjoint_r; auto.
@@ -163,14 +163,14 @@ Definition shift (i: interv) (delta: Z) : interv := (fst i + delta, snd i + delt
 Lemma in_shift:
   forall x i delta,
   In x i -> In (x + delta) (shift i delta).
-Proof.
+Proof using.
   unfold shift, In; intros. simpl. lia.
 Qed.
 
 Lemma in_shift_inv:
   forall x i delta,
   In x (shift i delta) -> In (x - delta) i.
-Proof.
+Proof using.
   unfold shift, In; simpl; intros. lia.
 Qed.
 
@@ -182,7 +182,7 @@ Variable lo: Z.
 
 Function elements_rec (hi: Z) {wf (Zwf lo) hi} : list Z :=
   if zlt lo hi then (hi-1) :: elements_rec (hi-1) else nil.
-Proof.
+Proof using.
   intros. red. lia.
   apply Zwf_well_founded.
 Qed.
@@ -190,7 +190,7 @@ Qed.
 Lemma In_elements_rec:
   forall hi x,
   List.In x (elements_rec hi) <-> lo <= x < hi.
-Proof.
+Proof using.
   intros. functional induction (elements_rec hi).
   simpl; split; intros.
   destruct H. clear IHl. lia. rewrite IHl in H. clear IHl. lia.
@@ -206,14 +206,14 @@ Definition elements (i: interv) : list Z :=
 Lemma in_elements:
   forall x i,
   In x i -> List.In x (elements i).
-Proof.
+Proof using.
   intros. unfold elements. rewrite In_elements_rec. auto.
 Qed.
 
 Lemma elements_in:
   forall x i,
   List.In x (elements i) -> In x i.
-Proof.
+Proof using.
   unfold elements; intros.
   rewrite In_elements_rec in H. auto.
 Qed.
@@ -276,14 +276,14 @@ Variable a: A.
 
 Function fold_rec (hi: Z) {wf (Zwf lo) hi} : A :=
   if zlt lo hi then f (hi - 1) (fold_rec (hi - 1)) else a.
-Proof.
+Proof using.
   intros. red. lia.
   apply Zwf_well_founded.
 Qed.
 
 Lemma fold_rec_elements:
   forall hi, fold_rec hi = List.fold_right f a (elements_rec lo hi).
-Proof.
+Proof using.
   intros. functional induction (fold_rec hi).
   rewrite elements_rec_equation. rewrite zlt_true; auto.
   simpl. congruence.
@@ -298,7 +298,7 @@ Definition fold {A: Type} (f: Z -> A -> A) (a: A) (i: interv) : A :=
 Lemma fold_elements:
   forall (A: Type) (f: Z -> A -> A) a i,
   fold f a i = List.fold_right f a (elements i).
-Proof.
+Proof using.
   intros. unfold fold, elements. apply fold_rec_elements.
 Qed.
 

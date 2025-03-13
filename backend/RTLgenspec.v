@@ -48,7 +48,7 @@ Remark bind_inversion:
   bind f g s1 = OK y s3 i ->
   exists x, exists s2, exists i1, exists i2,
   f s1 = OK x s2 i1 /\ g x s2 = OK y s3 i2.
-Proof.
+Proof using.
   intros until i. unfold bind. destruct (f s1); intros.
   discriminate.
   exists a; exists s'; exists s.
@@ -62,7 +62,7 @@ Remark bind2_inversion:
   bind2 f g s1 = OK z s3 i ->
   exists x, exists y, exists s2, exists i1, exists i2,
   f s1 = OK (x, y) s2 i1 /\ g x y s2 = OK z s3 i2.
-Proof.
+Proof using.
   unfold bind2; intros.
   exploit bind_inversion; eauto.
   intros [[x y] [s2 [i1 [i2 [P Q]]]]]. simpl in Q.
@@ -133,7 +133,7 @@ Global Hint Resolve state_incr_refl: rtlg.
 Lemma instr_at_incr:
   forall s1 s2 n i,
   state_incr s1 s2 -> s1.(st_code)!n = Some i -> s2.(st_code)!n = Some i.
-Proof.
+Proof using.
   intros. inv H.
   destruct (H3 n); congruence.
 Qed.
@@ -171,21 +171,21 @@ Definition reg_fresh (r: reg) (s: state) : Prop :=
 
 Lemma valid_fresh_absurd:
   forall r s, reg_valid r s -> reg_fresh r s -> False.
-Proof.
+Proof using.
   intros r s. unfold reg_valid, reg_fresh; case r; tauto.
 Qed.
 Global Hint Resolve valid_fresh_absurd: rtlg.
 
 Lemma valid_fresh_different:
   forall r1 r2 s, reg_valid r1 s -> reg_fresh r2 s -> r1 <> r2.
-Proof.
+Proof using.
   unfold not; intros. subst r2. eauto with rtlg.
 Qed.
 Global Hint Resolve valid_fresh_different: rtlg.
 
 Lemma reg_valid_incr:
   forall r s1 s2, state_incr s1 s2 -> reg_valid r s1 -> reg_valid r s2.
-Proof.
+Proof using.
   intros r s1 s2 INCR.
   inversion INCR.
   unfold reg_valid. intros; apply Plt_Ple_trans with (st_nextreg s1); auto.
@@ -194,7 +194,7 @@ Global Hint Resolve reg_valid_incr: rtlg.
 
 Lemma reg_fresh_decr:
   forall r s1 s2, state_incr s1 s2 -> reg_fresh r s2 -> reg_fresh r s1.
-Proof.
+Proof using.
   intros r s1 s2 INCR. inversion INCR.
   unfold reg_fresh; unfold not; intros.
   apply H4. apply Plt_Ple_trans with (st_nextreg s1); auto.
@@ -208,7 +208,7 @@ Definition regs_valid (rl: list reg) (s: state) : Prop :=
 
 Lemma regs_valid_nil:
   forall s, regs_valid nil s.
-Proof.
+Proof using.
   intros; red; intros. elim H.
 Qed.
 Global Hint Resolve regs_valid_nil: rtlg.
@@ -216,20 +216,20 @@ Global Hint Resolve regs_valid_nil: rtlg.
 Lemma regs_valid_cons:
   forall r1 rl s,
   reg_valid r1 s -> regs_valid rl s -> regs_valid (r1 :: rl) s.
-Proof.
+Proof using.
   intros; red; intros. elim H1; intro. subst r1; auto. auto.
 Qed.
 
 Lemma regs_valid_app:
   forall rl1 rl2 s,
   regs_valid rl1 s -> regs_valid rl2 s -> regs_valid (rl1 ++ rl2) s.
-Proof.
+Proof using.
   intros; red; intros. apply in_app_iff in H1. destruct H1; auto.
 Qed.
 
 Lemma regs_valid_incr:
   forall s1 s2 rl, state_incr s1 s2 -> regs_valid rl s1 -> regs_valid rl s2.
-Proof.
+Proof using.
   unfold regs_valid; intros; eauto with rtlg.
 Qed.
 Global Hint Resolve regs_valid_incr: rtlg.
@@ -250,7 +250,7 @@ Definition map_valid (m: mapping) (s: state) : Prop :=
 Lemma map_valid_incr:
   forall s1 s2 m,
   state_incr s1 s2 -> map_valid m s1 -> map_valid m s2.
-Proof.
+Proof using.
   unfold map_valid; intros; eauto with rtlg.
 Qed.
 Global Hint Resolve map_valid_incr: rtlg.
@@ -262,7 +262,7 @@ Global Hint Resolve map_valid_incr: rtlg.
 Lemma add_instr_at:
   forall s1 s2 incr i n,
   add_instr i s1 = OK n s2 incr -> s2.(st_code)!n = Some i.
-Proof.
+Proof using.
   intros. monadInv H. simpl. apply PTree.gss.
 Qed.
 Global Hint Resolve add_instr_at: rtlg.
@@ -272,7 +272,7 @@ Global Hint Resolve add_instr_at: rtlg.
 Lemma update_instr_at:
   forall n i s1 s2 incr u,
   update_instr n i s1 = OK u s2 incr -> s2.(st_code)!n = Some i.
-Proof.
+Proof using.
   intros. unfold update_instr in H.
   destruct (plt n (st_nextnode s1)); try discriminate.
   destruct (check_empty_node s1 n); try discriminate.
@@ -285,7 +285,7 @@ Global Hint Resolve update_instr_at: rtlg.
 Lemma new_reg_valid:
   forall s1 s2 r i,
   new_reg s1 = OK r s2 i -> reg_valid r s2.
-Proof.
+Proof using.
   intros. monadInv H.
   unfold reg_valid; simpl. apply Plt_succ.
 Qed.
@@ -294,7 +294,7 @@ Global Hint Resolve new_reg_valid: rtlg.
 Lemma new_reg_fresh:
   forall s1 s2 r i,
   new_reg s1 = OK r s2 i -> reg_fresh r s1.
-Proof.
+Proof using.
   intros. monadInv H.
   unfold reg_fresh; simpl.
   exact (Plt_strict _).
@@ -304,7 +304,7 @@ Global Hint Resolve new_reg_fresh: rtlg.
 Lemma new_reg_not_in_map:
   forall s1 s2 m r i,
   new_reg s1 = OK r s2 i -> map_valid m s1 -> ~(reg_in_map m r).
-Proof.
+Proof using.
   unfold not; intros; eauto with rtlg.
 Qed.
 Global Hint Resolve new_reg_not_in_map: rtlg.
@@ -313,7 +313,7 @@ Global Hint Resolve new_reg_not_in_map: rtlg.
 
 Lemma init_mapping_valid:
   forall s, map_valid init_mapping s.
-Proof.
+Proof using.
   unfold map_valid, init_mapping.
   intros s r [[id A] | B].
   simpl in A. rewrite PTree.gempty in A; discriminate.
@@ -325,7 +325,7 @@ Qed.
 Lemma find_var_in_map:
   forall s1 s2 map name r i,
   find_var map name s1 = OK r s2 i -> reg_in_map map r.
-Proof.
+Proof using.
   intros until r. unfold find_var; caseEq (map.(map_vars)!name).
   intros. inv H0. left; exists name; auto.
   intros. inv H0.
@@ -335,7 +335,7 @@ Global Hint Resolve find_var_in_map: rtlg.
 Lemma find_var_valid:
   forall s1 s2 map name r i,
   find_var map name s1 = OK r s2 i -> map_valid map s1 -> reg_valid r s1.
-Proof.
+Proof using.
   eauto with rtlg.
 Qed.
 Global Hint Resolve find_var_valid: rtlg.
@@ -345,7 +345,7 @@ Global Hint Resolve find_var_valid: rtlg.
 Lemma find_letvar_in_map:
   forall s1 s2 map idx r i,
   find_letvar map idx s1 = OK r s2 i -> reg_in_map map r.
-Proof.
+Proof using.
   intros until r. unfold find_letvar.
   caseEq (nth_error (map_letvars map) idx); intros; monadInv H0.
   right; apply nth_error_in with idx; auto.
@@ -355,7 +355,7 @@ Global Hint Resolve find_letvar_in_map: rtlg.
 Lemma find_letvar_valid:
   forall s1 s2 map idx r i,
   find_letvar map idx s1 = OK r s2 i -> map_valid map s1 -> reg_valid r s1.
-Proof.
+Proof using.
   eauto with rtlg.
 Qed.
 Global Hint Resolve find_letvar_valid: rtlg.
@@ -367,7 +367,7 @@ Lemma add_var_valid:
   add_var map1 name s1 = OK (r, map2) s2 i ->
   map_valid map1 s1 ->
   reg_valid r s2 /\ map_valid map2 s2.
-Proof.
+Proof using.
   intros. monadInv H.
   split. eauto with rtlg.
   inversion EQ. subst. red. intros r' [[id A] | B].
@@ -382,7 +382,7 @@ Qed.
 Lemma add_var_find:
   forall s1 s2 map name r map' i,
   add_var map name s1 = OK (r,map') s2 i -> map'.(map_vars)!name = Some r.
-Proof.
+Proof using.
   intros. monadInv H. simpl. apply PTree.gss.
 Qed.
 
@@ -391,7 +391,7 @@ Lemma add_vars_valid:
   add_vars map1 namel s1 = OK (rl, map2) s2 i ->
   map_valid map1 s1 ->
   regs_valid rl s2 /\ map_valid map2 s2.
-Proof.
+Proof using.
   induction namel; simpl; intros; monadInv H.
   split. red; simpl; intros; tauto. auto.
   exploit IHnamel; eauto. intros [A B].
@@ -404,7 +404,7 @@ Lemma add_var_letenv:
   forall map1 id s1 r map2 s2 i,
   add_var map1 id s1 = OK (r, map2) s2 i ->
   map2.(map_letvars) = map1.(map_letvars).
-Proof.
+Proof using.
   intros; monadInv H. reflexivity.
 Qed.
 
@@ -412,7 +412,7 @@ Lemma add_vars_letenv:
   forall il map1 s1 rl map2 s2 i,
   add_vars map1 il s1 = OK (rl, map2) s2 i ->
   map2.(map_letvars) = map1.(map_letvars).
-Proof.
+Proof using.
   induction il; simpl; intros; monadInv H.
   reflexivity.
   transitivity (map_letvars x0).
@@ -427,7 +427,7 @@ Lemma add_letvar_valid:
   map_valid map s ->
   reg_valid r s ->
   map_valid (add_letvar map r) s.
-Proof.
+Proof using.
   intros; red; intros.
   destruct H1 as [[id A]|B].
   simpl in A. apply H. left; exists id; auto.
@@ -441,7 +441,7 @@ Lemma alloc_reg_valid:
   forall a s1 s2 map r i,
   map_valid map s1 ->
   alloc_reg map a s1 = OK r s2 i -> reg_valid r s2.
-Proof.
+Proof using.
   intros until r.  unfold alloc_reg.
   case a; eauto with rtlg.
 Qed.
@@ -452,7 +452,7 @@ Lemma alloc_reg_fresh_or_in_map:
   map_valid map s ->
   alloc_reg map a s = OK r s' i ->
   reg_in_map map r \/ reg_fresh r s.
-Proof.
+Proof using.
   intros until s'. unfold alloc_reg.
   destruct a; intros; try (right; eauto with rtlg; fail).
   left; eauto with rtlg.
@@ -464,7 +464,7 @@ Lemma alloc_regs_valid:
   map_valid map s1 ->
   alloc_regs map al s1 = OK rl s2 i ->
   regs_valid rl s2.
-Proof.
+Proof using.
   induction al; simpl; intros; monadInv H0.
   apply regs_valid_nil.
   apply regs_valid_cons. eauto with rtlg. eauto with rtlg.
@@ -476,7 +476,7 @@ Lemma alloc_regs_fresh_or_in_map:
   map_valid map s ->
   alloc_regs map al s = OK rl s' i ->
   forall r, In r rl -> reg_in_map map r \/ reg_fresh r s.
-Proof.
+Proof using.
   induction al; simpl; intros; monadInv H0.
   elim H1.
   elim H1; intro.
@@ -490,7 +490,7 @@ Lemma alloc_optreg_valid:
   forall dest s1 s2 map r i,
   map_valid map s1 ->
   alloc_optreg map dest s1 = OK r s2 i -> reg_valid r s2.
-Proof.
+Proof using.
   intros until r.  unfold alloc_reg.
   case dest; eauto with rtlg.
 Qed.
@@ -501,7 +501,7 @@ Lemma alloc_optreg_fresh_or_in_map:
   map_valid map s ->
   alloc_optreg map dest s = OK r s' i ->
   reg_in_map map r \/ reg_fresh r s.
-Proof.
+Proof using.
   intros until s'. unfold alloc_optreg. destruct dest; intros.
   left; eauto with rtlg.
   right; eauto with rtlg.
@@ -542,7 +542,7 @@ Lemma target_reg_ok_append:
   forall pr',
   (forall r', In r' pr' -> reg_in_map map r' \/ r' <> r) ->
   target_reg_ok map (pr' ++ pr) a r.
-Proof.
+Proof using.
   induction 1; intros.
   constructor; auto.
   constructor; auto.
@@ -557,7 +557,7 @@ Lemma target_reg_ok_cons:
   forall r',
   reg_in_map map r' \/ r' <> r ->
   target_reg_ok map (r' :: pr) a r.
-Proof.
+Proof using.
   intros. change (r' :: pr) with ((r' :: nil) ++ pr).
   apply target_reg_ok_append; auto.
   intros r'' [A|B]. subst r''; auto. contradiction.
@@ -569,7 +569,7 @@ Lemma new_reg_target_ok:
   regs_valid pr s1 ->
   new_reg s1 = OK r s2 i ->
   target_reg_ok map pr a r.
-Proof.
+Proof using.
   intros. constructor.
   red; intro. apply valid_fresh_absurd with r s1.
   eauto with rtlg. eauto with rtlg.
@@ -583,7 +583,7 @@ Lemma alloc_reg_target_ok:
   regs_valid pr s1 ->
   alloc_reg map a s1 = OK r s2 i ->
   target_reg_ok map pr a r.
-Proof.
+Proof using.
   intros. unfold alloc_reg in H1. destruct a;
   try (eapply new_reg_target_ok; eauto; fail).
   (* Evar *)
@@ -600,7 +600,7 @@ Lemma alloc_regs_target_ok:
   regs_valid pr s1 ->
   alloc_regs map al s1 = OK rl s2 i ->
   target_regs_ok map pr al rl.
-Proof.
+Proof using.
   induction al; intros; monadInv H1.
   constructor.
   constructor.
@@ -628,7 +628,7 @@ Inductive return_reg_ok: state -> mapping -> option reg -> Prop :=
 Lemma return_reg_ok_incr:
   forall s map rret, return_reg_ok s map rret ->
   forall s', state_incr s s' -> return_reg_ok s' map rret.
-Proof.
+Proof using.
   induction 1; intros; econstructor; eauto with rtlg.
 Qed.
 Global Hint Resolve return_reg_ok_incr: rtlg.
@@ -638,7 +638,7 @@ Lemma new_reg_return_ok:
   new_reg s1 = OK r s2 i ->
   map_valid map s1 ->
   return_reg_ok s2 map (ret_reg sig r).
-Proof.
+Proof using.
   intros. unfold ret_reg.
   destruct (xtype_eq (sig_res sig) Xvoid); constructor; eauto with rtlg.
 Qed.
@@ -931,7 +931,7 @@ Lemma tr_move_incr:
   forall ns rs nd rd,
   tr_move s1.(st_code) ns rs nd rd ->
   tr_move s2.(st_code) ns rs nd rd.
-Proof.
+Proof using.
   induction 2; econstructor; eauto with rtlg.
 Qed.
 
@@ -950,7 +950,7 @@ with tr_exprlist_incr:
   forall map pr al ns nd rl,
   tr_exprlist s1.(st_code) map pr al ns nd rl ->
   tr_exprlist s2.(st_code) map pr al ns nd rl.
-Proof.
+Proof using.
   intros s1 s2 EXT.
   pose (AT := fun pc i => instr_at_incr s1 s2 pc i EXT).
   induction 1; econstructor; eauto.
@@ -968,7 +968,7 @@ Lemma add_move_charact:
   forall s ns rs nd rd s' i,
   add_move rs rd nd s = OK ns s' i ->
   tr_move s'.(st_code) ns rs nd rd.
-Proof.
+Proof using.
   intros. unfold add_move in H. destruct (Reg.eq rs rd).
   inv H. constructor.
   constructor. eauto with rtlg.
@@ -999,7 +999,7 @@ with transl_condexpr_charact:
      (VALID: regs_valid pr s),
    tr_condition s'.(st_code) map pr a ns ntrue nfalse.
 
-Proof.
+Proof using.
   induction a; intros; try (monadInv TR); saturateTrans.
   (* Evar *)
   generalize EQ; unfold find_var. caseEq (map_vars map)!i; intros; inv EQ1.
@@ -1093,7 +1093,7 @@ Lemma transl_expr_assign_charact:
      (WF: map_valid map s)
      (OK: reg_map_ok map rd (Some id)),
    tr_expr s'.(st_code) map nil a ns nd rd (Some id).
-Proof.
+Proof using.
   induction a; intros; monadInv TR; saturateTrans.
   (* Evar *)
   generalize EQ; unfold find_var. caseEq (map_vars map)!i; intros; inv EQ1.
@@ -1138,7 +1138,7 @@ Lemma alloc_optreg_map_ok:
   map_valid map s1 ->
   alloc_optreg map optid s1 = OK r s2 i ->
   reg_map_ok map r optid.
-Proof.
+Proof using.
   unfold alloc_optreg; intros. destruct optid.
   constructor. unfold find_var in H0. destruct (map_vars map)!i0; monadInv H0. auto.
   constructor. eapply new_reg_not_in_map; eauto.
@@ -1149,7 +1149,7 @@ Lemma tr_exitexpr_incr:
   forall map a ns nexits,
   tr_exitexpr s1.(st_code) map a ns nexits ->
   tr_exitexpr s2.(st_code) map a ns nexits.
-Proof.
+Proof using.
   intros s1 s2 EXT.
   generalize tr_expr_incr tr_condition_incr; intros I1 I2.
   induction 1; econstructor; eauto with rtlg.
@@ -1160,7 +1160,7 @@ Lemma tr_stmt_incr:
   forall map s ns nd nexits ngoto nret rret,
   tr_stmt s1.(st_code) map s ns nd nexits ngoto nret rret ->
   tr_stmt s2.(st_code) map s ns nd nexits ngoto nret rret.
-Proof.
+Proof using.
   intros s1 s2 EXT.
   generalize tr_expr_incr tr_condition_incr tr_exprlist_incr tr_exitexpr_incr; intros I1 I2 I3 I4.
   pose (AT := fun pc i => instr_at_incr s1 s2 pc i EXT).
@@ -1171,7 +1171,7 @@ Lemma transl_exit_charact:
   forall nexits n s ne s' incr,
   transl_exit nexits n s = OK ne s' incr ->
   nth_error nexits n = Some ne /\ s' = s.
-Proof.
+Proof using.
   intros until incr. unfold transl_exit.
   destruct (nth_error nexits n); intro; monadInv H. auto.
 Qed.
@@ -1180,7 +1180,7 @@ Lemma transl_jumptable_charact:
   forall nexits tbl s nl s' incr,
   transl_jumptable nexits tbl s = OK nl s' incr ->
   tr_jumptable nexits tbl nl /\ s' = s.
-Proof.
+Proof using.
   induction tbl; intros.
   monadInv H. split. red. simpl. intros. discriminate. auto.
   monadInv H. exploit transl_exit_charact; eauto. intros [A B].
@@ -1194,7 +1194,7 @@ Lemma transl_exitexpr_charact:
      (TR: transl_exitexpr map a nexits s = OK ns s' INCR)
      (WF: map_valid map s),
   tr_exitexpr s'.(st_code) map a ns nexits.
-Proof.
+Proof using.
   induction a; simpl; intros; try (monadInv TR); saturateTrans.
 - (* XEexit *)
   exploit transl_exit_charact; eauto. intros [A B].
@@ -1221,7 +1221,7 @@ Lemma convert_builtin_res_charact:
     (TR: convert_builtin_res map oty res s = OK res' s' INCR)
     (WF: map_valid map s),
   tr_builtin_res map res res'.
-Proof.
+Proof using.
   destruct res; simpl; intros.
 - monadInv TR. constructor.  unfold find_var in EQ. destruct (map_vars map)!x; inv EQ; auto.
 - destruct (xtype_eq oty Xvoid); monadInv TR.
@@ -1236,7 +1236,7 @@ Lemma transl_stmt_charact:
     (WF: map_valid map s)
     (OK: return_reg_ok s map rret),
   tr_stmt s'.(st_code) map stmt ns nd nexits ngoto nret rret.
-Proof.
+Proof using.
   induction stmt; intros; simpl in TR; try (monadInv TR); saturateTrans.
   (* Sskip *)
   constructor.
@@ -1337,7 +1337,7 @@ Lemma transl_function_charact:
   forall f tf,
   transl_function f = Errors.OK tf ->
   tr_function f tf.
-Proof.
+Proof using.
   intros until tf. unfold transl_function.
   caseEq (transl_fun f init_state). congruence.
   intros [nentry rparams] sfinal INCR TR E. inv E.

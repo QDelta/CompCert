@@ -28,7 +28,7 @@ Definition fenv_compat (p: program) (fenv: funenv) : Prop :=
 
 Lemma funenv_program_compat:
   forall p, fenv_compat p (funenv_program p).
-Proof.
+Proof using.
   set (P := fun (dm: PTree.t (globdef fundef unit)) (fenv: funenv) =>
               forall id f,
               fenv!id = Some f -> dm!id = Some (Gfun (Internal f))).
@@ -62,7 +62,7 @@ Qed.
 Lemma fenv_compat_linkorder:
   forall cunit prog fenv,
   linkorder cunit prog -> fenv_compat cunit fenv -> fenv_compat prog fenv.
-Proof.
+Proof using.
   intros; red; intros. apply H0 in H1.
   destruct (prog_defmap_linkorder _ _ _ _ H H1) as (gd' & P & Q).
   inv Q. inv H3. auto.
@@ -71,14 +71,14 @@ Qed.
 (** ** Properties of shifting *)
 
 Lemma shiftpos_eq: forall x y, Zpos (shiftpos x y) = (Zpos x + Zpos y) - 1.
-Proof.
+Proof using.
   intros. unfold shiftpos. zify.  try rewrite Pos2Z.inj_sub. auto.
   zify. lia.
 Qed.
 
 Lemma shiftpos_inj:
   forall x y n, shiftpos x n = shiftpos y n -> x = y.
-Proof.
+Proof using.
   intros.
   assert (Zpos (shiftpos x n) = Zpos (shiftpos y n)) by congruence.
   rewrite ! shiftpos_eq in H0.
@@ -88,31 +88,31 @@ Qed.
 
 Lemma shiftpos_diff:
   forall x y n, x <> y -> shiftpos x n <> shiftpos y n.
-Proof.
+Proof using.
   intros; red; intros. elim H. eapply shiftpos_inj; eauto.
 Qed.
 
 Lemma shiftpos_above:
   forall x n, Ple n (shiftpos x n).
-Proof.
+Proof using.
   intros. unfold Ple; zify. rewrite shiftpos_eq. extlia.
 Qed.
 
 Lemma shiftpos_not_below:
   forall x n, Plt (shiftpos x n) n -> False.
-Proof.
+Proof using.
   intros. generalize (shiftpos_above x n). extlia.
 Qed.
 
 Lemma shiftpos_below:
   forall x n, Plt (shiftpos x n) (Pos.add x n).
-Proof.
+Proof using.
   intros. unfold Plt; zify. rewrite shiftpos_eq. lia.
 Qed.
 
 Lemma shiftpos_le:
   forall x y n, Ple x y -> Ple (shiftpos x n) (shiftpos y n).
-Proof.
+Proof using.
   intros. unfold Ple in *; zify. rewrite ! shiftpos_eq. lia.
 Qed.
 
@@ -125,7 +125,7 @@ Remark bind_inversion:
   bind f g s1 = R y s3 i ->
   exists x, exists s2, exists i1, exists i2,
   f s1 = R x s2 i1 /\ g x s2 = R y s3 i2.
-Proof.
+Proof using.
   unfold bind; intros. destruct (f s1). exists x; exists s'; exists I.
   destruct (g x s'). inv H. exists I0; auto.
 Qed.
@@ -181,7 +181,7 @@ Remark mlist_iter2_fold:
   exists i,
   mlist_iter2 f l s =
   R tt (fold_left (fun a p => match f (fst p) (snd p) a with R _ s2 _ => s2 end) l s) i.
-Proof.
+Proof using.
   induction l; simpl; intros.
   exists (sincr_refl s); auto.
   destruct a as [x y]. unfold bind. simpl. destruct (f x y s) as [xx s1 i1].
@@ -192,7 +192,7 @@ Lemma ptree_mfold_spec:
   forall (A: Type) (f: positive -> A -> mon unit) t s x s' i,
   ptree_mfold f t s = R x s' i ->
   exists i', mlist_iter2 f (PTree.elements t) s = R tt s' i'.
-Proof.
+Proof using.
   intros.
   destruct (mlist_iter2_fold _ _ f (PTree.elements t) s) as [i' EQ].
   unfold ptree_mfold in H. inv H. rewrite PTree.fold_spec.
@@ -215,7 +215,7 @@ Lemma add_moves_unchanged:
   add_moves srcs dsts pc2 s = R pc1 s' i ->
   Plt pc s.(st_nextnode) \/ Ple s'.(st_nextnode) pc ->
   s'.(st_code)!pc = s.(st_code)!pc.
-Proof.
+Proof using.
   induction srcs; simpl; intros.
   monadInv H. auto.
   destruct dsts; monadInv H. auto.
@@ -229,7 +229,7 @@ Lemma add_moves_spec:
   add_moves srcs dsts pc2 s = R pc1 s' i ->
   (forall pc, Ple s.(st_nextnode) pc -> Plt pc s'.(st_nextnode) -> c!pc = s'.(st_code)!pc) ->
   tr_moves c pc1 srcs dsts pc2.
-Proof.
+Proof using.
   induction srcs; simpl; intros.
   monadInv H. apply tr_moves_nil; auto.
   destruct dsts; monadInv H. apply tr_moves_nil; auto.
@@ -358,7 +358,7 @@ Remark set_instr_other:
   set_instr pc instr s = R x s' i ->
   pc' <> pc ->
   s'.(st_code)!pc' = s.(st_code)!pc'.
-Proof.
+Proof using.
   intros. monadInv H; simpl. apply PTree.gso; auto.
 Qed.
 
@@ -367,7 +367,7 @@ Remark set_instr_same:
   set_instr pc instr s = R x s' i ->
   c!(pc) = s'.(st_code)!pc ->
   c!(pc) = Some instr.
-Proof.
+Proof using.
   intros. rewrite H0. monadInv H; simpl. apply PTree.gss.
 Qed.
 
@@ -378,7 +378,7 @@ Lemma expand_instr_unchanged:
   Plt pc' s.(st_nextnode) ->
   pc' <> spc ctx pc ->
   s'.(st_code)!pc' = s.(st_code)!pc'.
-Proof.
+Proof using rec_unchanged.
   generalize set_instr_other; intros A.
   intros. unfold expand_instr in H; destruct instr; eauto.
 (* call *)
@@ -414,7 +414,7 @@ Lemma iter_expand_instr_unchanged:
   ~In pc (List.map (spc ctx) (List.map (@fst _ _) l)) ->
   list_norepet (List.map (@fst _ _) l) ->
   s'.(st_code)!pc = s.(st_code)!pc.
-Proof.
+Proof using rec_unchanged.
   induction l; simpl; intros.
   (* base case *)
   monadInv H. auto.
@@ -432,7 +432,7 @@ Lemma expand_cfg_rec_unchanged:
   Ple ctx.(dpc) s.(st_nextnode) ->
   Plt pc ctx.(dpc) ->
   s'.(st_code)!pc = s.(st_code)!pc.
-Proof.
+Proof using rec_unchanged.
   intros. unfold expand_cfg_rec in H. monadInv H. inversion EQ.
   transitivity ((st_code s0)!pc).
   exploit ptree_mfold_spec; eauto. intros [INCR' ITER].
@@ -462,7 +462,7 @@ Hypothesis rec_spec:
 
 Remark min_alignment_pos:
   forall sz, min_alignment sz > 0.
-Proof.
+Proof using.
   intros; unfold min_alignment.
   destruct (zle sz 1). lia. destruct (zle sz 2). lia. destruct (zle sz 4); lia.
 Qed.
@@ -484,7 +484,7 @@ Lemma expand_instr_spec:
   (forall pc', Ple s.(st_nextnode) pc' -> Plt pc' s'.(st_nextnode) -> c!pc' = s'.(st_code)!pc') ->
   c!(spc ctx pc) = s'.(st_code)!(spc ctx pc) ->
   tr_instr ctx pc instr c.
-Proof.
+Proof using rec_spec FE.
   intros until c; intros EXP DEFS OPC OREG STK1 STK2 STK3 S1 S2.
   generalize set_instr_same; intros BASE.
   unfold expand_instr in EXP; destruct instr; simpl in DEFS;
@@ -569,7 +569,7 @@ Lemma iter_expand_instr_spec:
   (forall pc', Ple s.(st_nextnode) pc' -> Plt pc' s'.(st_nextnode) -> c!pc' = s'.(st_code)!pc') ->
   (forall pc instr, In (pc, instr) l -> c!(spc ctx pc) = s'.(st_code)!(spc ctx pc)) ->
   forall pc instr, In (pc, instr) l -> tr_instr ctx pc instr c.
-Proof.
+Proof using rec_unchanged rec_spec FE.
   induction l; simpl; intros.
   (* base case *)
   contradiction.
@@ -617,7 +617,7 @@ Lemma expand_cfg_rec_spec:
   s'.(st_stksize) <= stacksize ->
   (forall pc', Ple ctx.(dpc) pc' -> Plt pc' s'.(st_nextnode) -> c!pc' = s'.(st_code)!pc') ->
   tr_funbody ctx f c.
-Proof.
+Proof using rec_unchanged rec_spec FE.
   intros. unfold expand_cfg_rec in H. monadInv H. inversion EQ.
   constructor.
   intros. rewrite H1. eapply max_reg_function_params; eauto.
@@ -649,7 +649,7 @@ Lemma expand_cfg_unchanged:
   Ple ctx.(dpc) s.(st_nextnode) ->
   Plt pc ctx.(dpc) ->
   s'.(st_code)!pc = s.(st_code)!pc.
-Proof.
+Proof using.
   intros fe0; pattern fe0. apply well_founded_ind with (R := ltof _ size_fenv).
   apply well_founded_ltof.
   intros. unfold expand_cfg in H0. rewrite unroll_Fixm in H0.
@@ -670,7 +670,7 @@ Lemma expand_cfg_spec:
   s'.(st_stksize) <= stacksize ->
   (forall pc', Ple ctx.(dpc) pc' -> Plt pc' s'.(st_nextnode) -> c!pc' = s'.(st_code)!pc') ->
   tr_funbody ctx f c.
-Proof.
+Proof using.
   intros fe0; pattern fe0. apply well_founded_ind with (R := ltof _ size_fenv).
   apply well_founded_ltof.
   intros. unfold expand_cfg in H0. rewrite unroll_Fixm in H0.
@@ -701,7 +701,7 @@ Lemma tr_function_linkorder:
   linkorder cunit prog ->
   tr_function cunit f f' ->
   tr_function prog f f'.
-Proof.
+Proof using.
   intros. inv H0. econstructor; eauto. eapply fenv_compat_linkorder; eauto.
 Qed.
 
@@ -709,7 +709,7 @@ Lemma transf_function_spec:
   forall cunit f f',
   transf_function (funenv_program cunit) f = OK f' ->
   tr_function cunit f f'.
-Proof.
+Proof using.
   intros. unfold transf_function in H.
   set (fenv := funenv_program cunit) in *.
   destruct (expand_function fenv f initstate) as [ctx s i] eqn:?.

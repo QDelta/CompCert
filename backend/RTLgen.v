@@ -69,14 +69,14 @@ Inductive state_incr: state -> state -> Prop :=
 
 Lemma state_incr_refl:
   forall s, state_incr s s.
-Proof.
+Proof using.
   intros. apply state_incr_intro.
   apply Ple_refl. apply Ple_refl. intros; auto.
 Qed.
 
 Lemma state_incr_trans:
   forall s1 s2 s3, state_incr s1 s2 -> state_incr s2 s3 -> state_incr s1 s3.
-Proof.
+Proof using.
   intros. inv H; inv H0. apply state_incr_intro.
   apply Ple_trans with (st_nextnode s2); assumption.
   apply Ple_trans with (st_nextreg s2); assumption.
@@ -150,7 +150,7 @@ Definition handle_error {A: Type} (f g: mon A) : mon A :=
 
 Remark init_state_wf:
   forall pc, Plt pc 1%positive \/ (PTree.empty instruction)!pc = None.
-Proof. intros; right; apply PTree.gempty. Qed.
+Proof using. intros; right; apply PTree.gempty. Qed.
 
 Definition init_state : state :=
   mkstate 1%positive 1%positive (PTree.empty instruction) init_state_wf.
@@ -162,7 +162,7 @@ Remark add_instr_wf:
   forall s i pc,
   let n := s.(st_nextnode) in
   Plt pc (Pos.succ n) \/ (PTree.set n i s.(st_code))!pc = None.
-Proof.
+Proof using.
   intros. case (peq pc n); intro.
   subst pc; left; apply Plt_succ.
   rewrite PTree.gso; auto.
@@ -178,7 +178,7 @@ Remark add_instr_incr:
                 (Pos.succ n)
                 (PTree.set n i s.(st_code))
                 (add_instr_wf s i)).
-Proof.
+Proof using.
   constructor; simpl.
   apply Ple_succ.
   apply Ple_refl.
@@ -200,7 +200,7 @@ Definition add_instr (i: instruction) : mon node :=
 Remark reserve_instr_wf:
   forall s pc,
   Plt pc (Pos.succ s.(st_nextnode)) \/ s.(st_code)!pc = None.
-Proof.
+Proof using.
   intros. elim (st_wf s pc); intro.
   left; apply Plt_trans_succ; auto.
   right; auto.
@@ -213,7 +213,7 @@ Remark reserve_instr_incr:
                 (Pos.succ n)
                 s.(st_code)
                 (reserve_instr_wf s)).
-Proof.
+Proof using.
   intros; constructor; simpl.
   apply Ple_succ.
   apply Ple_refl.
@@ -232,7 +232,7 @@ Remark update_instr_wf:
   Plt n s.(st_nextnode) ->
   forall pc,
   Plt pc s.(st_nextnode) \/ (PTree.set n i s.(st_code))!pc = None.
-Proof.
+Proof using.
   intros.
   case (peq pc n); intro.
   subst pc; left; assumption.
@@ -245,7 +245,7 @@ Remark update_instr_incr:
   state_incr s
              (mkstate s.(st_nextreg) s.(st_nextnode) (PTree.set n i s.(st_code))
                      (update_instr_wf s n i LT)).
-Proof.
+Proof using.
   intros.
   constructor; simpl; intros.
   apply Ple_refl.
@@ -255,7 +255,7 @@ Qed.
 
 Definition check_empty_node:
   forall (s: state) (n: node), { s.(st_code)!n = None } + { True }.
-Proof.
+Proof using.
   intros. case (s.(st_code)!n); intros. right; auto. left; auto.
 Defined.
 
@@ -277,7 +277,7 @@ Remark new_reg_incr:
   forall s,
   state_incr s (mkstate (Pos.succ s.(st_nextreg))
                         s.(st_nextnode) s.(st_code) s.(st_wf)).
-Proof.
+Proof using.
   constructor; simpl. apply Ple_refl. apply Ple_succ. auto.
 Qed.
 

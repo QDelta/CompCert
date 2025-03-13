@@ -143,7 +143,7 @@ Definition loc_result (s: signature) : rpair mreg :=
 Lemma loc_result_type:
   forall sig,
   subtype (proj_sig_res sig) (typ_rpair mreg_type (loc_result sig)) = true.
-Proof.
+Proof using.
   intros. unfold loc_result. destruct (proj_sig_res sig); destruct Archi.big_endian; auto.
 Qed.
 
@@ -152,7 +152,7 @@ Qed.
 Lemma loc_result_caller_save:
   forall (s: signature),
   forall_rpair (fun r => is_callee_save r = false) (loc_result s).
-Proof.
+Proof using.
   intros.
   unfold loc_result. destruct (proj_sig_res s); destruct Archi.big_endian; simpl; auto.
 Qed.
@@ -168,7 +168,7 @@ Lemma loc_result_pair:
      /\ subtype Tint (mreg_type r1) = true /\ subtype Tint (mreg_type r2) = true
      /\ Archi.ptr64 = false
   end.
-Proof.
+Proof using.
   intros; unfold loc_result; destruct (proj_sig_res sg); auto.
   destruct Archi.big_endian; intuition congruence.
 Qed.
@@ -177,7 +177,7 @@ Qed.
 
 Lemma loc_result_exten:
   forall s1 s2, s1.(sig_res) = s2.(sig_res) -> loc_result s1 = loc_result s2.
-Proof.
+Proof using.
   intros. unfold loc_result, proj_sig_res. rewrite H; auto.
 Qed.
 
@@ -313,7 +313,7 @@ Definition loc_argument_charact (ofs: Z) (l: loc) : Prop :=
   end.
 
 Remark ireg_param_caller_save: forall n, is_callee_save (ireg_param n) = false.
-Proof.
+Proof using.
   unfold ireg_param; intros.
   assert (A: forall r, In r int_param_regs -> is_callee_save r = false) by decide_goal.
   destruct (list_nth_z int_param_regs n) as [r|] eqn:NTH.
@@ -322,7 +322,7 @@ Proof.
 Qed.
 
 Remark freg_param_caller_save: forall n, is_callee_save (freg_param n) = false.
-Proof.
+Proof using.
   unfold freg_param; intros.
   assert (A: forall r, In r float_param_regs -> is_callee_save r = false) by decide_goal.
   destruct (list_nth_z float_param_regs n) as [r|] eqn:NTH.
@@ -333,7 +333,7 @@ Qed.
 Remark loc_arguments_hf_charact:
   forall tyl ir fr ofs p,
   In p (loc_arguments_hf tyl ir fr ofs) -> forall_rpair (loc_argument_charact ofs) p.
-Proof.
+Proof using.
   assert (X: forall ofs1 ofs2 l, loc_argument_charact ofs2 l -> ofs1 <= ofs2 -> loc_argument_charact ofs1 l).
   { destruct l; simpl; intros; auto. destruct sl; auto. intuition lia. }
   assert (Y: forall ofs1 ofs2 p, forall_rpair (loc_argument_charact ofs2) p -> ofs1 <= ofs2 -> forall_rpair (loc_argument_charact ofs1) p).
@@ -384,7 +384,7 @@ Qed.
 Remark loc_arguments_sf_charact:
   forall tyl ofs p,
   In p (loc_arguments_sf tyl ofs) -> forall_rpair (loc_argument_charact (Z.max 0 ofs)) p.
-Proof.
+Proof using.
   assert (X: forall ofs1 ofs2 l, loc_argument_charact (Z.max 0 ofs2) l -> ofs1 <= ofs2 -> loc_argument_charact (Z.max 0 ofs1) l).
   { destruct l; simpl; intros; auto. destruct sl; auto. intuition extlia. }
   assert (Y: forall ofs1 ofs2 p, forall_rpair (loc_argument_charact (Z.max 0 ofs2)) p -> ofs1 <= ofs2 -> forall_rpair (loc_argument_charact (Z.max 0 ofs1)) p).
@@ -439,7 +439,7 @@ Qed.
 Lemma loc_arguments_acceptable:
   forall (s: signature) (p: rpair loc),
   In p (loc_arguments s) -> forall_rpair loc_argument_acceptable p.
-Proof.
+Proof using.
   unfold loc_arguments; intros.
   assert (X: forall l, loc_argument_charact 0 l -> loc_argument_acceptable l).
   { unfold loc_argument_charact, loc_argument_acceptable.
@@ -457,7 +457,7 @@ Global Hint Resolve loc_arguments_acceptable: locs.
 
 Lemma loc_arguments_main:
   loc_arguments signature_main = nil.
-Proof.
+Proof using.
   unfold loc_arguments.
   destruct Archi.abi; reflexivity.
 Qed.

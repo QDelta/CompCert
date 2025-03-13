@@ -24,7 +24,7 @@ Local Open Scope error_monad_scope.
 Lemma agree_nextinstr_nf:
   forall ms sp rs,
   agree ms sp rs -> agree ms sp (nextinstr_nf rs).
-Proof.
+Proof using.
   intros. unfold nextinstr_nf. apply agree_nextinstr.
   apply agree_undef_nondata_regs. auto.
   simpl; intros. intuition (subst r; auto).
@@ -36,7 +36,7 @@ Lemma nextinstr_nf_inv:
   forall r rs,
   match r with PC => False | CR _ => False | _ => True end ->
   (nextinstr_nf rs)#r = rs#r.
-Proof.
+Proof using.
   intros. unfold nextinstr_nf. rewrite nextinstr_inv.
   simpl. repeat rewrite Pregmap.gso; auto;
   red; intro; subst; contradiction.
@@ -46,14 +46,14 @@ Qed.
 Lemma nextinstr_nf_inv1:
   forall r rs,
   data_preg r = true -> (nextinstr_nf rs)#r = rs#r.
-Proof.
+Proof using.
   intros. apply nextinstr_nf_inv. destruct r; auto || discriminate.
 Qed.
 
 Lemma nextinstr_nf_set_preg:
   forall rs m v,
   (nextinstr_nf (rs#(preg_of m) <- v))#PC = Val.offset_ptr rs#PC Ptrofs.one.
-Proof.
+Proof using.
   intros. unfold nextinstr_nf.
   transitivity (nextinstr (rs#(preg_of m) <- v) PC). auto.
   apply nextinstr_set_preg.
@@ -97,7 +97,7 @@ Lemma mk_mov_correct:
      exec_straight ge fn c rs1 m k rs2 m
   /\ rs2#rd = rs1#rs
   /\ forall r, data_preg r = true -> r <> rd -> rs2#r = rs1#r.
-Proof.
+Proof using.
   unfold mk_mov; intros.
   destruct rd; try (monadInv H); destruct rs; monadInv H.
 (* mov *)
@@ -117,7 +117,7 @@ Lemma divu_modu_exists:
      v1 = Vint n /\ v2 = Vint d
   /\ Int.divmodu2 Int.zero n d = Some(q, r)
   /\ Val.divu v1 v2 = Some (Vint q) /\ Val.modu v1 v2 = Some (Vint r).
-Proof.
+Proof using.
   intros v1 v2; unfold Val.divu, Val.modu.
   destruct v1; try (intuition discriminate).
   destruct v2; try (intuition discriminate).
@@ -133,7 +133,7 @@ Lemma divs_mods_exists:
      Val.shr v1 (Vint (Int.repr 31)) = Vint nh /\ v1 = Vint nl /\ v2 = Vint d
   /\ Int.divmods2 nh nl d = Some(q, r)
   /\ Val.divs v1 v2 = Some (Vint q) /\ Val.mods v1 v2 = Some (Vint r).
-Proof.
+Proof using.
   intros v1 v2; unfold Val.divs, Val.mods.
   destruct v1; try (intuition discriminate).
   destruct v2; try (intuition discriminate).
@@ -157,7 +157,7 @@ Lemma divlu_modlu_exists:
      v1 = Vlong n /\ v2 = Vlong d
   /\ Int64.divmodu2 Int64.zero n d = Some(q, r)
   /\ Val.divlu v1 v2 = Some (Vlong q) /\ Val.modlu v1 v2 = Some (Vlong r).
-Proof.
+Proof using.
   intros v1 v2; unfold Val.divlu, Val.modlu.
   destruct v1; try (intuition discriminate).
   destruct v2; try (intuition discriminate).
@@ -173,7 +173,7 @@ Lemma divls_modls_exists:
      Val.shrl v1 (Vint (Int.repr 63)) = Vlong nh /\ v1 = Vlong nl /\ v2 = Vlong d
   /\ Int64.divmods2 nh nl d = Some(q, r)
   /\ Val.divls v1 v2 = Some (Vlong q) /\ Val.modls v1 v2 = Some (Vlong r).
-Proof.
+Proof using.
   intros v1 v2; unfold Val.divls, Val.modls.
   destruct v1; try (intuition discriminate).
   destruct v2; try (intuition discriminate).
@@ -200,7 +200,7 @@ Lemma mk_shrximm_correct:
      exec_straight ge fn c rs1 m k rs2 m
   /\ rs2#RAX = v
   /\ forall r, data_preg r = true -> r <> RAX -> r <> RCX -> rs2#r = rs1#r.
-Proof.
+Proof using.
   unfold mk_shrximm; intros. inv H.
   exploit Val.shrx_shr; eauto. intros [x [y [A [B C]]]].
   inversion B; clear B; subst y; subst v; clear H0.
@@ -239,7 +239,7 @@ Lemma mk_shrxlimm_correct:
      exec_straight ge fn c rs1 m k rs2 m
   /\ rs2#RAX = v
   /\ forall r, data_preg r = true -> r <> RAX -> r <> RDX -> rs2#r = rs1#r.
-Proof.
+Proof using.
   unfold mk_shrxlimm; intros. exploit Val.shrxl_shrl_2; eauto. intros EQ.
   destruct (Int.eq n Int.zero); inv H.
 - econstructor; split. apply exec_straight_one. simpl; reflexivity. auto.
@@ -279,7 +279,7 @@ Lemma mk_intconv_correct:
      exec_straight ge fn c rs1 m k rs2 m
   /\ rs2#rd = sem rs1#rs
   /\ forall r, data_preg r = true -> r <> rd -> r <> RAX -> rs2#r = rs1#r.
-Proof.
+Proof using.
   unfold mk_intconv; intros. destruct (Archi.ptr64 || low_ireg rs); monadInv H.
   econstructor. split. apply exec_straight_one. rewrite H0. eauto. auto.
   split. Simplifs. intros. Simplifs.
@@ -295,7 +295,7 @@ Lemma addressing_mentions_correct:
   (forall (r': ireg), r' <> r -> rs1 r' = rs2 r') ->
   addressing_mentions a r = false ->
   eval_addrmode32 ge a rs1 = eval_addrmode32 ge a rs2.
-Proof.
+Proof using.
   intros until rs2; intro AG. unfold addressing_mentions, eval_addrmode32.
   destruct a. intros. destruct (orb_false_elim _ _ H). unfold proj_sumbool in *.
   decEq. destruct base; auto. apply AG. destruct (ireg_eq r i); congruence.
@@ -309,7 +309,7 @@ Lemma mk_storebyte_correct:
   exists rs2,
      exec_straight ge fn c rs1 m1 k rs2 m2
   /\ forall r, data_preg r = true -> preg_notin r (if Archi.ptr64 then nil else AX :: CX :: nil) -> rs2#r = rs1#r.
-Proof.
+Proof using.
   unfold mk_storebyte; intros.
   destruct (Archi.ptr64 || low_ireg r) eqn:E.
 (* low reg *)
@@ -356,7 +356,7 @@ Remark eval_addrmode_indexed:
   forall (base: ireg) ofs (rs: regset),
   match rs#base with Vptr _ _ => True | _ => False end ->
   eval_addrmode ge (Addrmode (Some base) None (inl _ (Ptrofs.unsigned ofs))) rs = Val.offset_ptr rs#base ofs.
-Proof.
+Proof using.
   intros. destruct (rs#base) eqn:BASE; try contradiction.
   intros; unfold eval_addrmode; destruct Archi.ptr64 eqn:SF; simpl; rewrite BASE; simpl; rewrite SF; simpl.
 - apply f_equal. apply f_equal. rewrite Int64.add_zero_l. rewrite <- (Ptrofs.repr_unsigned ofs) at 2. auto with ptrofs.
@@ -379,7 +379,7 @@ Lemma loadind_correct:
      exec_straight ge fn c rs m k rs' m
   /\ rs'#(preg_of dst) = v
   /\ forall r, data_preg r = true -> r <> preg_of dst -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold loadind; intros.
   set (addr := Addrmode (Some base) None (inl (ident * ptrofs) (Ptrofs.unsigned ofs))) in *.
   assert (eval_addrmode ge addr rs = Val.offset_ptr rs#base ofs).
@@ -397,7 +397,7 @@ Lemma storeind_correct:
   exists rs',
      exec_straight ge fn c rs m k rs' m'
   /\ forall r, data_preg r = true -> preg_notin r (destroyed_by_setstack ty) -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold storeind; intros.
   set (addr := Addrmode (Some base) None (inl (ident * ptrofs) (Ptrofs.unsigned ofs))) in *.
   assert (eval_addrmode ge addr rs = Val.offset_ptr rs#base ofs).
@@ -416,7 +416,7 @@ Lemma transl_addressing_mode_32_correct:
   transl_addressing addr args = OK am ->
   eval_addressing32 ge (rs RSP) addr (List.map rs (List.map preg_of args)) = Some v ->
   Val.lessdef v (eval_addrmode32 ge am rs).
-Proof.
+Proof using.
   assert (A: forall id ofs, Archi.ptr64 = false ->
           Val.add (Vint Int.zero) (Genv.symbol_address ge id ofs) = Genv.symbol_address ge id ofs).
   { intros. unfold Val.add; rewrite H. unfold Genv.symbol_address.
@@ -447,7 +447,7 @@ Lemma transl_addressing_mode_64_correct:
   transl_addressing addr args = OK am ->
   eval_addressing64 ge (rs RSP) addr (List.map rs (List.map preg_of args)) = Some v ->
   Val.lessdef v (eval_addrmode64 ge am rs).
-Proof.
+Proof using.
   assert (A: forall id ofs, Archi.ptr64 = true ->
           Val.addl (Vlong Int64.zero) (Genv.symbol_address ge id ofs) = Genv.symbol_address ge id ofs).
   { intros. unfold Val.addl; rewrite H. unfold Genv.symbol_address.
@@ -475,7 +475,7 @@ Lemma transl_addressing_mode_correct:
   transl_addressing addr args = OK am ->
   eval_addressing ge (rs RSP) addr (List.map rs (List.map preg_of args)) = Some v ->
   Val.lessdef v (eval_addrmode ge am rs).
-Proof.
+Proof using.
   unfold eval_addressing, eval_addrmode; intros. destruct Archi.ptr64.
   eapply transl_addressing_mode_64_correct; eauto.
   eapply transl_addressing_mode_32_correct; eauto.
@@ -483,7 +483,7 @@ Qed.
 
 Lemma normalize_addrmode_32_correct:
   forall am rs, eval_addrmode32 ge (normalize_addrmode_32 am) rs = eval_addrmode32 ge am rs.
-Proof.
+Proof using.
   intros; destruct am as [base ofs [n|r]]; simpl; auto. rewrite Int.repr_signed. auto.
 Qed.
 
@@ -494,7 +494,7 @@ Lemma normalize_addrmode_64_correct:
   | (am', None) => eval_addrmode64 ge am' rs
   | (am', Some delta) => Val.addl (eval_addrmode64 ge am' rs) (Vlong delta)
   end.
-Proof.
+Proof using.
   intros; destruct am as [base ofs [n|[id delta]]]; simpl.
 - destruct (offset_in_range n); auto; simpl.
   rewrite ! Val.addl_assoc. apply f_equal. apply f_equal. simpl. rewrite Int64.add_zero_l; auto.
@@ -515,7 +515,7 @@ Lemma compare_ints_spec:
   /\ rs'#SF = Val.negative (Val.sub v1 v2)
   /\ rs'#OF = Val.sub_overflow v1 v2
   /\ (forall r, data_preg r = true -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros. unfold rs'; unfold compare_ints.
   split. auto.
   split. auto.
@@ -529,7 +529,7 @@ Lemma testcond_for_signed_comparison_32_correct:
   Val.cmp_bool c v1 v2 = Some b ->
   eval_testcond (testcond_for_signed_comparison c)
                 (nextinstr (compare_ints v1 v2 rs m)) = Some b.
-Proof.
+Proof using.
   intros. generalize (compare_ints_spec rs v1 v2 m).
   set (rs' := nextinstr (compare_ints v1 v2 rs m)).
   intros [A [B [C [D E]]]].
@@ -551,7 +551,7 @@ Lemma testcond_for_unsigned_comparison_32_correct:
   Val.cmpu_bool (Mem.valid_pointer m) c v1 v2 = Some b ->
   eval_testcond (testcond_for_unsigned_comparison c)
                 (nextinstr (compare_ints v1 v2 rs m)) = Some b.
-Proof.
+Proof using.
   intros. generalize (compare_ints_spec rs v1 v2 m).
   set (rs' := nextinstr (compare_ints v1 v2 rs m)).
   intros [A [B [C [D E]]]].
@@ -602,7 +602,7 @@ Lemma compare_longs_spec:
   /\ rs'#SF = Val.negativel (Val.subl v1 v2)
   /\ rs'#OF = Val.subl_overflow v1 v2
   /\ (forall r, data_preg r = true -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros. unfold rs'; unfold compare_longs.
   split. auto.
   split. auto.
@@ -616,7 +616,7 @@ Lemma int64_sub_overflow:
   Int.xor (Int.repr (Int64.unsigned (Int64.sub_overflow x y Int64.zero)))
           (Int.repr (Int64.unsigned (Int64.negative (Int64.sub x y)))) =
   (if Int64.lt x y then Int.one else Int.zero).
-Proof.
+Proof using.
   intros.
   transitivity (Int.repr (Int64.unsigned (if Int64.lt x y then Int64.one else Int64.zero))).
   rewrite <- (Int64.lt_sub_overflow x y).
@@ -633,7 +633,7 @@ Lemma testcond_for_signed_comparison_64_correct:
   Val.cmpl_bool c v1 v2 = Some b ->
   eval_testcond (testcond_for_signed_comparison c)
                 (nextinstr (compare_longs v1 v2 rs m)) = Some b.
-Proof.
+Proof using.
   intros. generalize (compare_longs_spec rs v1 v2 m).
   set (rs' := nextinstr (compare_longs v1 v2 rs m)).
   intros [A [B [C [D E]]]].
@@ -654,7 +654,7 @@ Lemma testcond_for_unsigned_comparison_64_correct:
   Val.cmplu_bool (Mem.valid_pointer m) c v1 v2 = Some b ->
   eval_testcond (testcond_for_unsigned_comparison c)
                 (nextinstr (compare_longs v1 v2 rs m)) = Some b.
-Proof.
+Proof using.
   intros. generalize (compare_longs_spec rs v1 v2 m).
   set (rs' := nextinstr (compare_longs v1 v2 rs m)).
   intros [A [B [C [D E]]]].
@@ -704,7 +704,7 @@ Lemma compare_floats_spec:
   /\ rs'#CF = Val.of_bool (negb (Float.cmp Cge n1 n2))
   /\ rs'#PF = Val.of_bool (negb (Float.ordered n1 n2))
   /\ (forall r, data_preg r = true -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros. unfold rs'; unfold compare_floats.
   split. auto.
   split. auto.
@@ -719,7 +719,7 @@ Lemma compare_floats32_spec:
   /\ rs'#CF = Val.of_bool (negb (Float32.cmp Cge n1 n2))
   /\ rs'#PF = Val.of_bool (negb (Float32.ordered n1 n2))
   /\ (forall r, data_preg r = true -> rs'#r = rs#r).
-Proof.
+Proof using.
   intros. unfold rs'; unfold compare_floats32.
   split. auto.
   split. auto.
@@ -755,7 +755,7 @@ Lemma testcond_for_float_comparison_correct:
                (nextinstr (compare_floats (Vfloat (swap_floats c n1 n2))
                                           (Vfloat (swap_floats c n2 n1)) rs)) =
   Some(Float.cmp c n1 n2).
-Proof.
+Proof using.
   intros.
   generalize (compare_floats_spec rs (swap_floats c n1 n2) (swap_floats c n2 n1)).
   set (rs' := nextinstr (compare_floats (Vfloat (swap_floats c n1 n2))
@@ -787,7 +787,7 @@ Lemma testcond_for_neg_float_comparison_correct:
                (nextinstr (compare_floats (Vfloat (swap_floats c n1 n2))
                                           (Vfloat (swap_floats c n2 n1)) rs)) =
   Some(negb(Float.cmp c n1 n2)).
-Proof.
+Proof using.
   intros.
   generalize (compare_floats_spec rs (swap_floats c n1 n2) (swap_floats c n2 n1)).
   set (rs' := nextinstr (compare_floats (Vfloat (swap_floats c n1 n2))
@@ -819,7 +819,7 @@ Lemma testcond_for_float32_comparison_correct:
                (nextinstr (compare_floats32 (Vsingle (swap_floats c n1 n2))
                                             (Vsingle (swap_floats c n2 n1)) rs)) =
   Some(Float32.cmp c n1 n2).
-Proof.
+Proof using.
   intros.
   generalize (compare_floats32_spec rs (swap_floats c n1 n2) (swap_floats c n2 n1)).
   set (rs' := nextinstr (compare_floats32 (Vsingle (swap_floats c n1 n2))
@@ -851,7 +851,7 @@ Lemma testcond_for_neg_float32_comparison_correct:
                (nextinstr (compare_floats32 (Vsingle (swap_floats c n1 n2))
                                             (Vsingle (swap_floats c n2 n1)) rs)) =
   Some(negb(Float32.cmp c n1 n2)).
-Proof.
+Proof using.
   intros.
   generalize (compare_floats32_spec rs (swap_floats c n1 n2) (swap_floats c n2 n1)).
   set (rs' := nextinstr (compare_floats32 (Vsingle (swap_floats c n1 n2))
@@ -879,7 +879,7 @@ Qed.
 
 Remark swap_floats_commut:
   forall (A B: Type) c (f: A -> B) x y, swap_floats c (f x) (f y) = f (swap_floats c x y).
-Proof.
+Proof using.
   intros. destruct c; auto.
 Qed.
 
@@ -887,7 +887,7 @@ Remark compare_floats_inv:
   forall vx vy rs r,
   r <> CR ZF -> r <> CR CF -> r <> CR PF -> r <> CR SF -> r <> CR OF ->
   compare_floats vx vy rs r = rs r.
-Proof.
+Proof using.
   intros.
   assert (DFL: undef_regs (CR ZF :: CR CF :: CR PF :: CR SF :: CR OF :: nil) rs r = rs r).
     simpl. Simplifs.
@@ -898,7 +898,7 @@ Remark compare_floats32_inv:
   forall vx vy rs r,
   r <> CR ZF -> r <> CR CF -> r <> CR PF -> r <> CR SF -> r <> CR OF ->
   compare_floats32 vx vy rs r = rs r.
-Proof.
+Proof using.
   intros.
   assert (DFL: undef_regs (CR ZF :: CR CF :: CR PF :: CR SF :: CR OF :: nil) rs r = rs r).
     simpl. Simplifs.
@@ -916,7 +916,7 @@ Lemma transl_cond_correct:
               /\ eval_extcond (testcond_for_condition (negate_condition cond)) rs' = Some (negb b)
      end
   /\ forall r, data_preg r = true -> rs'#r = rs r.
-Proof.
+Proof using.
   unfold transl_cond; intros.
   destruct cond; repeat (destruct args; try discriminate); monadInv H.
 - (* comp *)
@@ -1057,13 +1057,13 @@ Qed.
 
 Remark eval_testcond_nextinstr:
   forall c rs, eval_testcond c (nextinstr rs) = eval_testcond c rs.
-Proof.
+Proof using.
   intros. unfold eval_testcond. repeat rewrite nextinstr_inv; auto with asmgen.
 Qed.
 
 Remark eval_testcond_set_ireg:
   forall c rs r v, eval_testcond c (rs#(IR r) <- v) = eval_testcond c rs.
-Proof.
+Proof using.
   intros. unfold eval_testcond. repeat rewrite Pregmap.gso; auto with asmgen.
 Qed.
 
@@ -1073,7 +1073,7 @@ Lemma mk_setcc_base_correct:
   exec_straight ge fn (mk_setcc_base cond rd k) rs1 m k rs2 m
   /\ rs2#rd = Val.of_optbool(eval_extcond cond rs1)
   /\ forall r, data_preg r = true -> r <> RAX /\ r <> RCX -> r <> rd -> rs2#r = rs1#r.
-Proof.
+Proof using.
   intros. destruct cond; simpl in *.
 - (* base *)
   econstructor; split.
@@ -1153,7 +1153,7 @@ Lemma mk_setcc_correct:
   exec_straight ge fn (mk_setcc cond rd k) rs1 m k rs2 m
   /\ rs2#rd = Val.of_optbool(eval_extcond cond rs1)
   /\ forall r, data_preg r = true -> r <> RAX /\ r <> RCX -> r <> rd -> rs2#r = rs1#r.
-Proof.
+Proof using.
   intros. unfold mk_setcc. destruct (Archi.ptr64 || low_ireg rd).
 - apply mk_setcc_base_correct.
 - exploit mk_setcc_base_correct. intros [rs2 [A [B C]]].
@@ -1172,7 +1172,7 @@ Definition negate_extcond (xc: extcond) : extcond :=
 Remark negate_testcond_for_condition:
   forall cond,
   negate_extcond (testcond_for_condition cond) = testcond_for_condition (negate_condition cond).
-Proof.
+Proof using.
   intros. destruct cond; try destruct c; reflexivity.
 Qed.
 
@@ -1188,7 +1188,7 @@ Lemma mk_sel_correct:
      exec_straight ge fn c rs m k rs' m
   /\ Val.lessdef (Val.select ob rs#rd rs#r2 ty) rs'#rd
   /\ forall r, data_preg r = true -> r <> rd -> rs'#r = rs r.
-Proof.
+Proof using.
   intros. destruct xc; monadInv H; simpl in H1.
 - econstructor; split.
   eapply exec_straight_one. reflexivity. reflexivity.
@@ -1234,7 +1234,7 @@ Lemma transl_sel_correct:
      exec_straight ge fn c rs m k rs' m
   /\ Val.lessdef (Val.select (eval_condition cond (map rs (map preg_of args)) m) rs#rd rs#r2 ty) rs'#rd
   /\ forall r, data_preg r = true -> r <> rd -> rs'#r = rs r.
-Proof.
+Proof using.
   unfold transl_sel; intros. destruct (ireg_eq rd r2); monadInv H. 
 - econstructor; split. 
   apply exec_straight_one; reflexivity.
@@ -1279,7 +1279,7 @@ Lemma transl_op_correct:
      exec_straight ge fn c rs m k rs' m
   /\ Val.lessdef v rs'#(preg_of res)
   /\ forall r, data_preg r = true -> r <> preg_of res -> preg_notin r (destroyed_by_op op) -> rs' r = rs r.
-Proof.
+Proof using.
 Transparent destroyed_by_op.
   intros until v; intros TR EV.
   assert (SAME:
@@ -1472,7 +1472,7 @@ Lemma transl_load_correct:
      exec_straight ge fn c rs m k rs' m
   /\ rs'#(preg_of dest) = v
   /\ forall r, data_preg r = true -> r <> preg_of dest -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold transl_load; intros. monadInv H.
   exploit transl_addressing_mode_correct; eauto. intro EA.
   assert (EA': eval_addrmode ge x rs = a). destruct a; simpl in H1; try discriminate; inv EA; auto.
@@ -1496,7 +1496,7 @@ Lemma transl_store_correct:
   exists rs',
      exec_straight ge fn c rs m k rs' m'
   /\ forall r, data_preg r = true -> preg_notin r (destroyed_by_store chunk addr) -> rs'#r = rs#r.
-Proof.
+Proof using.
   unfold transl_store; intros. monadInv H.
   exploit transl_addressing_mode_correct; eauto. intro EA.
   assert (EA': eval_addrmode ge x rs = a). destruct a; simpl in H1; try discriminate; inv EA; auto.

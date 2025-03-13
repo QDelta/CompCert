@@ -26,7 +26,7 @@ Definition match_prog (p tp: Linear.program) :=
 
 Lemma transf_program_match:
   forall p, match_prog p (transf_program p).
-Proof.
+Proof using.
   intros. eapply match_transform_program; eauto.
 Qed.
 
@@ -61,7 +61,7 @@ Proof (Genv.find_funct_ptr_transf TRANSL).
 Lemma sig_function_translated:
   forall f,
   funsig (transf_fundef f) = funsig f.
-Proof.
+Proof using.
   intros. destruct f; reflexivity.
 Qed.
 
@@ -69,7 +69,7 @@ Lemma find_function_translated:
   forall ros ls f,
   find_function ge ros ls = Some f ->
   find_function tge ros ls = Some (transf_fundef f).
-Proof.
+Proof using TRANSL.
   unfold find_function; intros; destruct ros; simpl.
   apply functions_translated; auto.
   rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
@@ -89,7 +89,7 @@ Definition instr_branches_to (i: instruction) (lbl: label) : Prop :=
 
 Remark add_label_branched_to_incr:
   forall ls i, Labelset.Subset ls (add_label_branched_to ls i).
-Proof.
+Proof using.
   intros; red; intros; destruct i; simpl; auto.
   apply Labelset.add_2; auto.
   apply Labelset.add_2; auto.
@@ -100,7 +100,7 @@ Remark add_label_branched_to_contains:
   forall ls i lbl,
   instr_branches_to i lbl ->
   Labelset.In lbl (add_label_branched_to ls i).
-Proof.
+Proof using.
   destruct i; simpl; intros; try contradiction.
   apply Labelset.add_1; auto.
   apply Labelset.add_1; auto.
@@ -112,7 +112,7 @@ Qed.
 Lemma labels_branched_to_correct:
   forall c i lbl,
   In i c -> instr_branches_to i lbl -> Labelset.In lbl (labels_branched_to c).
-Proof.
+Proof using.
   intros.
   assert (forall c' bto,
              Labelset.Subset bto (fold_left add_label_branched_to c' bto)).
@@ -142,7 +142,7 @@ Lemma remove_unused_labels_cons:
   | _ =>
       i :: remove_unused_labels bto c
   end.
-Proof.
+Proof using.
   unfold remove_unused_labels; intros. rewrite list_fold_right_eq. auto.
 Qed.
 
@@ -153,7 +153,7 @@ Lemma find_label_commut:
   forall c c',
   find_label lbl c = Some c' ->
   find_label lbl (remove_unused_labels bto c) = Some (remove_unused_labels bto c').
-Proof.
+Proof using.
   induction c; simpl; intros.
   congruence.
   rewrite remove_unused_labels_cons.
@@ -171,7 +171,7 @@ Corollary find_label_translated:
   instr_branches_to i lbl ->
   find_label lbl (fn_code (transf_function f)) =
      Some (remove_unused_labels (labels_branched_to (fn_code f)) c).
-Proof.
+Proof using.
   intros. unfold transf_function; unfold cleanup_labels; simpl.
   apply find_label_commut. eapply labels_branched_to_correct; eauto.
   apply H; auto with coqlib.
@@ -180,7 +180,7 @@ Qed.
 
 Lemma find_label_incl:
   forall lbl c c', find_label lbl c = Some c' -> incl c' c.
-Proof.
+Proof using.
   induction c; simpl; intros.
   discriminate.
   destruct (is_label lbl a). inv H; auto with coqlib. auto with coqlib.
@@ -225,7 +225,7 @@ Lemma match_parent_locset:
   forall s ts,
   list_forall2 match_stackframes s ts ->
   parent_locset ts = parent_locset s.
-Proof.
+Proof using.
   induction 1; simpl. auto. inv H; auto.
 Qed.
 
@@ -234,7 +234,7 @@ Theorem transf_step_correct:
   forall s1' (MS: match_states s1 s1'),
   (exists s2', step tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
-Proof.
+Proof using TRANSL.
   induction 1; intros; inv MS; try rewrite remove_unused_labels_cons.
 (* Lgetstack *)
   left; econstructor; split.
@@ -326,7 +326,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSL.
   intros. inv H.
   econstructor; split.
   eapply initial_state_intro with (f := transf_fundef f).
@@ -340,13 +340,13 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv H5. econstructor; eauto.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (Linear.semantics prog) (Linear.semantics tprog).
-Proof.
+Proof using TRANSL.
   eapply forward_simulation_opt.
   apply senv_preserved.
   eexact transf_initial_states.

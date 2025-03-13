@@ -406,11 +406,11 @@ Module Numbering.
     numbering_holds valu ge sp rs m n1.
   Definition top := empty_numbering.
   Lemma top_ge: forall x, ge top x.
-  Proof.
+  Proof using.
     intros; red; intros. unfold top. apply empty_numbering_holds.
   Qed.
   Lemma refl_ge: forall x, ge x x.
-  Proof.
+  Proof using.
     intros; red; auto.
   Qed.
 End Numbering.

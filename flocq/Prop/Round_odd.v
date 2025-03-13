@@ -35,7 +35,7 @@ Definition Zrnd_odd x :=  match Req_EM_T x (IZR (Zfloor x))  with
 
 
 Global Instance valid_rnd_odd : Valid_rnd Zrnd_odd.
-Proof.
+Proof using.
 split.
 (* . *)
 intros x y Hxy.
@@ -84,7 +84,7 @@ Qed.
 
 Lemma Zrnd_odd_Zodd: forall x, x <> (IZR (Zfloor x)) ->
   (Z.even (Zrnd_odd x)) = false.
-Proof.
+Proof using.
 intros x Hx; unfold Zrnd_odd.
 destruct (Req_EM_T  x (IZR (Zfloor x))) as [H|H].
 now contradict H.
@@ -101,7 +101,7 @@ Qed.
 
 Lemma Zfloor_plus: forall (n:Z) y,
   (Zfloor (IZR n+y) = n + Zfloor y)%Z.
-Proof.
+Proof using.
 intros n y; unfold Zfloor.
 unfold Zminus; rewrite Zplus_assoc; f_equal.
 apply sym_eq, tech_up.
@@ -117,7 +117,7 @@ Qed.
 
 Lemma Zceil_plus: forall (n:Z) y,
   (Zceil (IZR n+y) = n + Zceil y)%Z.
-Proof.
+Proof using.
 intros n y; unfold Zceil.
 rewrite Ropp_plus_distr, <- Ropp_Ropp_IZR.
 rewrite Zfloor_plus.
@@ -126,7 +126,7 @@ Qed.
 
 
 Lemma Zeven_abs: forall z, Z.even (Z.abs z) = Z.even z.
-Proof.
+Proof using.
 intros z; case (Zle_or_lt z 0); intros H1.
 rewrite Z.abs_neq; try assumption.
 apply Z.even_opp.
@@ -139,7 +139,7 @@ Qed.
 Lemma Zrnd_odd_plus: forall x y, (x = IZR (Zfloor x)) ->
     Z.even (Zfloor x) = true ->
    (IZR (Zrnd_odd (x+y)) = x+IZR (Zrnd_odd y))%R.
-Proof.
+Proof using.
 intros x y Hx H.
 unfold Zrnd_odd; rewrite Hx, Zfloor_plus.
 case (Req_EM_T y (IZR (Zfloor y))); intros Hy.
@@ -183,7 +183,7 @@ Definition Rnd_odd (rnd : R -> R) :=
 
 Theorem Rnd_odd_pt_opp_inv :   forall x f : R,
   Rnd_odd_pt (-x) (-f) -> Rnd_odd_pt x f.
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros x f (H1,H2).
 split.
 replace f with (-(-f))%R by ring.
@@ -221,7 +221,7 @@ Qed.
 Theorem round_odd_opp :
   forall x,
   round beta fexp Zrnd_odd (-x) = (- round beta fexp Zrnd_odd x)%R.
-Proof.
+Proof using.
 intros x; unfold round.
 rewrite <- F2R_Zopp.
 unfold F2R; simpl.
@@ -266,7 +266,7 @@ Qed.
 Theorem round_odd_pt :
   forall x,
   Rnd_odd_pt x (round beta fexp Zrnd_odd x).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp exists_NE_) with auto with typeclass_instances.
 cut (forall x : R, (0 < x)%R -> Rnd_odd_pt x (round beta fexp Zrnd_odd x)).
 intros H x; case (Rle_or_lt 0 x).
 intros H1; destruct H1.
@@ -415,7 +415,7 @@ Theorem Rnd_odd_pt_unique :
   forall x f1 f2 : R,
   Rnd_odd_pt x f1 -> Rnd_odd_pt x f2 ->
   f1 = f2.
-Proof.
+Proof using valid_exp exists_NE_.
 intros x f1 f2 (Ff1,H1) (Ff2,H2).
 (* *)
 case (generic_format_EM beta fexp x); intros L.
@@ -467,7 +467,7 @@ Qed.
 
 Theorem Rnd_odd_pt_monotone :
   round_pred_monotone (Rnd_odd_pt).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp exists_NE_) with auto with typeclass_instances.
 intros x y f g H1 H2 Hxy.
 apply Rle_trans with (round beta fexp Zrnd_odd x).
 right; apply Rnd_odd_pt_unique with x; try assumption.
@@ -500,7 +500,7 @@ Hypothesis fexpe_fexp: forall e, (fexpe e <= fexp e -2)%Z.
 
 Lemma generic_format_fexpe_fexp: forall x,
  generic_format beta fexp x ->  generic_format beta fexpe x.
-Proof.
+Proof using fexpe_fexp.
 intros x Hx.
 apply generic_inclusion_mag with fexp; trivial; intros Hx2.
 generalize (fexpe_fexp (mag beta x)).
@@ -512,7 +512,7 @@ Qed.
 Lemma exists_even_fexp_lt: forall (c:Z->Z), forall (x:R),
       (exists f:float beta, F2R f = x /\ (c (mag beta x) < Fexp f)%Z) ->
       exists f:float beta, F2R f =x /\ canonical beta c f /\ Z.even (Fnum f) = true.
-Proof with auto with typeclass_instances.
+Proof using Even_beta with auto with typeclass_instances.
 intros c x (g,(Hg1,Hg2)).
 exists (Float beta
      (Fnum g*Z.pow (radix_val beta) (Fexp g - c (mag beta x)))
@@ -558,21 +558,21 @@ Let m:= ((F2R d+F2R u)/2)%R.
 
 
 Lemma d_eq: F2R d= round beta fexp Zfloor x.
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Hd) with auto with typeclass_instances.
 apply Rnd_DN_pt_unique with (generic_format beta fexp) x...
 apply round_DN_pt...
 Qed.
 
 
 Lemma u_eq: F2R u= round beta fexp Zceil x.
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Hu) with auto with typeclass_instances.
 apply Rnd_UP_pt_unique with (generic_format beta fexp) x...
 apply round_UP_pt...
 Qed.
 
 
 Lemma d_ge_0: (0 <= F2R d)%R.
-Proof with auto with typeclass_instances.
+Proof using (xPos x valid_exp fexp Hd) with auto with typeclass_instances.
 rewrite d_eq; apply round_ge_generic...
 apply generic_format_0.
 now left.
@@ -582,7 +582,7 @@ Qed.
 
 Lemma mag_d:  (0< F2R d)%R ->
     (mag beta (F2R d) = mag beta x :>Z).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp fexp Hd) with auto with typeclass_instances.
 intros Y.
 rewrite d_eq; apply mag_DN...
 now rewrite <- d_eq.
@@ -590,7 +590,7 @@ Qed.
 
 
 Lemma Fexp_d: (0 < F2R d)%R -> Fexp d =fexp (mag beta x).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Hd Cd) with auto with typeclass_instances.
 intros Y.
 now rewrite Cd, <- mag_d.
 Qed.
@@ -599,7 +599,7 @@ Qed.
 
 Lemma format_bpow_x: (0 < F2R d)%R
     -> generic_format beta fexp  (bpow (mag beta x)).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Hd Cd) with auto with typeclass_instances.
 intros Y.
 apply generic_format_bpow.
 apply valid_exp.
@@ -615,7 +615,7 @@ Qed.
 
 Lemma format_bpow_d: (0 < F2R d)%R ->
   generic_format beta fexp (bpow (mag beta (F2R d))).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Cd) with auto with typeclass_instances.
 intros Y; apply generic_format_bpow.
 apply valid_exp.
 apply mag_generic_gt...
@@ -625,7 +625,7 @@ Qed.
 
 
 Lemma d_le_m: (F2R d <= m)%R.
-Proof.
+Proof using x fexp Hu Hd.
 assert (F2R d <= F2R u)%R.
   apply Rle_trans with x.
   apply Hd.
@@ -635,7 +635,7 @@ lra.
 Qed.
 
 Lemma m_le_u: (m <= F2R u)%R.
-Proof.
+Proof using x fexp Hu Hd.
 assert (F2R d <= F2R u)%R.
   apply Rle_trans with x.
   apply Hd.
@@ -645,7 +645,7 @@ lra.
 Qed.
 
 Lemma mag_m: (0 < F2R d)%R -> (mag beta m =mag beta (F2R d) :>Z).
-Proof with auto with typeclass_instances.
+Proof using (x valid_exp fexp Hu Hd Cd) with auto with typeclass_instances.
 intros dPos; apply mag_unique_pos.
 split.
 apply Rle_trans with (F2R d).
@@ -695,7 +695,7 @@ Qed.
 
 Lemma mag_m_0: (0 = F2R d)%R
     -> (mag beta m =mag beta (F2R u)-1:>Z)%Z.
-Proof with auto with typeclass_instances.
+Proof using (xPos x valid_exp fexp Hu Hd) with auto with typeclass_instances.
 intros Y.
 apply mag_unique_pos.
 unfold m; rewrite <- Y, Rplus_0_l.
@@ -731,7 +731,7 @@ Qed.
 
 
 Lemma u'_eq:  (0 < F2R d)%R -> exists f:float beta, F2R f = F2R u /\ (Fexp f = Fexp d)%Z.
-Proof with auto with typeclass_instances.
+Proof using (x valid_exp fexp Hu Hd Cd) with auto with typeclass_instances.
 intros Y.
 rewrite u_eq; unfold round.
 eexists; repeat split.
@@ -743,7 +743,7 @@ Lemma m_eq :
   (0 < F2R d)%R ->
   exists f:float beta,
   F2R f = m /\ (Fexp f = fexp (mag beta x) - 1)%Z.
-Proof with auto with typeclass_instances.
+Proof using (valid_exp Hu Hd Even_beta Cd) with auto with typeclass_instances.
 intros Y.
 specialize (Zeven_ex (radix_val beta)); rewrite Even_beta.
 intros (b, Hb); rewrite Zplus_0_r in Hb.
@@ -772,7 +772,7 @@ Qed.
 
 Lemma m_eq_0: (0 = F2R d)%R ->  exists f:float beta,
    F2R f = m /\ (Fexp f = fexp (mag beta (F2R u)) -1)%Z.
-Proof with auto with typeclass_instances.
+Proof using (x Hu Even_beta Cu) with auto with typeclass_instances.
 intros Y.
 specialize (Zeven_ex (radix_val beta)); rewrite Even_beta.
 intros (b, Hb); rewrite Zplus_0_r in Hb.
@@ -795,7 +795,7 @@ Qed.
 
 Lemma fexp_m_eq_0:  (0 = F2R d)%R ->
   (fexp (mag beta (F2R u)-1) < fexp (mag beta (F2R u))+1)%Z.
-Proof with auto with typeclass_instances.
+Proof using (xPos x valid_exp exists_NE_ Hu Hd Even_beta) with auto with typeclass_instances.
 intros Y.
 assert ((fexp (mag beta (F2R u) - 1) <= fexp (mag beta (F2R u))))%Z.
 2: lia.
@@ -818,7 +818,7 @@ apply sym_eq, valid_exp; lia.
 Qed.
 
 Lemma Fm:  generic_format beta fexpe m.
-Proof.
+Proof using xPos x valid_exp fexpe_fexp fexp exists_NE_ Hu Hd Even_beta Cu Cd.
 case (d_ge_0); intros Y.
 (* *)
 destruct m_eq as (g,(Hg1,Hg2)); trivial.
@@ -846,7 +846,7 @@ Qed.
 
 Lemma Zm:
    exists g : float beta, F2R g = m /\ canonical beta fexpe g /\ Z.even (Fnum g) = true.
-Proof with auto with typeclass_instances.
+Proof using (xPos x valid_exp fexpe_fexp fexp exists_NE_ Hu Hd Even_beta Cu Cd) with auto with typeclass_instances.
 case (d_ge_0); intros Y.
 (* *)
 destruct m_eq as (g,(Hg1,Hg2)); trivial.
@@ -874,7 +874,7 @@ Qed.
 Lemma DN_odd_d_aux :
   forall z, (F2R d <= z < F2R u)%R ->
   Rnd_DN_pt (generic_format beta fexp) z (F2R d).
-Proof with auto with typeclass_instances.
+Proof using (x valid_exp Hu Hd) with auto with typeclass_instances.
 intros z Hz1.
 replace (F2R d) with (round beta fexp Zfloor z).
 apply round_DN_pt...
@@ -892,7 +892,7 @@ Qed.
 Lemma UP_odd_d_aux :
   forall z, (F2R d < z <= F2R u)%R ->
   Rnd_UP_pt (generic_format beta fexp) z (F2R u).
-Proof with auto with typeclass_instances.
+Proof using (x valid_exp Hu Hd) with auto with typeclass_instances.
 intros z Hz1.
 replace (F2R u) with (round beta fexp Zceil z).
 apply round_UP_pt...
@@ -911,7 +911,7 @@ Qed.
 Lemma round_N_odd_pos :
   round beta fexp (Znearest choice) (round beta fexpe Zrnd_odd x) =
                round beta fexp (Znearest choice) x.
-Proof with auto with typeclass_instances.
+Proof using (xPos valid_expe valid_exp u m fexpe_fexp exists_NE_e exists_NE_ d Hu Hd Even_beta Cu Cd) with auto with typeclass_instances.
 set (o:=round beta fexpe Zrnd_odd x).
 case (generic_format_EM beta fexp x); intros Hx.
 replace o with x; trivial.
@@ -1023,7 +1023,7 @@ Theorem round_N_odd :
   forall x,
   round beta fexp (Znearest choice) (round beta fexpe Zrnd_odd x) =
                round beta fexp (Znearest choice) x.
-Proof with auto with typeclass_instances.
+Proof using (valid_expe valid_exp fexpe_fexp exists_NE_e exists_NE_ Even_beta) with auto with typeclass_instances.
 intros x.
 case (total_order_T x 0); intros H; [case H; clear H; intros H | idtac].
 rewrite <- (Ropp_involutive x).
@@ -1074,7 +1074,7 @@ Notation fexpe k := (FLT_exp (emin-k) (prec+k)).
 Lemma Zrnd_odd_plus': forall x y,
   (exists n:Z, exists e:Z, (x = IZR n*bpow beta e)%R /\ (1 <= e)%Z) ->
    (IZR (Zrnd_odd (x+y)) = x+IZR (Zrnd_odd y))%R.
-Proof.
+Proof using Even_beta.
 intros x y (n,(e,(H1,H2))).
 apply Zrnd_odd_plus.
 rewrite H1.
@@ -1097,7 +1097,7 @@ Theorem mag_round_odd: forall (x:R),
  (emin < mag beta x)%Z ->
   (mag_val beta _ (mag beta (round beta (FLT_exp emin prec) Zrnd_odd x))
       = mag_val beta x (mag beta x))%Z.
-Proof with auto with typeclass_instances.
+Proof using (prec_gt_1 Even_beta) with auto with typeclass_instances.
 intros x.
 assert (T:Prec_gt_0 prec).
 unfold Prec_gt_0; auto with zarith.
@@ -1158,7 +1158,7 @@ Qed.
 Theorem fexp_round_odd: forall (x:R),
   (cexp_flt (round beta (FLT_exp emin prec) Zrnd_odd x)
       = cexp_flt x)%Z.
-Proof with auto with typeclass_instances.
+Proof using (prec_gt_1 Even_beta) with auto with typeclass_instances.
 intros x.
 assert (G0:Valid_exp (FLT_exp emin prec)).
 apply FLT_exp_valid; unfold Prec_gt_0; auto with zarith.

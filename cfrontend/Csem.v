@@ -456,7 +456,7 @@ Lemma red_selection:
   sem_cast v3 ty3 ty m = Some v3' ->
   rred (Eselection (Eval v1 ty1) (Eval v2 ty2) (Eval v3 ty3) ty) m
     E0 (Eval (if b then v2' else v3') ty) m.
-Proof.
+Proof using.
   intros. unfold Eselection.
   set (t := typ_of_type ty).
   set (x := inj_type t).
@@ -480,19 +480,19 @@ Qed.
 
 Lemma ctx_selection_1:
   forall k C r2 r3 ty, context k RV C -> context k RV (fun x => Eselection (C x) r2 r3 ty).
-Proof.
+Proof using.
   intros. apply ctx_builtin. constructor; auto.
 Qed.
 
 Lemma ctx_selection_2:
   forall k r1 C r3 ty, context k RV C -> context k RV (fun x => Eselection r1 (C x) r3 ty).
-Proof.
+Proof using.
   intros. apply ctx_builtin. constructor; constructor; auto.
 Qed.
 
 Lemma ctx_selection_3:
   forall k r1 r2 C ty, context k RV C -> context k RV (fun x => Eselection r1 r2 (C x) ty).
-Proof.
+Proof using.
   intros. apply ctx_builtin. constructor; constructor; constructor; auto.
 Qed.
 
@@ -851,7 +851,7 @@ Definition semantics (p: program) :=
 
 Lemma semantics_single_events:
   forall p, single_events (semantics p).
-Proof.
+Proof using.
   unfold semantics; intros; red; simpl; intros.
   set (ge := globalenv p) in *.
   assert (DEREF: forall chunk m b ofs bf t v, deref_loc ge chunk m b ofs bf t v -> (length t <= 1)%nat).

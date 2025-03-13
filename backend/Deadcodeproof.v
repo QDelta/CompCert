@@ -24,7 +24,7 @@ Definition match_prog (prog tprog: RTL.program) :=
 
 Lemma transf_program_match:
   forall prog tprog, transf_program prog = OK tprog -> match_prog prog tprog.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program_contextual; eauto.
 Qed.
 
@@ -59,13 +59,13 @@ Lemma magree_monotone:
   magree m1 m2 P ->
   (forall b ofs, Q b ofs -> P b ofs) ->
   magree m1 m2 Q.
-Proof.
+Proof using.
   intros. destruct H. constructor; auto.
 Qed.
 
 Lemma mextends_agree:
   forall m1 m2 P, Mem.extends m1 m2 -> magree m1 m2 P.
-Proof.
+Proof using.
   intros. destruct H. destruct mext_inj. constructor; intros.
 - replace ofs with (ofs + 0) by lia. eapply mi_perm; eauto. auto.
 - eauto.
@@ -78,7 +78,7 @@ Lemma magree_extends:
   forall m1 m2 (P: locset),
   (forall b ofs, P b ofs) ->
   magree m1 m2 P -> Mem.extends m1 m2.
-Proof.
+Proof using.
   intros. destruct H0. constructor; auto. constructor; unfold inject_id; intros.
 - inv H0. rewrite Z.add_0_r. eauto.
 - inv H0. apply Z.divide_0_r.
@@ -91,7 +91,7 @@ Lemma magree_loadbytes:
   Mem.loadbytes m1 b ofs n = Some bytes ->
   (forall i, ofs <= i < ofs + n -> P b i) ->
   exists bytes', Mem.loadbytes m2 b ofs n = Some bytes' /\ list_forall2 memval_lessdef bytes bytes'.
-Proof.
+Proof using.
   assert (GETN: forall c1 c2 n ofs,
     (forall i, ofs <= i < ofs + Z.of_nat n -> memval_lessdef (ZMap.get i c1) (ZMap.get i c2)) ->
     list_forall2 memval_lessdef (Mem.getN n ofs c1) (Mem.getN n ofs c2)).
@@ -118,7 +118,7 @@ Lemma magree_load:
   Mem.load chunk m1 b ofs = Some v ->
   (forall i, ofs <= i < ofs + size_chunk chunk -> P b i) ->
   exists v', Mem.load chunk m2 b ofs = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros. exploit Mem.load_valid_access; eauto. intros [A B].
   exploit Mem.load_loadbytes; eauto. intros [bytes [C D]].
   exploit magree_loadbytes; eauto. intros [bytes' [E F]].
@@ -136,7 +136,7 @@ Lemma magree_storebytes_parallel:
                 P b' i) ->
   list_forall2 memval_lessdef bytes1 bytes2 ->
   exists m2', Mem.storebytes m2 b ofs bytes2 = Some m2' /\ magree m1' m2' Q.
-Proof.
+Proof using.
   assert (SETN: forall (access: Z -> Prop) bytes1 bytes2,
     list_forall2 memval_lessdef bytes1 bytes2 ->
     forall p c1 c2,
@@ -184,7 +184,7 @@ Lemma magree_store_parallel:
                 b' <> b \/ i < ofs \/ ofs + size_chunk chunk <= i ->
                 P b' i) ->
   exists m2', Mem.store chunk m2 b ofs v2 = Some m2' /\ magree m1' m2' Q.
-Proof.
+Proof using.
   intros.
   exploit Mem.store_valid_access_3; eauto. intros [A B].
   exploit Mem.store_storebytes; eauto. intros SB1.
@@ -203,7 +203,7 @@ Lemma magree_storebytes_left:
   Mem.storebytes m1 b ofs bytes1 = Some m1' ->
   (forall i, ofs <= i < ofs + Z.of_nat (length bytes1) -> ~(P b i)) ->
   magree m1' m2 P.
-Proof.
+Proof using.
   intros. constructor; intros.
 - eapply ma_perm; eauto. eapply Mem.perm_storebytes_2; eauto.
 - exploit ma_perm_inv; eauto.
@@ -224,7 +224,7 @@ Lemma magree_store_left:
   Mem.store chunk m1 b ofs v1 = Some m1' ->
   (forall i, ofs <= i < ofs + size_chunk chunk -> ~(P b i)) ->
   magree m1' m2 P.
-Proof.
+Proof using.
   intros. eapply magree_storebytes_left; eauto.
   eapply Mem.store_storebytes; eauto.
   intros. rewrite encode_val_length in H2.
@@ -239,7 +239,7 @@ Lemma magree_free:
                 b' <> b \/ ~(lo <= i < hi) ->
                 P b' i) ->
   exists m2', Mem.free m2 b lo hi = Some m2' /\ magree m1' m2' Q.
-Proof.
+Proof using.
   intros.
   destruct (Mem.range_perm_free m2 b lo hi) as [m2' FREE].
   red; intros. eapply ma_perm; eauto. eapply Mem.free_range_perm; eauto.
@@ -271,7 +271,7 @@ Lemma magree_valid_access:
   magree m1 m2 P ->
   Mem.valid_access m1 chunk b ofs p ->
   Mem.valid_access m2 chunk b ofs p.
-Proof.
+Proof using.
   intros. destruct H0; split; auto.
   red; intros. eapply ma_perm; eauto.
 Qed.
@@ -281,7 +281,7 @@ Qed.
 Lemma add_need_all_eagree:
   forall e e' r ne,
   eagree e e' (add_need_all r ne) -> eagree e e' ne.
-Proof.
+Proof using.
   intros; red; intros. generalize (H r0). unfold add_need_all.
   rewrite NE.gsspec. destruct (peq r0 r); auto with na.
 Qed.
@@ -289,7 +289,7 @@ Qed.
 Lemma add_need_all_lessdef:
   forall e e' r ne,
   eagree e e' (add_need_all r ne) -> Val.lessdef e#r e'#r.
-Proof.
+Proof using.
   intros. generalize (H r); unfold add_need_all.
   rewrite NE.gsspec, peq_true. auto with na.
 Qed.
@@ -297,7 +297,7 @@ Qed.
 Lemma add_need_eagree:
   forall e e' r nv ne,
   eagree e e' (add_need r nv ne) -> eagree e e' ne.
-Proof.
+Proof using.
   intros; red; intros. generalize (H r0); unfold add_need.
   rewrite NE.gsspec. destruct (peq r0 r); auto.
   subst r0. intros. eapply nge_agree; eauto. apply nge_lub_r.
@@ -306,7 +306,7 @@ Qed.
 Lemma add_need_vagree:
   forall e e' r nv ne,
   eagree e e' (add_need r nv ne) -> vagree e#r e'#r nv.
-Proof.
+Proof using.
   intros. generalize (H r); unfold add_need.
   rewrite NE.gsspec, peq_true. intros. eapply nge_agree; eauto. apply nge_lub_l.
 Qed.
@@ -314,7 +314,7 @@ Qed.
 Lemma add_needs_all_eagree:
   forall rl e e' ne,
   eagree e e' (add_needs_all rl ne) -> eagree e e' ne.
-Proof.
+Proof using.
   induction rl; simpl; intros.
   auto.
   apply IHrl. eapply add_need_all_eagree; eauto.
@@ -323,7 +323,7 @@ Qed.
 Lemma add_needs_all_lessdef:
   forall rl e e' ne,
   eagree e e' (add_needs_all rl ne) -> Val.lessdef_list e##rl e'##rl.
-Proof.
+Proof using.
   induction rl; simpl; intros.
   constructor.
   constructor. eapply add_need_all_lessdef; eauto.
@@ -333,7 +333,7 @@ Qed.
 Lemma add_needs_eagree:
   forall rl nvl e e' ne,
   eagree e e' (add_needs rl nvl ne) -> eagree e e' ne.
-Proof.
+Proof using.
   induction rl; simpl; intros.
   auto.
   destruct nvl. apply add_needs_all_eagree with (a :: rl); auto.
@@ -343,7 +343,7 @@ Qed.
 Lemma add_needs_vagree:
   forall rl nvl e e' ne,
   eagree e e' (add_needs rl nvl ne) -> vagree_list e##rl e'##rl nvl.
-Proof.
+Proof using.
   induction rl; simpl; intros.
   constructor.
   destruct nvl.
@@ -354,7 +354,7 @@ Qed.
 
 Lemma add_ros_need_eagree:
   forall e e' ros ne, eagree e e' (add_ros_need_all ros ne) -> eagree e e' ne.
-Proof.
+Proof using.
   intros. destruct ros; simpl in *. eapply add_need_all_eagree; eauto. auto.
 Qed.
 
@@ -368,7 +368,7 @@ Lemma eagree_init_regs:
   forall rl vl1 vl2 ne,
   Val.lessdef_list vl1 vl2 ->
   eagree (init_regs vl1 rl) (init_regs vl2 rl) ne.
-Proof.
+Proof using.
   induction rl; intros until ne; intros LD; simpl.
 - red; auto with na.
 - inv LD.
@@ -412,7 +412,7 @@ Lemma sig_function_translated:
   forall rm f tf,
   transf_fundef rm f = OK tf ->
   funsig tf = funsig f.
-Proof.
+Proof using.
   intros; destruct f; monadInv H.
   unfold transf_function in EQ.
   destruct (analyze (ValueAnalysis.analyze rm f) f); inv EQ; auto.
@@ -422,7 +422,7 @@ Qed.
 Lemma stacksize_translated:
   forall rm f tf,
   transf_function rm f = OK tf -> tf.(fn_stacksize) = f.(fn_stacksize).
-Proof.
+Proof using.
   unfold transf_function; intros. destruct (analyze (ValueAnalysis.analyze rm f) f); inv H; auto.
 Qed.
 
@@ -435,20 +435,20 @@ Lemma transf_function_at:
   analyze (vanalyze cu f) f = Some an ->
   f.(fn_code)!pc = Some instr ->
   tf.(fn_code)!pc = Some(transf_instr (vanalyze cu f) an pc instr).
-Proof.
+Proof using.
   intros. unfold transf_function in H. unfold vanalyze in H0. rewrite H0 in H. inv H; simpl.
   rewrite PTree.gmap. rewrite H1; auto.
 Qed.
 
 Lemma is_dead_sound_1:
   forall nv, is_dead nv = true -> nv = Nothing.
-Proof.
+Proof using.
   destruct nv; simpl; congruence.
 Qed.
 
 Lemma is_dead_sound_2:
   forall nv, is_dead nv = false -> nv <> Nothing.
-Proof.
+Proof using.
   intros; red; intros. subst nv; discriminate.
 Qed.
 
@@ -456,7 +456,7 @@ Hint Resolve is_dead_sound_1 is_dead_sound_2: na.
 
 Lemma is_int_zero_sound:
   forall nv, is_int_zero nv = true -> nv = I Int.zero.
-Proof.
+Proof using.
   unfold is_int_zero; destruct nv; try discriminate.
   predSpec Int.eq Int.eq_spec m Int.zero; congruence.
 Qed.
@@ -469,7 +469,7 @@ Lemma find_function_translated:
      find_function tge ros trs = Some tfd
   /\ transf_fundef (romem_for cu) fd = OK tfd
   /\ linkorder cu prog.
-Proof.
+Proof using TRANSF.
   intros. destruct ros as [r|id]; simpl in *.
 - assert (LD: Val.lessdef rs#r trs#r) by eauto with na. inv LD.
   apply functions_translated; auto.
@@ -529,7 +529,7 @@ Lemma analyze_successors:
   f.(fn_code)!pc = Some instr ->
   In pc' (successors_instr instr) ->
   NA.ge an!!pc (transfer f (vanalyze cu f) pc' an!!pc').
-Proof.
+Proof using.
   intros. eapply DS.fixpoint_solution; eauto.
   intros. unfold transfer; rewrite H2. destruct a. apply DS.L.eq_refl.
 Qed.
@@ -547,7 +547,7 @@ Lemma match_succ_states:
     (MEM: magree m tm (nlive ge sp nm)),
   match_states (State s f (Vptr sp Ptrofs.zero) pc' e m)
                (State ts tf (Vptr sp Ptrofs.zero) pc' te tm).
-Proof.
+Proof using.
   intros. exploit analyze_successors; eauto. rewrite ANPC; simpl. intros [A B].
   econstructor; eauto.
   eapply eagree_ge; eauto.
@@ -561,7 +561,7 @@ Lemma eagree_set_res:
   Val.lessdef v1 v2 ->
   eagree e1 e2 (kill_builtin_res res ne) ->
   eagree (regmap_setres res v1 e1) (regmap_setres res v2 e2) ne.
-Proof.
+Proof using.
   intros. destruct res; simpl in *; auto.
   apply eagree_update; eauto. apply vagree_lessdef; auto.
 Qed.
@@ -580,7 +580,7 @@ Lemma transfer_builtin_arg_sound:
   /\ vagree v v' nv
   /\ eagree e e' ne1
   /\ magree m m' (nlive ge sp nm1).
-Proof.
+Proof using.
   induction 1; simpl; intros until nm2; intros TR EA MA GM SPM; inv TR.
 - exists e'#x; intuition auto. constructor. eauto 2 with na. eauto 2 with na.
 - exists (Vint n); intuition auto. constructor. apply vagree_same.
@@ -632,7 +632,7 @@ Lemma transfer_builtin_args_sound:
   /\ Val.lessdef_list vl vl'
   /\ eagree e e' ne1
   /\ magree m m' (nlive ge sp nm1).
-Proof.
+Proof using.
 Local Opaque transfer_builtin_arg.
   induction 1; simpl; intros.
 - inv H. exists (@nil val); intuition auto. constructor.
@@ -648,7 +648,7 @@ Lemma can_eval_builtin_arg:
   forall a v,
   eval_builtin_arg ge (fun r => e#r) (Vptr sp Ptrofs.zero) m a v ->
   exists v', eval_builtin_arg tge (fun r => e'#r) (Vptr sp Ptrofs.zero) m' a v'.
-Proof.
+Proof using TRANSF.
   intros until P; intros MA.
   assert (LD: forall chunk addr v,
               Mem.loadv chunk m addr = Some v ->
@@ -675,7 +675,7 @@ Lemma can_eval_builtin_args:
   forall al vl,
   eval_builtin_args ge (fun r => e#r) (Vptr sp Ptrofs.zero) m al vl ->
   exists vl', eval_builtin_args tge (fun r => e'#r) (Vptr sp Ptrofs.zero) m' al vl'.
-Proof.
+Proof using TRANSF.
   induction 2.
 - exists (@nil val); constructor.
 - exploit can_eval_builtin_arg; eauto. intros (v' & A).
@@ -694,7 +694,7 @@ Lemma transf_volatile_store:
   v = Vundef /\
   exists tm', volatile_store_sem chunk ge (v1'::v2'::nil) tm t Vundef tm'
            /\ magree m' tm' (nlive ge sp nm).
-Proof.
+Proof using.
   intros. inv H. split; auto.
   inv H0. inv H9.
 - (* volatile *)
@@ -709,7 +709,7 @@ Qed.
 
 Lemma eagree_set_undef:
   forall e1 e2 ne r, eagree e1 e2 ne -> eagree (e1#r <- Vundef) e2 ne.
-Proof.
+Proof using.
   intros; red; intros. rewrite PMap.gsspec. destruct (peq r0 r); auto with na.
 Qed.
 
@@ -719,7 +719,7 @@ Theorem step_simulation:
   forall S1 t S2, step ge S1 t S2 ->
   forall S1', match_states S1 S1' -> sound_state prog S1 ->
   exists S2', step tge S1' t S2' /\ match_states S2 S2'.
-Proof.
+Proof using TRANSF.
 
 Ltac TransfInstr :=
   match goal with
@@ -1109,7 +1109,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inversion H.
   exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
   exists (Callstate nil tf nil m0); split.
@@ -1125,7 +1125,7 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STACKS. inv RES. constructor.
 Qed.
 
@@ -1133,7 +1133,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSF.
   intros.
   apply forward_simulation_step with
      (match_states := fun s1 s2 => sound_state prog s1 /\ match_states s1 s2).

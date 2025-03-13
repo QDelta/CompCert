@@ -292,7 +292,7 @@ Lemma link_prog_inv:
   /\ p = {| prog_main := p1.(prog_main);
             prog_public := p1.(prog_public) ++ p2.(prog_public);
             prog_defs := PTree.elements (PTree.combine link_prog_merge dm1 dm2) |}.
-Proof.
+Proof using.
   unfold link_prog; intros p E.
   destruct (ident_eq (prog_main p1) (prog_main p2)); try discriminate.
   destruct (PTree_Properties.for_all dm1 link_prog_check) eqn:C; inv E.
@@ -314,7 +314,7 @@ Lemma link_prog_succeeds:
     Some {| prog_main := p1.(prog_main);
             prog_public := p1.(prog_public) ++ p2.(prog_public);
             prog_defs := PTree.elements (PTree.combine link_prog_merge dm1 dm2) |}.
-Proof.
+Proof using.
   intros. unfold link_prog. unfold proj_sumbool. rewrite H, dec_eq_true. simpl.
   replace (PTree_Properties.for_all dm1 link_prog_check) with true; auto.
   symmetry. apply PTree_Properties.for_all_correct; intros. rename a into gd1.
@@ -326,7 +326,7 @@ Qed.
 Lemma prog_defmap_elements:
   forall (m: PTree.t (globdef F V)) pub mn x,
   (prog_defmap {| prog_defs := PTree.elements m; prog_public := pub; prog_main := mn |})!x = m!x.
-Proof.
+Proof using.
   intros. unfold prog_defmap; simpl. apply PTree_Properties.of_list_elements.
 Qed.
 
@@ -379,7 +379,7 @@ Lemma prog_defmap_linkorder:
   linkorder p1 p2 ->
   (prog_defmap p1)!id = Some gd1 ->
   exists gd2, (prog_defmap p2)!id = Some gd2 /\ linkorder gd1 gd2.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C).
   exploit C; eauto. intros (gd2 & P & Q & R). exists gd2; auto.
 Qed.
@@ -429,19 +429,19 @@ Definition match_program_gen (ctx: C) (p1: program F1 V1) (p2: program F2 V2) : 
 Theorem match_program_defmap:
   forall ctx p1 p2, match_program_gen ctx p1 p2 ->
   forall id, option_rel (match_globdef ctx) (prog_defmap p1)!id (prog_defmap p2)!id.
-Proof.
+Proof using.
   intros. apply PTree_Properties.of_list_related. apply H.
 Qed.
 
 Lemma match_program_gen_main:
   forall ctx p1 p2, match_program_gen ctx p1 p2 -> p2.(prog_main) = p1.(prog_main).
-Proof.
+Proof using.
   intros. apply H.
 Qed.
 
 Lemma match_program_public:
   forall ctx p1 p2, match_program_gen ctx p1 p2 -> p2.(prog_public) = p1.(prog_public).
-Proof.
+Proof using.
   intros. apply H.
 Qed.
 
@@ -462,7 +462,7 @@ Lemma match_program_main:
          {match_varinfo: V1 -> V2 -> Prop}
          {p1: program F1 V1} {p2: program F2 V2},
   match_program match_fundef match_varinfo p1 p2 -> p2.(prog_main) = p1.(prog_main).
-Proof.
+Proof using.
   intros. apply H.
 Qed.
 
@@ -476,7 +476,7 @@ Lemma match_program_implies:
   (forall cu a b, match_fundef1 cu a b -> linkorder cu p -> match_fundef2 cu a b) ->
   (forall v w, match_varinfo1 v w -> match_varinfo2 v w) ->
   match_program match_fundef2 match_varinfo2 p p'.
-Proof.
+Proof using.
   intros. destruct H as [P Q]. split; auto.
   eapply list_forall2_imply; eauto.
   intros. inv H3. split; auto. inv H5.
@@ -499,7 +499,7 @@ Theorem match_transform_partial_program2:
   (forall i f tf, transf_fun i f = OK tf -> match_fundef ctx f tf) ->
   (forall i v tv, transf_var i v = OK tv -> match_varinfo v tv) ->
   match_program_gen match_fundef match_varinfo ctx p tp.
-Proof.
+Proof using.
   unfold transform_partial_program2; intros. monadInv H.
   red; simpl; split; auto.
   revert x EQ. generalize (prog_defs p).
@@ -521,7 +521,7 @@ Theorem match_transform_partial_program_contextual:
   transform_partial_program transf_fun p = OK tp ->
   (forall f tf, transf_fun f = OK tf -> match_fundef p f tf) ->
   match_program match_fundef eq p tp.
-Proof.
+Proof using.
   intros.
   eapply match_transform_partial_program2. eexact H.
   auto.
@@ -535,7 +535,7 @@ Theorem match_transform_program_contextual:
          (p: program A V),
   (forall f, match_fundef p f (transf_fun f)) ->
   match_program match_fundef eq p (transform_program transf_fun p).
-Proof.
+Proof using.
   intros.
   eapply match_transform_partial_program_contextual.
   apply transform_program_partial_program with (transf_fun := transf_fun).
@@ -551,7 +551,7 @@ Theorem match_transform_partial_program:
          (p: program A V) (tp: program B V),
   transform_partial_program transf_fun p = OK tp ->
   match_program (fun cu f tf => transf_fun f = OK tf) eq p tp.
-Proof.
+Proof using.
   intros.
   eapply match_transform_partial_program2. eexact H.
   auto.
@@ -563,7 +563,7 @@ Theorem match_transform_program:
          (transf: A -> B)
          (p: program A V),
   match_program (fun cu f tf => tf = transf f) eq p (transform_program transf p).
-Proof.
+Proof using.
   intros. apply match_transform_program_contextual. auto.
 Qed.
 
@@ -594,7 +594,7 @@ Lemma link_match_globvar:
   link v1 v2 = Some v ->
   match_globvar match_varinfo v1 tv1 -> match_globvar match_varinfo v2 tv2 ->
   exists tv, link tv1 tv2 = Some tv /\ match_globvar match_varinfo v tv.
-Proof.
+Proof using link_match_varinfo.
   simpl; intros. unfold link_vardef in *. inv H0; inv H1; simpl in *.
   destruct (link i1 i0) as [info'|] eqn:LINFO; try discriminate.
   destruct (link init init0) as [init'|] eqn:LINIT; try discriminate.
@@ -610,7 +610,7 @@ Lemma link_match_globdef:
   match_globdef match_fundef match_varinfo ctx1 g1 tg1 ->
   match_globdef match_fundef match_varinfo ctx2 g2 tg2 ->
   exists tg, link tg1 tg2 = Some tg /\ match_globdef match_fundef match_varinfo ctx g tg.
-Proof.
+Proof using link_match_varinfo link_match_fundef.
   simpl link. unfold link_def. intros. inv H2; inv H3; try discriminate.
 - destruct (link f1 f0) as [f|] eqn:LF; inv H1.
   exploit link_match_fundef; eauto. intros (tf & P & Q).
@@ -630,7 +630,7 @@ Lemma match_globdef_linkorder:
   match_globdef match_fundef match_varinfo ctx g tg ->
   linkorder ctx ctx' ->
   match_globdef match_fundef match_varinfo ctx' g tg.
-Proof.
+Proof using.
   intros. inv H.
 - econstructor. eapply linkorder_trans; eauto. auto.
 - constructor; auto.
@@ -643,7 +643,7 @@ Theorem link_match_program:
   match_program_gen match_fundef match_varinfo ctx2 p2 tp2 ->
   linkorder ctx1 ctx -> linkorder ctx2 ctx ->
   exists tp, link tp1 tp2 = Some tp /\ match_program_gen match_fundef match_varinfo ctx p tp.
-Proof.
+Proof using link_match_varinfo link_match_fundef.
   intros. destruct (link_prog_inv _ _ _ H) as (P & Q & R).
   generalize H0; intros (A1 & B1 & C1).
   generalize H1; intros (A2 & B2 & C2).
@@ -690,7 +690,7 @@ Remark link_transf_partial_fundef:
   exists tf,
       link tf1 tf2 = Some tf
   /\ (transf_partial_fundef tr1 f = OK tf \/ transf_partial_fundef tr2 f = OK tf).
-Proof.
+Proof using.
 Local Transparent Linker_fundef.
   simpl; intros. destruct f1 as [f1|ef1], f2 as [f2|ef2]; simpl in *; monadInv H0; monadInv H1.
 - discriminate.
@@ -707,7 +707,7 @@ Global Instance TransfPartialContextualLink
               match_program
                 (fun cu f tf => AST.transf_partial_fundef (tr_fun (ctx_for cu)) f = OK tf)
                 eq p1 p2).
-Proof.
+Proof using.
   red. intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.
 - intros. eapply link_transf_partial_fundef; eauto.
@@ -721,7 +721,7 @@ Global Instance TransfPartialLink
               match_program
                 (fun cu f tf => AST.transf_partial_fundef tr_fun f = OK tf)
                 eq p1 p2).
-Proof.
+Proof using.
   red. intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.
 - intros. eapply link_transf_partial_fundef; eauto.
@@ -736,7 +736,7 @@ Global Instance TransfTotallContextualLink
               match_program
                 (fun cu f tf => tf = AST.transf_fundef (tr_fun (ctx_for cu)) f)
                 eq p1 p2).
-Proof.
+Proof using.
   red. intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.
 - intros. subst. destruct f1, f2; simpl in *.
@@ -754,7 +754,7 @@ Global Instance TransfTotalLink
               match_program
                 (fun cu f tf => tf = AST.transf_fundef tr_fun f)
                 eq p1 p2).
-Proof.
+Proof using.
   red. intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.
 - intros. subst. destruct f1, f2; simpl in *.
@@ -783,7 +783,7 @@ Fixpoint link_list (l: nlist A) : option A :=
 
 Lemma link_list_linkorder:
   forall a l b, link_list l = Some b -> nIn a l -> linkorder a b.
-Proof.
+Proof using.
   induction l; simpl; intros.
 - inv H. subst. apply linkorder_refl.
 - destruct (link_list l) as [b'|]; try discriminate.
@@ -805,7 +805,7 @@ Theorem link_list_match:
   forall al bl, nlist_forall2 prog_match al bl ->
   forall a, link_list al = Some a ->
   exists b, link_list bl = Some b /\ prog_match a b.
-Proof.
+Proof using TL.
   induction 1; simpl; intros a' L.
 - inv L. exists b; auto.
 - destruct (link_list l) as [a1|] eqn:LL; try discriminate.
@@ -879,7 +879,7 @@ Fixpoint compose_passes (l l': Language) (passes: Passes l l') : Pass l l' :=
 Lemma nlist_forall2_identity:
   forall (A: Type) (la lb: nlist A),
   nlist_forall2 (fun a b => a = b) la lb -> la = lb.
-Proof.
+Proof using.
   induction 1; congruence.
 Qed.
 
@@ -888,7 +888,7 @@ Lemma nlist_forall2_compose_inv:
          (la: nlist A) (lc: nlist C),
   nlist_forall2 (fun a c => exists b, R1 a b /\ R2 b c) la lc ->
   exists lb: nlist B, nlist_forall2 R1 la lb /\ nlist_forall2 R2 lb lc.
-Proof.
+Proof using.
   induction 1.
 - rename b into c. destruct H as (b & P & Q).
   exists (nbase b); split; constructor; auto.
@@ -907,7 +907,7 @@ Theorem link_list_compose_passes:
   exists tgt_prog,
   @link_list _ (lang_link tgt) tgt_units = Some tgt_prog
   /\ pass_match (compose_passes passes) src_prog tgt_prog.
-Proof.
+Proof using.
   induction passes; simpl; intros src_units tgt_units F2 src_prog LINK.
 - apply nlist_forall2_identity in F2. subst tgt_units. exists src_prog; auto.
 - apply nlist_forall2_compose_inv in F2. destruct F2 as (interm_units & P & Q).

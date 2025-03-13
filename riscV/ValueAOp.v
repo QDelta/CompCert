@@ -151,7 +151,7 @@ Theorem eval_static_condition_sound:
   forall cond vargs m aargs,
   list_forall2 (vmatch bc) vargs aargs ->
   cmatch (eval_condition cond vargs m) (eval_static_condition cond aargs).
-Proof.
+Proof using.
   intros until aargs; intros VM. inv VM.
   destruct cond; auto with va.
   inv H0.
@@ -164,14 +164,14 @@ Qed.
 Lemma symbol_address_sound:
   forall id ofs,
   vmatch bc (Genv.symbol_address ge id ofs) (Ptr (Gl id ofs)).
-Proof.
+Proof using.
   intros; apply symbol_address_sound; apply GENV.
 Qed.
 
 Lemma symbol_address_sound_2:
   forall id ofs,
   vmatch bc (Genv.symbol_address ge id ofs) (Ifptr (Gl id ofs)).
-Proof.
+Proof using.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:F.
   constructor. constructor. apply GENV; auto.
   constructor.
@@ -194,7 +194,7 @@ Theorem eval_static_addressing_sound:
   eval_addressing ge (Vptr sp Ptrofs.zero) addr vargs = Some vres ->
   list_forall2 (vmatch bc) vargs aargs ->
   vmatch bc vres (eval_static_addressing addr aargs).
-Proof.
+Proof using.
   unfold eval_addressing, eval_static_addressing; intros;
   destruct addr; InvHyps; eauto with va.
   rewrite Ptrofs.add_zero_l; eauto with va.
@@ -205,7 +205,7 @@ Theorem eval_static_operation_sound:
   eval_operation ge (Vptr sp Ptrofs.zero) op vargs m = Some vres ->
   list_forall2 (vmatch bc) vargs aargs ->
   vmatch bc vres (eval_static_operation op aargs).
-Proof.
+Proof using.
   unfold eval_operation, eval_static_operation; intros;
   destruct op; InvHyps; eauto with va.
   destruct (propagate_float_constants tt); constructor.

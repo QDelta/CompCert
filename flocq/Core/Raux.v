@@ -28,7 +28,7 @@ Section Rmissing.
 (** About R *)
 Theorem Rle_0_minus :
   forall x y, (x <= y)%R -> (0 <= y - x)%R.
-Proof.
+Proof using.
 intros.
 apply Rge_le.
 apply Rge_minus.
@@ -38,7 +38,7 @@ Qed.
 Theorem Rabs_eq_Rabs :
   forall x y : R,
   Rabs x = Rabs y -> x = y \/ x = Ropp y.
-Proof.
+Proof using.
 intros x y H.
 unfold Rabs in H.
 destruct (Rcase_abs x) as [_|_].
@@ -57,20 +57,20 @@ Theorem Rabs_minus_le:
   forall x y : R,
   (0 <= y)%R -> (y <= 2*x)%R ->
   (Rabs (x-y) <= x)%R.
-Proof.
+Proof using.
 intros x y Hx Hy.
 apply Rabs_le.
 lra.
 Qed.
 
 Theorem Rabs_eq_R0 x : (Rabs x = 0 -> x = 0)%R.
-Proof. split_Rabs; lra. Qed.
+Proof using. split_Rabs; lra. Qed.
 
 Theorem Rmult_lt_compat :
   forall r1 r2 r3 r4,
   (0 <= r1)%R -> (0 <= r3)%R -> (r1 < r2)%R -> (r3 < r4)%R ->
   (r1 * r3 < r2 * r4)%R.
-Proof.
+Proof using.
 intros r1 r2 r3 r4 Pr1 Pr3 H12 H34.
 apply Rle_lt_trans with (r1 * r4)%R.
 - apply Rmult_le_compat_l.
@@ -83,7 +83,7 @@ Qed.
 
 Lemma Rmult_neq_reg_r :
   forall r1 r2 r3 : R, (r2 * r1 <> r3 * r1)%R -> r2 <> r3.
-Proof.
+Proof using.
 intros r1 r2 r3 H1 H2.
 apply H1; rewrite H2; ring.
 Qed.
@@ -92,7 +92,7 @@ Lemma Rmult_neq_compat_r :
   forall r1 r2 r3 : R,
   (r1 <> 0)%R -> (r2 <> r3)%R ->
   (r2 * r1 <> r3 * r1)%R.
-Proof.
+Proof using.
 intros r1 r2 r3 H H1 H2.
 now apply H1, Rmult_eq_reg_r with r1.
 Qed.
@@ -101,7 +101,7 @@ Theorem Rmult_min_distr_r :
   forall r r1 r2 : R,
   (0 <= r)%R ->
   (Rmin r1 r2 * r)%R = Rmin (r1 * r) (r2 * r).
-Proof.
+Proof using.
 intros r r1 r2 [Hr|Hr].
 unfold Rmin.
 destruct (Rle_dec r1 r2) as [H1|H1] ;
@@ -132,14 +132,14 @@ Theorem Rmult_min_distr_l :
   forall r r1 r2 : R,
   (0 <= r)%R ->
   (r * Rmin r1 r2)%R = Rmin (r * r1) (r * r2).
-Proof.
+Proof using.
 intros r r1 r2 Hr.
 rewrite 3!(Rmult_comm r).
 now apply Rmult_min_distr_r.
 Qed.
 
 Lemma Rmin_opp: forall x y, (Rmin (-x) (-y) = - Rmax x y)%R.
-Proof.
+Proof using.
 intros x y.
 apply Rmax_case_strong; intros H.
 rewrite Rmin_left; trivial.
@@ -149,7 +149,7 @@ now apply Ropp_le_contravar.
 Qed.
 
 Lemma Rmax_opp: forall x y, (Rmax (-x) (-y) = - Rmin x y)%R.
-Proof.
+Proof using.
 intros x y.
 apply Rmin_case_strong; intros H.
 rewrite Rmax_left; trivial.
@@ -161,7 +161,7 @@ Qed.
 Theorem exp_le :
   forall x y : R,
   (x <= y)%R -> (exp x <= exp y)%R.
-Proof.
+Proof using.
 intros x y [H|H].
 apply Rlt_le.
 now apply exp_increasing.
@@ -172,7 +172,7 @@ Qed.
 Theorem Rinv_lt :
   forall x y,
   (0 < x)%R -> (x < y)%R -> (/y < /x)%R.
-Proof.
+Proof using.
 intros x y Hx Hxy.
 apply Rinv_lt_contravar.
 apply Rmult_lt_0_compat.
@@ -184,7 +184,7 @@ Qed.
 Theorem Rinv_le :
   forall x y,
   (0 < x)%R -> (x <= y)%R -> (/y <= /x)%R.
-Proof.
+Proof using.
 intros x y Hx Hxy.
 apply Rle_Rinv.
 exact Hx.
@@ -195,7 +195,7 @@ Qed.
 Theorem sqrt_ge_0 :
   forall x : R,
   (0 <= sqrt x)%R.
-Proof.
+Proof using.
 intros x.
 unfold sqrt.
 destruct (Rcase_abs x) as [_|H].
@@ -204,7 +204,7 @@ apply Rsqrt_positivity.
 Qed.
 
 Lemma sqrt_neg : forall x, (x <= 0)%R -> (sqrt x = 0)%R.
-Proof.
+Proof using.
 intros x Npx.
 destruct (Req_dec x 0) as [Zx|Nzx].
 - (* x = 0 *)
@@ -221,7 +221,7 @@ Qed.
 Lemma Rsqr_le_abs_0_alt :
   forall x y,
   (x² <= y² -> x <= Rabs y)%R.
-Proof.
+Proof using.
 intros x y H.
 apply (Rle_trans _ (Rabs x)); [apply Rle_abs|apply (Rsqr_le_abs_0 _ _ H)].
 Qed.
@@ -229,7 +229,7 @@ Qed.
 Theorem Rabs_le_inv :
   forall x y,
   (Rabs x <= y)%R -> (-y <= x <= y)%R.
-Proof.
+Proof using.
 intros x y Hxy.
 split.
 apply Rle_trans with (- Rabs x)%R.
@@ -244,7 +244,7 @@ Qed.
 Theorem Rabs_ge :
   forall x y,
   (y <= -x \/ x <= y)%R -> (x <= Rabs y)%R.
-Proof.
+Proof using.
 intros x y [Hyx|Hxy].
 apply Rle_trans with (-y)%R.
 apply Ropp_le_cancel.
@@ -258,7 +258,7 @@ Qed.
 Theorem Rabs_ge_inv :
   forall x y,
   (x <= Rabs y)%R -> (y <= -x \/ x <= y)%R.
-Proof.
+Proof using.
 intros x y.
 unfold Rabs.
 case Rcase_abs ; intros Hy Hxy.
@@ -271,7 +271,7 @@ Qed.
 Theorem Rabs_lt :
   forall x y,
   (-y < x < y)%R -> (Rabs x < y)%R.
-Proof.
+Proof using.
 intros x y (Hyx,Hxy).
 now apply Rabs_def1.
 Qed.
@@ -279,7 +279,7 @@ Qed.
 Theorem Rabs_lt_inv :
   forall x y,
   (Rabs x < y)%R -> (-y < x < y)%R.
-Proof.
+Proof using.
 intros x y H.
 now split ; eapply Rabs_def2.
 Qed.
@@ -287,7 +287,7 @@ Qed.
 Theorem Rabs_gt :
   forall x y,
   (y < -x \/ x < y)%R -> (x < Rabs y)%R.
-Proof.
+Proof using.
 intros x y [Hyx|Hxy].
 rewrite <- Rabs_Ropp.
 apply Rlt_le_trans with (Ropp y).
@@ -301,7 +301,7 @@ Qed.
 Theorem Rabs_gt_inv :
   forall x y,
   (x < Rabs y)%R -> (y < -x \/ x < y)%R.
-Proof.
+Proof using.
 intros x y.
 unfold Rabs.
 case Rcase_abs ; intros Hy Hxy.
@@ -317,7 +317,7 @@ Section IZR.
 
 Theorem IZR_le_lt :
   forall m n p, (m <= n < p)%Z -> (IZR m <= IZR n < IZR p)%R.
-Proof.
+Proof using.
 intros m n p (H1, H2).
 split.
 now apply IZR_le.
@@ -326,7 +326,7 @@ Qed.
 
 Theorem le_lt_IZR :
   forall m n p, (IZR m <= IZR n < IZR p)%R -> (m <= n < p)%Z.
-Proof.
+Proof using.
 intros m n p (H1, H2).
 split.
 now apply le_IZR.
@@ -335,7 +335,7 @@ Qed.
 
 Theorem neq_IZR :
   forall m n, (IZR m <> IZR n)%R -> (m <> n)%Z.
-Proof.
+Proof using.
 intros m n H H'.
 apply H.
 now apply f_equal.
@@ -360,7 +360,7 @@ Inductive Rcompare_prop (x y : R) : comparison -> Prop :=
 
 Theorem Rcompare_spec :
   forall x y, Rcompare_prop x y (Rcompare x y).
-Proof.
+Proof using.
 intros x y.
 unfold Rcompare.
 now destruct (total_order_T x y) as [[H|H]|H] ; constructor.
@@ -371,7 +371,7 @@ Global Opaque Rcompare.
 Theorem Rcompare_Lt :
   forall x y,
   (x < y)%R -> Rcompare x y = Lt.
-Proof.
+Proof using.
 intros x y H.
 case Rcompare_spec ; intro H'.
 easy.
@@ -384,7 +384,7 @@ Qed.
 Theorem Rcompare_Lt_inv :
   forall x y,
   Rcompare x y = Lt -> (x < y)%R.
-Proof.
+Proof using.
 intros x y.
 now case Rcompare_spec.
 Qed.
@@ -392,7 +392,7 @@ Qed.
 Theorem Rcompare_not_Lt :
   forall x y,
   (y <= x)%R -> Rcompare x y <> Lt.
-Proof.
+Proof using.
 intros x y H1 H2.
 apply Rle_not_lt with (1 := H1).
 now apply Rcompare_Lt_inv.
@@ -401,7 +401,7 @@ Qed.
 Theorem Rcompare_not_Lt_inv :
   forall x y,
   Rcompare x y <> Lt -> (y <= x)%R.
-Proof.
+Proof using.
 intros x y H.
 apply Rnot_lt_le.
 contradict H.
@@ -411,7 +411,7 @@ Qed.
 Theorem Rcompare_Eq :
   forall x y,
   x = y -> Rcompare x y = Eq.
-Proof.
+Proof using.
 intros x y H.
 rewrite H.
 now case Rcompare_spec ; intro H' ; try elim (Rlt_irrefl _ H').
@@ -420,7 +420,7 @@ Qed.
 Theorem Rcompare_Eq_inv :
   forall x y,
   Rcompare x y = Eq -> x = y.
-Proof.
+Proof using.
 intros x y.
 now case Rcompare_spec.
 Qed.
@@ -428,7 +428,7 @@ Qed.
 Theorem Rcompare_Gt :
   forall x y,
   (y < x)%R -> Rcompare x y = Gt.
-Proof.
+Proof using.
 intros x y H.
 case Rcompare_spec ; intro H'.
 elim (Rlt_irrefl x).
@@ -441,7 +441,7 @@ Qed.
 Theorem Rcompare_Gt_inv :
   forall x y,
   Rcompare x y = Gt -> (y < x)%R.
-Proof.
+Proof using.
 intros x y.
 now case Rcompare_spec.
 Qed.
@@ -449,7 +449,7 @@ Qed.
 Theorem Rcompare_not_Gt :
   forall x y,
   (x <= y)%R -> Rcompare x y <> Gt.
-Proof.
+Proof using.
 intros x y H1 H2.
 apply Rle_not_lt with (1 := H1).
 now apply Rcompare_Gt_inv.
@@ -458,7 +458,7 @@ Qed.
 Theorem Rcompare_not_Gt_inv :
   forall x y,
   Rcompare x y <> Gt -> (x <= y)%R.
-Proof.
+Proof using.
 intros x y H.
 apply Rnot_lt_le.
 contradict H.
@@ -467,7 +467,7 @@ Qed.
 
 Theorem Rcompare_IZR :
   forall x y, Rcompare (IZR x) (IZR y) = Z.compare x y.
-Proof.
+Proof using.
 intros x y.
 case Rcompare_spec ; intros H ; apply sym_eq.
 apply Zcompare_Lt.
@@ -481,7 +481,7 @@ Qed.
 Theorem Rcompare_sym :
   forall x y,
   Rcompare x y = CompOpp (Rcompare y x).
-Proof.
+Proof using.
 intros x y.
 destruct (Rcompare_spec y x) as [H|H|H].
 now apply Rcompare_Gt.
@@ -492,7 +492,7 @@ Qed.
 Lemma Rcompare_opp :
   forall x y,
   Rcompare (- x) (- y) = Rcompare y x.
-Proof.
+Proof using.
 intros x y.
 destruct (Rcompare_spec y x);
   destruct (Rcompare_spec (- x) (- y));
@@ -502,7 +502,7 @@ Qed.
 Theorem Rcompare_plus_r :
   forall z x y,
   Rcompare (x + z) (y + z) = Rcompare x y.
-Proof.
+Proof using.
 intros z x y.
 destruct (Rcompare_spec x y) as [H|H|H].
 apply Rcompare_Lt.
@@ -516,7 +516,7 @@ Qed.
 Theorem Rcompare_plus_l :
   forall z x y,
   Rcompare (z + x) (z + y) = Rcompare x y.
-Proof.
+Proof using.
 intros z x y.
 rewrite 2!(Rplus_comm z).
 apply Rcompare_plus_r.
@@ -526,7 +526,7 @@ Theorem Rcompare_mult_r :
   forall z x y,
   (0 < z)%R ->
   Rcompare (x * z) (y * z) = Rcompare x y.
-Proof.
+Proof using.
 intros z x y Hz.
 destruct (Rcompare_spec x y) as [H|H|H].
 apply Rcompare_Lt.
@@ -541,7 +541,7 @@ Theorem Rcompare_mult_l :
   forall z x y,
   (0 < z)%R ->
   Rcompare (z * x) (z * y) = Rcompare x y.
-Proof.
+Proof using.
 intros z x y.
 rewrite 2!(Rmult_comm z).
 apply Rcompare_mult_r.
@@ -550,7 +550,7 @@ Qed.
 Theorem Rcompare_middle :
   forall x d u,
   Rcompare (x - d) (u - x) = Rcompare x ((d + u) / 2).
-Proof.
+Proof using.
 intros x d u.
 rewrite <- (Rcompare_plus_r (- x / 2 - d / 2) x).
 rewrite <- (Rcompare_mult_r (/2) (x - d)).
@@ -562,7 +562,7 @@ Qed.
 
 Theorem Rcompare_half_l :
   forall x y, Rcompare (x / 2) y = Rcompare x (2 * y).
-Proof.
+Proof using.
 intros x y.
 rewrite <- (Rcompare_mult_r 2%R).
 unfold Rdiv.
@@ -574,7 +574,7 @@ Qed.
 
 Theorem Rcompare_half_r :
   forall x y, Rcompare x (y / 2) = Rcompare (2 * x) y.
-Proof.
+Proof using.
 intros x y.
 rewrite <- (Rcompare_mult_r 2%R).
 unfold Rdiv.
@@ -587,7 +587,7 @@ Qed.
 Theorem Rcompare_sqr :
   forall x y,
   Rcompare (x * x) (y * y) = Rcompare (Rabs x) (Rabs y).
-Proof.
+Proof using.
 intros x y.
 destruct (Rcompare_spec (Rabs x) (Rabs y)) as [H|H|H].
 apply Rcompare_Lt.
@@ -602,7 +602,7 @@ Qed.
 Theorem Rmin_compare :
   forall x y,
   Rmin x y = match Rcompare x y with Lt => x | Eq => x | Gt => y end.
-Proof.
+Proof using.
 intros x y.
 unfold Rmin.
 destruct (Rle_dec x y) as [[Hx|Hx]|Hx].
@@ -629,7 +629,7 @@ Inductive Rle_bool_prop (x y : R) : bool -> Prop :=
 
 Theorem Rle_bool_spec :
   forall x y, Rle_bool_prop x y (Rle_bool x y).
-Proof.
+Proof using.
 intros x y.
 unfold Rle_bool.
 case Rcompare_spec ; constructor.
@@ -642,7 +642,7 @@ Qed.
 Theorem Rle_bool_true :
   forall x y,
   (x <= y)%R -> Rle_bool x y = true.
-Proof.
+Proof using.
 intros x y Hxy.
 case Rle_bool_spec ; intros H.
 apply refl_equal.
@@ -653,7 +653,7 @@ Qed.
 Theorem Rle_bool_false :
   forall x y,
   (y < x)%R -> Rle_bool x y = false.
-Proof.
+Proof using.
 intros x y Hxy.
 case Rle_bool_spec ; intros H.
 elim (Rlt_irrefl x).
@@ -677,7 +677,7 @@ Inductive Rlt_bool_prop (x y : R) : bool -> Prop :=
 
 Theorem Rlt_bool_spec :
   forall x y, Rlt_bool_prop x y (Rlt_bool x y).
-Proof.
+Proof using.
 intros x y.
 unfold Rlt_bool.
 case Rcompare_spec ; constructor.
@@ -690,7 +690,7 @@ Qed.
 Theorem negb_Rlt_bool :
   forall x y,
   negb (Rle_bool x y) = Rlt_bool y x.
-Proof.
+Proof using.
 intros x y.
 unfold Rlt_bool, Rle_bool.
 rewrite Rcompare_sym.
@@ -700,7 +700,7 @@ Qed.
 Theorem negb_Rle_bool :
   forall x y,
   negb (Rlt_bool x y) = Rle_bool y x.
-Proof.
+Proof using.
 intros x y.
 unfold Rlt_bool, Rle_bool.
 rewrite Rcompare_sym.
@@ -710,7 +710,7 @@ Qed.
 Theorem Rlt_bool_true :
   forall x y,
   (x < y)%R -> Rlt_bool x y = true.
-Proof.
+Proof using.
 intros x y Hxy.
 rewrite <- negb_Rlt_bool.
 now rewrite Rle_bool_false.
@@ -719,7 +719,7 @@ Qed.
 Theorem Rlt_bool_false :
   forall x y,
   (y <= x)%R -> Rlt_bool x y = false.
-Proof.
+Proof using.
 intros x y Hxy.
 rewrite <- negb_Rlt_bool.
 now rewrite Rle_bool_true.
@@ -728,7 +728,7 @@ Qed.
 Lemma Rlt_bool_opp :
   forall x y,
   Rlt_bool (- x) (- y) = Rlt_bool y x.
-Proof.
+Proof using.
 intros x y.
 now unfold Rlt_bool; rewrite Rcompare_opp.
 Qed.
@@ -749,7 +749,7 @@ Inductive Req_bool_prop (x y : R) : bool -> Prop :=
 
 Theorem Req_bool_spec :
   forall x y, Req_bool_prop x y (Req_bool x y).
-Proof.
+Proof using.
 intros x y.
 unfold Req_bool.
 case Rcompare_spec ; constructor.
@@ -761,7 +761,7 @@ Qed.
 Theorem Req_bool_true :
   forall x y,
   (x = y)%R -> Req_bool x y = true.
-Proof.
+Proof using.
 intros x y Hxy.
 case Req_bool_spec ; intros H.
 apply refl_equal.
@@ -772,7 +772,7 @@ Qed.
 Theorem Req_bool_false :
   forall x y,
   (x <> y)%R -> Req_bool x y = false.
-Proof.
+Proof using.
 intros x y Hxy.
 case Req_bool_spec ; intros H.
 contradict Hxy.
@@ -790,7 +790,7 @@ Definition Zfloor (x : R) := (up x - 1)%Z.
 Theorem Zfloor_lb :
   forall x : R,
   (IZR (Zfloor x) <= x)%R.
-Proof.
+Proof using.
 intros x.
 unfold Zfloor.
 rewrite minus_IZR.
@@ -803,7 +803,7 @@ Qed.
 Theorem Zfloor_ub :
   forall x : R,
   (x < IZR (Zfloor x) + 1)%R.
-Proof.
+Proof using.
 intros x.
 unfold Zfloor.
 rewrite minus_IZR.
@@ -817,7 +817,7 @@ Theorem Zfloor_lub :
   forall n x,
   (IZR n <= x)%R ->
   (n <= Zfloor x)%Z.
-Proof.
+Proof using.
 intros n x Hnx.
 apply Zlt_succ_le.
 apply lt_IZR.
@@ -831,7 +831,7 @@ Theorem Zfloor_imp :
   forall n x,
   (IZR n <= x < IZR (n + 1))%R ->
   Zfloor x = n.
-Proof.
+Proof using.
 intros n x Hnx.
 apply Zle_antisym.
 apply Zlt_succ_le.
@@ -844,7 +844,7 @@ Qed.
 Theorem Zfloor_IZR :
   forall n,
   Zfloor (IZR n) = n.
-Proof.
+Proof using.
 intros n.
 apply Zfloor_imp.
 split.
@@ -856,7 +856,7 @@ Qed.
 Theorem Zfloor_le :
   forall x y, (x <= y)%R ->
   (Zfloor x <= Zfloor y)%Z.
-Proof.
+Proof using.
 intros x y Hxy.
 apply Zfloor_lub.
 apply Rle_trans with (2 := Hxy).
@@ -868,7 +868,7 @@ Definition Zceil (x : R) := (- Zfloor (- x))%Z.
 Theorem Zceil_ub :
   forall x : R,
   (x <= IZR (Zceil x))%R.
-Proof.
+Proof using.
 intros x.
 unfold Zceil.
 rewrite opp_IZR.
@@ -880,7 +880,7 @@ Qed.
 Theorem Zceil_lb :
   forall x : R,
   (IZR (Zceil x) < x + 1)%R.
-Proof.
+Proof using.
 intros x.
 unfold Zceil.
 rewrite opp_IZR.
@@ -893,7 +893,7 @@ Theorem Zceil_glb :
   forall n x,
   (x <= IZR n)%R ->
   (Zceil x <= n)%Z.
-Proof.
+Proof using.
 intros n x Hnx.
 unfold Zceil.
 apply Zopp_le_cancel.
@@ -907,7 +907,7 @@ Theorem Zceil_imp :
   forall n x,
   (IZR (n - 1) < x <= IZR n)%R ->
   Zceil x = n.
-Proof.
+Proof using.
 intros n x Hnx.
 unfold Zceil.
 rewrite <- (Z.opp_involutive n).
@@ -925,7 +925,7 @@ Qed.
 Theorem Zceil_IZR :
   forall n,
   Zceil (IZR n) = n.
-Proof.
+Proof using.
 intros n.
 unfold Zceil.
 rewrite <- opp_IZR, Zfloor_IZR.
@@ -935,7 +935,7 @@ Qed.
 Theorem Zceil_le :
   forall x y, (x <= y)%R ->
   (Zceil x <= Zceil y)%Z.
-Proof.
+Proof using.
 intros x y Hxy.
 apply Zceil_glb.
 apply Rle_trans with (1 := Hxy).
@@ -946,7 +946,7 @@ Theorem Zceil_floor_neq :
   forall x : R,
   (IZR (Zfloor x) <> x)%R ->
   (Zceil x = Zfloor x + 1)%Z.
-Proof.
+Proof using.
 intros x Hx.
 apply Zceil_imp.
 split.
@@ -967,7 +967,7 @@ Definition Ztrunc x := if Rlt_bool x 0 then Zceil x else Zfloor x.
 Theorem Ztrunc_IZR :
   forall n,
   Ztrunc (IZR n) = n.
-Proof.
+Proof using.
 intros n.
 unfold Ztrunc.
 case Rlt_bool_spec ; intro H.
@@ -979,7 +979,7 @@ Theorem Ztrunc_floor :
   forall x,
   (0 <= x)%R ->
   Ztrunc x = Zfloor x.
-Proof.
+Proof using.
 intros x Hx.
 unfold Ztrunc.
 case Rlt_bool_spec ; intro H.
@@ -992,7 +992,7 @@ Theorem Ztrunc_ceil :
   forall x,
   (x <= 0)%R ->
   Ztrunc x = Zceil x.
-Proof.
+Proof using.
 intros x Hx.
 unfold Ztrunc.
 case Rlt_bool_spec ; intro H.
@@ -1005,7 +1005,7 @@ Qed.
 Theorem Ztrunc_le :
   forall x y, (x <= y)%R ->
   (Ztrunc x <= Ztrunc y)%Z.
-Proof.
+Proof using.
 intros x y Hxy.
 unfold Ztrunc at 1.
 case Rlt_bool_spec ; intro Hx.
@@ -1024,7 +1024,7 @@ Qed.
 Theorem Ztrunc_opp :
   forall x,
   Ztrunc (- x) = Z.opp (Ztrunc x).
-Proof.
+Proof using.
 intros x.
 unfold Ztrunc at 2.
 case Rlt_bool_spec ; intros Hx.
@@ -1044,7 +1044,7 @@ Qed.
 Theorem Ztrunc_abs :
   forall x,
   Ztrunc (Rabs x) = Z.abs (Ztrunc x).
-Proof.
+Proof using.
 intros x.
 rewrite Ztrunc_floor. 2: apply Rabs_pos.
 unfold Ztrunc.
@@ -1065,7 +1065,7 @@ Theorem Ztrunc_lub :
   forall n x,
   (IZR n <= Rabs x)%R ->
   (n <= Z.abs (Ztrunc x))%Z.
-Proof.
+Proof using.
 intros n x H.
 rewrite <- Ztrunc_abs.
 rewrite Ztrunc_floor. 2: apply Rabs_pos.
@@ -1077,7 +1077,7 @@ Definition Zaway x := if Rlt_bool x 0 then Zfloor x else Zceil x.
 Theorem Zaway_IZR :
   forall n,
   Zaway (IZR n) = n.
-Proof.
+Proof using.
 intros n.
 unfold Zaway.
 case Rlt_bool_spec ; intro H.
@@ -1089,7 +1089,7 @@ Theorem Zaway_ceil :
   forall x,
   (0 <= x)%R ->
   Zaway x = Zceil x.
-Proof.
+Proof using.
 intros x Hx.
 unfold Zaway.
 case Rlt_bool_spec ; intro H.
@@ -1102,7 +1102,7 @@ Theorem Zaway_floor :
   forall x,
   (x <= 0)%R ->
   Zaway x = Zfloor x.
-Proof.
+Proof using.
 intros x Hx.
 unfold Zaway.
 case Rlt_bool_spec ; intro H.
@@ -1115,7 +1115,7 @@ Qed.
 Theorem Zaway_le :
   forall x y, (x <= y)%R ->
   (Zaway x <= Zaway y)%Z.
-Proof.
+Proof using.
 intros x y Hxy.
 unfold Zaway at 1.
 case Rlt_bool_spec ; intro Hx.
@@ -1137,7 +1137,7 @@ Qed.
 Theorem Zaway_opp :
   forall x,
   Zaway (- x) = Z.opp (Zaway x).
-Proof.
+Proof using.
 intros x.
 unfold Zaway at 2.
 case Rlt_bool_spec ; intro H.
@@ -1156,7 +1156,7 @@ Qed.
 Theorem Zaway_abs :
   forall x,
   Zaway (Rabs x) = Z.abs (Zaway x).
-Proof.
+Proof using.
 intros x.
 rewrite Zaway_ceil. 2: apply Rabs_pos.
 unfold Zaway.
@@ -1183,7 +1183,7 @@ Theorem Rcompare_floor_ceil_middle :
   forall x,
   IZR (Zfloor x) <> x ->
   Rcompare (x - IZR (Zfloor x)) (/ 2) = Rcompare (x - IZR (Zfloor x)) (IZR (Zceil x) - x).
-Proof.
+Proof using.
 intros x Hx.
 rewrite Zceil_floor_neq with (1 := Hx).
 rewrite plus_IZR.
@@ -1213,7 +1213,7 @@ Theorem Rcompare_ceil_floor_middle :
   forall x,
   IZR (Zfloor x) <> x ->
   Rcompare (IZR (Zceil x) - x) (/ 2) = Rcompare (IZR (Zceil x) - x) (x - IZR (Zfloor x)).
-Proof.
+Proof using.
 intros x Hx.
 rewrite Zceil_floor_neq with (1 := Hx).
 rewrite plus_IZR.
@@ -1243,7 +1243,7 @@ Theorem Zfloor_div :
   forall x y,
   y <> Z0 ->
   Zfloor (IZR x / IZR y) = (x / y)%Z.
-Proof.
+Proof using.
 intros x y Zy.
 generalize (Z.div_mod x y Zy).
 intros Hx.
@@ -1300,7 +1300,7 @@ Qed.
 Theorem Ztrunc_div :
   forall x y, y <> 0%Z ->
   Ztrunc (IZR x / IZR y) = Z.quot x y.
-Proof.
+Proof using.
   destruct y; [easy | |]; destruct x; intros _.
   - rewrite Z.quot_0_l; [| easy]. unfold Rdiv. rewrite Rmult_0_l.
     rewrite Ztrunc_floor; [| apply Rle_refl]. now rewrite Zfloor_IZR.
@@ -1333,7 +1333,7 @@ Section pow.
 Variable r : radix.
 
 Theorem radix_pos : (0 < IZR r)%R.
-Proof.
+Proof using.
 destruct r as (v, Hr). simpl.
 apply IZR_lt.
 apply Z.lt_le_trans with 2%Z.
@@ -1352,7 +1352,7 @@ Definition bpow e :=
 Theorem IZR_Zpower_pos :
   forall n m,
   IZR (Zpower_pos n m) = powerRZ (IZR n) (Zpos m).
-Proof.
+Proof using.
 intros.
 rewrite Zpower_pos_nat.
 simpl.
@@ -1368,7 +1368,7 @@ Qed.
 Theorem bpow_powerRZ :
   forall e,
   bpow e = powerRZ (IZR r) e.
-Proof.
+Proof using.
 destruct e ; unfold bpow.
 reflexivity.
 now rewrite IZR_Zpower_pos.
@@ -1377,7 +1377,7 @@ Qed.
 
 Theorem  bpow_ge_0 :
   forall e : Z, (0 <= bpow e)%R.
-Proof.
+Proof using.
 intros.
 rewrite bpow_powerRZ.
 apply powerRZ_le.
@@ -1386,7 +1386,7 @@ Qed.
 
 Theorem bpow_gt_0 :
   forall e : Z, (0 < bpow e)%R.
-Proof.
+Proof using.
 intros.
 rewrite bpow_powerRZ.
 apply powerRZ_lt.
@@ -1395,7 +1395,7 @@ Qed.
 
 Theorem bpow_plus :
   forall e1 e2 : Z, (bpow (e1 + e2) = bpow e1 * bpow e2)%R.
-Proof.
+Proof using.
 intros.
 repeat rewrite bpow_powerRZ.
 apply powerRZ_add.
@@ -1405,14 +1405,14 @@ Qed.
 
 Theorem bpow_1 :
   bpow 1 = IZR r.
-Proof.
+Proof using.
 unfold bpow, Zpower_pos. simpl.
 now rewrite Zmult_1_r.
 Qed.
 
 Theorem bpow_plus_1 :
   forall e : Z, (bpow (e + 1) = IZR r * bpow e)%R.
-Proof.
+Proof using.
 intros.
 rewrite <- bpow_1.
 rewrite <- bpow_plus.
@@ -1421,7 +1421,7 @@ Qed.
 
 Theorem bpow_opp :
   forall e : Z, (bpow (-e) = /bpow e)%R.
-Proof.
+Proof using.
 intros [|p|p].
 apply eq_sym, Rinv_1.
 now change (-Zpos p)%Z with (Zneg p).
@@ -1434,7 +1434,7 @@ Qed.
 Theorem IZR_Zpower_nat :
   forall e : nat,
   IZR (Zpower_nat r e) = bpow (Z_of_nat e).
-Proof.
+Proof using.
 intros [|e].
 split.
 rewrite <- nat_of_P_o_P_of_succ_nat_eq_succ.
@@ -1446,7 +1446,7 @@ Theorem IZR_Zpower :
   forall e : Z,
   (0 <= e)%Z ->
   IZR (Zpower r e) = bpow e.
-Proof.
+Proof using.
 intros [|e|e] H.
 split.
 split.
@@ -1456,7 +1456,7 @@ Qed.
 Theorem bpow_lt :
   forall e1 e2 : Z,
   (e1 < e2)%Z -> (bpow e1 < bpow e2)%R.
-Proof.
+Proof using.
 intros e1 e2 H.
 replace e2 with (e1 + (e2 - e1))%Z by ring.
 rewrite <- (Rmult_1_r (bpow e1)).
@@ -1474,7 +1474,7 @@ Qed.
 Theorem lt_bpow :
   forall e1 e2 : Z,
   (bpow e1 < bpow e2)%R -> (e1 < e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 H.
 apply Z.gt_lt.
 apply Znot_le_gt.
@@ -1490,7 +1490,7 @@ Qed.
 Theorem bpow_le :
   forall e1 e2 : Z,
   (e1 <= e2)%Z -> (bpow e1 <= bpow e2)%R.
-Proof.
+Proof using.
 intros e1 e2 H.
 apply Rnot_lt_le.
 intros H'.
@@ -1502,7 +1502,7 @@ Qed.
 Theorem le_bpow :
   forall e1 e2 : Z,
   (bpow e1 <= bpow e2)%R -> (e1 <= e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 H.
 apply Znot_gt_le.
 intros H'.
@@ -1514,7 +1514,7 @@ Qed.
 Theorem bpow_inj :
   forall e1 e2 : Z,
   bpow e1 = bpow e2 -> e1 = e2.
-Proof.
+Proof using.
 intros.
 apply Zle_antisym.
 apply le_bpow.
@@ -1526,7 +1526,7 @@ Qed.
 Theorem bpow_exp :
   forall e : Z,
   bpow e = exp (IZR e * ln (IZR r)).
-Proof.
+Proof using.
 (* positive case *)
 assert (forall e, bpow (Zpos e) = exp (IZR (Zpos e) * ln (IZR r))).
 intros e.
@@ -1563,7 +1563,7 @@ Qed.
 Lemma sqrt_bpow :
   forall e,
   sqrt (bpow (2 * e)) = bpow e.
-Proof.
+Proof using.
 intro e.
 change 2%Z with (1 + 1)%Z; rewrite Z.mul_add_distr_r, Z.mul_1_l, bpow_plus.
 apply sqrt_square, bpow_ge_0.
@@ -1572,7 +1572,7 @@ Qed.
 Lemma sqrt_bpow_ge :
   forall e,
   (bpow (e / 2) <= sqrt (bpow e))%R.
-Proof.
+Proof using.
 intro e.
 rewrite <- (sqrt_square (bpow _)); [|now apply bpow_ge_0].
 apply sqrt_le_1_alt; rewrite <- bpow_plus; apply bpow_le.
@@ -1587,7 +1587,7 @@ Record mag_prop x := {
 
 Definition mag :
   forall x : R, mag_prop x.
-Proof.
+Proof using.
 intros x.
 set (fact := ln (IZR r)).
 (* . *)
@@ -1634,7 +1634,7 @@ Theorem bpow_lt_bpow :
   forall e1 e2,
   (bpow (e1 - 1) < bpow e2)%R ->
   (e1 <= e2)%Z.
-Proof.
+Proof using.
 intros e1 e2 He.
 rewrite (Zsucc_pred e1).
 apply Zlt_le_succ.
@@ -1646,7 +1646,7 @@ Theorem bpow_unique :
   (bpow (e1 - 1) <= x < bpow e1)%R ->
   (bpow (e2 - 1) <= x < bpow e2)%R ->
   e1 = e2.
-Proof.
+Proof using.
 intros x e1 e2 (H1a,H1b) (H2a,H2b).
 apply Zle_antisym ;
   apply bpow_lt_bpow ;
@@ -1658,7 +1658,7 @@ Theorem mag_unique :
   forall (x : R) (e : Z),
   (bpow (e - 1) <= Rabs x < bpow e)%R ->
   mag x = e :> Z.
-Proof.
+Proof using.
 intros x e1 He.
 destruct (Req_dec x 0) as [Hx|Hx].
 elim Rle_not_lt with (1 := proj1 He).
@@ -1673,7 +1673,7 @@ Qed.
 Theorem mag_opp :
   forall x,
   mag (-x) = mag x :> Z.
-Proof.
+Proof using.
 intros x.
 destruct (Req_dec x 0) as [Hx|Hx].
 now rewrite Hx, Ropp_0.
@@ -1687,7 +1687,7 @@ Qed.
 Theorem mag_abs :
   forall x,
   mag (Rabs x) = mag x :> Z.
-Proof.
+Proof using.
 intros x.
 unfold Rabs.
 case Rcase_abs ; intros _.
@@ -1699,7 +1699,7 @@ Theorem mag_unique_pos :
   forall (x : R) (e : Z),
   (bpow (e - 1) <= x < bpow e)%R ->
   mag x = e :> Z.
-Proof.
+Proof using.
 intros x e1 He1.
 rewrite <- mag_abs.
 apply mag_unique.
@@ -1714,7 +1714,7 @@ Theorem mag_le_abs :
   forall x y,
   (x <> 0)%R -> (Rabs x <= Rabs y)%R ->
   (mag x <= mag y)%Z.
-Proof.
+Proof using.
 intros x y H0x Hxy.
 destruct (mag x) as (ex, Hx).
 destruct (mag y) as (ey, Hy).
@@ -1735,7 +1735,7 @@ Theorem mag_le :
   forall x y,
   (0 < x)%R -> (x <= y)%R ->
   (mag x <= mag y)%Z.
-Proof.
+Proof using.
 intros x y H0x Hxy.
 apply mag_le_abs.
 now apply Rgt_not_eq.
@@ -1750,7 +1750,7 @@ Lemma lt_mag :
   forall x y,
   (0 < y)%R ->
   (mag x < mag y)%Z -> (x < y)%R.
-Proof.
+Proof using.
 intros x y Py.
 case (Rle_or_lt x 0); intros Px.
 intros H.
@@ -1770,7 +1770,7 @@ Qed.
 
 Theorem mag_bpow :
   forall e, (mag (bpow e) = e + 1 :> Z)%Z.
-Proof.
+Proof using.
 intros e.
 apply mag_unique.
 rewrite Rabs_right.
@@ -1786,7 +1786,7 @@ Qed.
 Theorem mag_mult_bpow :
   forall x e, x <> 0%R ->
   (mag (x * bpow e) = mag x + e :>Z)%Z.
-Proof.
+Proof using.
 intros x e Zx.
 destruct (mag x) as (ex, Ex) ; simpl.
 specialize (Ex Zx).
@@ -1810,7 +1810,7 @@ Theorem mag_le_bpow :
   x <> 0%R ->
   (Rabs x < bpow e)%R ->
   (mag x <= e)%Z.
-Proof.
+Proof using.
 intros x e Zx Hx.
 destruct (mag x) as (ex, Ex) ; simpl.
 specialize (Ex Zx).
@@ -1822,7 +1822,7 @@ Theorem mag_gt_bpow :
   forall x e,
   (bpow e <= Rabs x)%R ->
   (e < mag x)%Z.
-Proof.
+Proof using.
 intros x e Hx.
 destruct (mag x) as (ex, Ex) ; simpl.
 apply lt_bpow.
@@ -1838,7 +1838,7 @@ Theorem mag_ge_bpow :
   forall x e,
   (bpow (e - 1) <= Rabs x)%R ->
   (e <= mag x)%Z.
-Proof.
+Proof using.
 intros x e H.
 destruct (Rlt_or_le (Rabs x) (bpow e)) as [Hxe|Hxe].
 - (* Rabs x w bpow e *)
@@ -1854,7 +1854,7 @@ Qed.
 Theorem bpow_mag_gt :
   forall x,
   (Rabs x < bpow (mag x))%R.
-Proof.
+Proof using.
 intros x.
 destruct (Req_dec x 0) as [Zx|Zx].
 rewrite Zx, Rabs_R0.
@@ -1866,7 +1866,7 @@ Qed.
 Theorem bpow_mag_le :
   forall x, (x <> 0)%R ->
     (bpow (mag x-1) <= Rabs x)%R.
-Proof.
+Proof using.
 intros x Hx.
 destruct (mag x) as (ex, Ex) ; simpl.
 now apply Ex.
@@ -1878,7 +1878,7 @@ Theorem mag_le_Zpower :
   m <> Z0 ->
   (Z.abs m < Zpower r e)%Z->
   (mag (IZR m) <= e)%Z.
-Proof.
+Proof using.
 intros m e Zm Hm.
 apply mag_le_bpow.
 now apply IZR_neq.
@@ -1897,7 +1897,7 @@ Theorem mag_gt_Zpower :
   m <> Z0 ->
   (Zpower r e <= Z.abs m)%Z ->
   (e < mag (IZR m))%Z.
-Proof.
+Proof using.
 intros m e Zm Hm.
 apply mag_gt_bpow.
 rewrite <- abs_IZR.
@@ -1916,7 +1916,7 @@ Lemma mag_mult :
   forall x y,
   (x <> 0)%R -> (y <> 0)%R ->
   (mag x + mag y - 1 <= mag (x * y) <= mag x + mag y)%Z.
-Proof.
+Proof using.
 intros x y Hx Hy.
 destruct (mag x) as (ex, Hx2).
 destruct (mag y) as (ey, Hy2).
@@ -1945,7 +1945,7 @@ Lemma mag_plus :
   forall x y,
   (0 < y)%R -> (y <= x)%R ->
   (mag x <= mag (x + y) <= mag x + 1)%Z.
-Proof.
+Proof using.
 assert (Hr : (2 <= r)%Z).
 { destruct r as (beta_val,beta_prop).
   now apply Zle_bool_imp_le. }
@@ -1987,7 +1987,7 @@ Lemma mag_minus :
   forall x y,
   (0 < y)%R -> (y < x)%R ->
   (mag (x - y) <= mag x)%Z.
-Proof.
+Proof using.
 intros x y Py Hxy.
 assert (Px : (0 < x)%R) by apply (Rlt_trans _ _ _ Py Hxy).
 apply mag_le.
@@ -2003,7 +2003,7 @@ Lemma mag_minus_lb :
   (0 < x)%R -> (0 < y)%R ->
   (mag y <= mag x - 2)%Z ->
   (mag x - 1 <= mag (x - y))%Z.
-Proof.
+Proof using.
 assert (Hbeta : (2 <= r)%Z).
 { destruct r as (beta_val,beta_prop).
   now apply Zle_bool_imp_le. }
@@ -2042,7 +2042,7 @@ Theorem mag_plus_ge :
   (x <> 0)%R ->
   (mag y <= mag x - 2)%Z ->
   (mag x - 1 <= mag (x + y))%Z.
-Proof.
+Proof using.
 intros x y Zx.
 destruct (Req_dec y 0) as [Zy|Zy].
 { intros _.
@@ -2068,7 +2068,7 @@ Lemma mag_div :
   forall x y : R,
   x <> 0%R -> y <> 0%R ->
   (mag x - mag y <= mag (x / y) <= mag x - mag y + 1)%Z.
-Proof.
+Proof using.
 intros x y Px Py.
 destruct (mag x) as (ex,Hex).
 destruct (mag y) as (ey,Hey).
@@ -2117,7 +2117,7 @@ Lemma mag_sqrt :
   forall x,
   (0 < x)%R ->
   mag (sqrt x) = Z.div2 (mag x + 1) :> Z.
-Proof.
+Proof using.
 intros x Px.
 apply mag_unique.
 destruct mag as [e He].
@@ -2144,7 +2144,7 @@ split.
 Qed.
 
 Lemma mag_1 : mag 1 = 1%Z :> Z.
-Proof.
+Proof using.
 apply mag_unique_pos; rewrite bpow_1; simpl; split; [now right|apply IZR_lt].
 assert (H := Zle_bool_imp_le _ _ (radix_prop r)); revert H.
 now apply Z.lt_le_trans.
@@ -2156,19 +2156,19 @@ Section Bool.
 
 Theorem eqb_sym :
   forall x y, Bool.eqb x y = Bool.eqb y x.
-Proof.
+Proof using.
 now intros [|] [|].
 Qed.
 
 Theorem eqb_false :
   forall x y, x = negb y -> Bool.eqb x y = false.
-Proof.
+Proof using.
 now intros [|] [|].
 Qed.
 
 Theorem eqb_true :
   forall x y, x = y -> Bool.eqb x y = true.
-Proof.
+Proof using.
 now intros [|] [|].
 Qed.
 
@@ -2181,7 +2181,7 @@ Definition cond_Ropp (b : bool) m := if b then Ropp m else m.
 Theorem IZR_cond_Zopp :
   forall b m,
   IZR (cond_Zopp b m) = cond_Ropp b (IZR m).
-Proof.
+Proof using.
 intros [|] m.
 apply opp_IZR.
 apply refl_equal.
@@ -2190,7 +2190,7 @@ Qed.
 Theorem abs_cond_Ropp :
   forall b m,
   Rabs (cond_Ropp b m) = Rabs m.
-Proof.
+Proof using.
 intros [|] m.
 apply Rabs_Ropp.
 apply refl_equal.
@@ -2199,7 +2199,7 @@ Qed.
 Theorem cond_Ropp_Rlt_bool :
   forall m,
   cond_Ropp (Rlt_bool m 0) m = Rabs m.
-Proof.
+Proof using.
 intros m.
 apply sym_eq.
 case Rlt_bool_spec ; intros Hm.
@@ -2210,7 +2210,7 @@ Qed.
 Theorem Rlt_bool_cond_Ropp :
   forall x sx, (0 < x)%R ->
   Rlt_bool (cond_Ropp sx x) 0 = sx.
-Proof.
+Proof using.
   intros x sx Hx. destruct sx; simpl.
   - apply Rlt_bool_true. now apply Ropp_lt_gt_0_contravar.
   - apply Rlt_bool_false. now left.
@@ -2219,7 +2219,7 @@ Qed.
 Theorem cond_Ropp_involutive :
   forall b x,
   cond_Ropp b (cond_Ropp b x) = x.
-Proof.
+Proof using.
 intros [|] x.
 apply Ropp_involutive.
 apply refl_equal.
@@ -2228,7 +2228,7 @@ Qed.
 Theorem cond_Ropp_inj :
   forall b x y,
   cond_Ropp b x = cond_Ropp b y -> x = y.
-Proof.
+Proof using.
 intros b x y H.
 rewrite <- (cond_Ropp_involutive b x), H.
 apply cond_Ropp_involutive.
@@ -2237,7 +2237,7 @@ Qed.
 Theorem cond_Ropp_mult_l :
   forall b x y,
   cond_Ropp b (x * y) = (cond_Ropp b x * y)%R.
-Proof.
+Proof using.
 intros [|] x y.
 apply sym_eq.
 apply Ropp_mult_distr_l_reverse.
@@ -2247,7 +2247,7 @@ Qed.
 Theorem cond_Ropp_mult_r :
   forall b x y,
   cond_Ropp b (x * y) = (x * cond_Ropp b y)%R.
-Proof.
+Proof using.
 intros [|] x y.
 apply sym_eq.
 apply Ropp_mult_distr_r_reverse.
@@ -2257,7 +2257,7 @@ Qed.
 Theorem cond_Ropp_plus :
   forall b x y,
   cond_Ropp b (x + y) = (cond_Ropp b x + cond_Ropp b y)%R.
-Proof.
+Proof using.
 intros [|] x y.
 apply Ropp_plus_distr.
 apply refl_equal.
@@ -2271,7 +2271,7 @@ End cond_Ropp.
 Theorem LPO_min :
   forall P : nat -> Prop, (forall n, P n \/ ~ P n) ->
   {n : nat | P n /\ forall i, (i < n)%nat -> ~ P i} + {forall n, ~ P n}.
-Proof.
+Proof using.
 assert (Hi: forall n, (0 < INR n + 1)%R).
   intros N.
   rewrite <- S_INR.
@@ -2384,7 +2384,7 @@ Qed.
 Theorem LPO :
   forall P : nat -> Prop, (forall n, P n \/ ~ P n) ->
   {n : nat | P n} + {forall n, ~ P n}.
-Proof.
+Proof using.
 intros P HP.
 destruct (LPO_min P HP) as [[n [Pn _]]|Pn].
 left.
@@ -2395,7 +2395,7 @@ Qed.
 
 Lemma LPO_Z : forall P : Z -> Prop, (forall n, P n \/ ~P n) ->
   {n : Z| P n} + {forall n, ~ P n}.
-Proof.
+Proof using.
 intros P H.
 destruct (LPO (fun n => P (Z.of_nat n))) as [J|J].
 intros n; apply H.

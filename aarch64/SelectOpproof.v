@@ -116,14 +116,14 @@ Definition binary_constructor_sound (cstr: expr -> expr -> expr) (sem: val -> va
 Theorem eval_addrsymbol:
   forall le id ofs,
   exists v, eval_expr ge sp e m le (addrsymbol id ofs) v /\ Val.lessdef (Genv.symbol_address ge id ofs) v.
-Proof.
+Proof using.
   intros. unfold addrsymbol. TrivialExists.
 Qed.
 
 Theorem eval_addrstack:
   forall le ofs,
   exists v, eval_expr ge sp e m le (addrstack ofs) v /\ Val.lessdef (Val.offset_ptr sp ofs) v.
-Proof.
+Proof using.
   intros. unfold addrstack. TrivialExists.
 Qed.
 
@@ -131,7 +131,7 @@ Qed.
 
 Theorem eval_addimm:
   forall n, unary_constructor_sound (addimm n) (fun x => Val.add x (Vint n)).
-Proof.
+Proof using.
   red; unfold addimm; intros until x.
   predSpec Int.eq Int.eq_spec n Int.zero.
 - subst n. intros. exists x; split; auto.
@@ -142,7 +142,7 @@ Proof.
 Qed.
 
 Theorem eval_add: binary_constructor_sound add Val.add.
-Proof.
+Proof using.
   red; intros until y.
   unfold add; case (add_match a b); intros; InvEval; subst.
 - rewrite Val.add_commut. apply eval_addimm; auto.
@@ -164,7 +164,7 @@ Proof.
 Qed.
 
 Theorem eval_negint: unary_constructor_sound negint (fun v => Val.sub Vzero v).
-Proof.
+Proof using.
   red; intros until x; unfold negint. case (negint_match a); intros; InvEval; subst.
 - TrivialExists.
 - TrivialExists.
@@ -172,7 +172,7 @@ Proof.
 Qed.
 
 Theorem eval_sub: binary_constructor_sound sub Val.sub.
-Proof.
+Proof using.
   red; intros until y; unfold sub; case (sub_match a b); intros; InvEval; subst.
 - rewrite Val.sub_add_opp. apply eval_addimm; auto.
 - rewrite Val.sub_add_l. rewrite Val.sub_add_r.
@@ -191,7 +191,7 @@ Remark eval_shlimm_base: forall le a n x,
   eval_expr ge sp e m le a x ->
   Int.ltu n Int.iwordsize = true ->
   eval_expr ge sp e m le (shlimm_base a n) (Val.shl x (Vint n)).
-Proof.
+Proof using.
 Local Opaque mk_amount32.
   unfold shlimm_base; intros; EvalOp. simpl. rewrite mk_amount32_eq by auto. auto.
 Qed.
@@ -199,7 +199,7 @@ Qed.
 Theorem eval_shlimm:
   forall n, unary_constructor_sound (fun a => shlimm a n)
                                     (fun x => Val.shl x (Vint n)).
-Proof.
+Proof using.
   red; intros until x; unfold shlimm.
   predSpec Int.eq Int.eq_spec n Int.zero; [| destruct (Int.ltu n Int.iwordsize) eqn:L]; simpl.
 - intros; subst. exists x; split; auto. destruct x; simpl; auto. rewrite Int.shl_zero; auto.
@@ -232,7 +232,7 @@ Remark eval_shruimm_base: forall le a n x,
   eval_expr ge sp e m le a x ->
   Int.ltu n Int.iwordsize = true ->
   eval_expr ge sp e m le (shruimm_base a n) (Val.shru x (Vint n)).
-Proof.
+Proof using.
   unfold shruimm_base; intros; EvalOp. simpl. rewrite mk_amount32_eq by auto. auto.
 Qed.
 
@@ -240,7 +240,7 @@ Remark sub_shift_amount:
   forall y z,
   Int.ltu y Int.iwordsize = true -> Int.ltu z Int.iwordsize = true -> Int.unsigned y <= Int.unsigned z ->
   Int.ltu (Int.sub z y) Int.iwordsize = true.
-Proof.
+Proof using.
   intros. unfold Int.ltu; apply zlt_true. rewrite Int.unsigned_repr_wordsize.
   apply Int.ltu_iwordsize_inv in H. apply Int.ltu_iwordsize_inv in H0.
   unfold Int.sub; rewrite Int.unsigned_repr. lia.
@@ -250,7 +250,7 @@ Qed.
 Theorem eval_shruimm:
   forall n, unary_constructor_sound (fun a => shruimm a n)
                                     (fun x => Val.shru x (Vint n)).
-Proof.
+Proof using.
 Local Opaque Int.zwordsize.
   red; intros until x; unfold shruimm.
   predSpec Int.eq Int.eq_spec n Int.zero; [| destruct (Int.ltu n Int.iwordsize) eqn:L]; simpl.
@@ -292,14 +292,14 @@ Remark eval_shrimm_base: forall le a n x,
   eval_expr ge sp e m le a x ->
   Int.ltu n Int.iwordsize = true ->
   eval_expr ge sp e m le (shrimm_base a n) (Val.shr x (Vint n)).
-Proof.
+Proof using.
   unfold shrimm_base; intros; EvalOp. simpl. rewrite mk_amount32_eq by auto. auto.
 Qed.
 
 Theorem eval_shrimm:
   forall n, unary_constructor_sound (fun a => shrimm a n)
                                     (fun x => Val.shr x (Vint n)).
-Proof.
+Proof using.
   red; intros until x; unfold shrimm.
   predSpec Int.eq Int.eq_spec n Int.zero; [| destruct (Int.ltu n Int.iwordsize) eqn:L]; simpl.
 - intros; subst. exists x; split; auto. destruct x; simpl; auto. rewrite Int.shr_zero; auto.
@@ -338,7 +338,7 @@ Qed.
 
 Lemma eval_mulimm_base:
   forall n, unary_constructor_sound (mulimm_base n) (fun x => Val.mul x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros; unfold mulimm_base.
   assert (DFL: exists v, eval_expr ge sp e m le (Eop Omul (Eop (Ointconst n) Enil ::: a ::: Enil)) v /\ Val.lessdef (Val.mul x (Vint n)) v).
   { rewrite Val.mul_commut; TrivialExists. } 
@@ -363,7 +363,7 @@ Qed.
 
 Theorem eval_mulimm:
   forall n, unary_constructor_sound (mulimm n) (fun x => Val.mul x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros until x; unfold mulimm.
   predSpec Int.eq Int.eq_spec n Int.zero.
   intros. exists (Vint Int.zero); split. EvalOp.
@@ -382,7 +382,7 @@ Proof.
 Qed.
 
 Theorem eval_mul: binary_constructor_sound mul Val.mul.
-Proof.
+Proof using.
   red; intros until y; unfold mul; case (mul_match a b); intros; InvEval; subst.
 - rewrite Val.mul_commut. apply eval_mulimm; auto.
 - apply eval_mulimm; auto.
@@ -390,7 +390,7 @@ Proof.
 Qed.
 
 Theorem eval_mulhs: binary_constructor_sound mulhs Val.mulhs.
-Proof.
+Proof using.
   unfold mulhs; red; intros. econstructor; split. EvalOp.
   unfold eval_shiftl, eval_extend. rewrite ! mk_amount64_eq by auto.
   destruct x; simpl; auto. destruct y; simpl; auto.
@@ -416,7 +416,7 @@ Proof.
 Qed.
 
 Theorem eval_mulhu: binary_constructor_sound mulhu Val.mulhu.
-Proof.
+Proof using.
   unfold mulhu; red; intros. econstructor; split. EvalOp.
   unfold eval_shiftl, eval_extend. rewrite ! mk_amount64_eq by auto.
   destruct x; simpl; auto. destruct y; simpl; auto.
@@ -445,7 +445,7 @@ Qed.
 
 Theorem eval_zero_ext:
   forall sz, 0 <= sz -> unary_constructor_sound (zero_ext sz) (Val.zero_ext sz).
-Proof.
+Proof using.
   intros; red; intros until x; unfold zero_ext; case (zero_ext_match a); intros; InvEval; subst.
 - TrivialExists.
 - TrivialExists.
@@ -458,7 +458,7 @@ Qed.
 
 Theorem eval_sign_ext:
   forall sz, 0 < sz -> unary_constructor_sound (sign_ext sz) (Val.sign_ext sz).
-Proof.
+Proof using.
   intros; red; intros until x; unfold sign_ext; case (sign_ext_match a); intros; InvEval; subst.
 - TrivialExists.
 - TrivialExists.
@@ -470,29 +470,29 @@ Proof.
 Qed.
 
 Theorem eval_cast8signed: unary_constructor_sound cast8signed (Val.sign_ext 8).
-Proof.
+Proof using.
   apply eval_sign_ext; lia. 
 Qed.
 
 Theorem eval_cast8unsigned: unary_constructor_sound cast8unsigned (Val.zero_ext 8).
-Proof.
+Proof using.
   apply eval_zero_ext; lia.
 Qed.
 
 Theorem eval_cast16signed: unary_constructor_sound cast16signed (Val.sign_ext 16).
-Proof.
+Proof using.
   apply eval_sign_ext; lia. 
 Qed.
 
 Theorem eval_cast16unsigned: unary_constructor_sound cast16unsigned (Val.zero_ext 16).
-Proof.
+Proof using.
   apply eval_zero_ext; lia.
 Qed.
 
 (** Bitwise not, and, or, xor *)
 
 Theorem eval_notint: unary_constructor_sound notint Val.notint.
-Proof.
+Proof using.
   assert (INV: forall v, Val.lessdef (Val.notint (Val.notint v)) v).
   { destruct v; auto. simpl; rewrite Int.not_involutive; auto. } 
   unfold notint; red; intros until x; case (notint_match a); intros; InvEval; subst.
@@ -516,7 +516,7 @@ Qed.
 
 Lemma eval_andimm_base:
   forall n, unary_constructor_sound (andimm_base n) (fun x => Val.and x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros. unfold andimm_base.
   predSpec Int.eq Int.eq_spec n Int.zero.
   exists (Vint Int.zero); split. EvalOp.
@@ -533,7 +533,7 @@ Qed.
 
 Theorem eval_andimm:
   forall n, unary_constructor_sound (andimm n) (fun x => Val.and x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros until x. unfold andimm.
   case (andimm_match a); intros; InvEval; subst.
 - rewrite Int.and_commut; TrivialExists.
@@ -546,7 +546,7 @@ Proof.
 Qed.
 
 Theorem eval_and: binary_constructor_sound and Val.and.
-Proof.
+Proof using.
   red; intros until y; unfold and; case (and_match a b); intros; InvEval; subst.
 - rewrite Val.and_commut; apply eval_andimm; auto.
 - apply eval_andimm; auto.
@@ -561,7 +561,7 @@ Qed.
 
 Theorem eval_orimm:
   forall n, unary_constructor_sound (orimm n) (fun x => Val.or x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros until x. unfold orimm.
   predSpec Int.eq Int.eq_spec n Int.zero.
   intros. subst. exists x; split; auto.
@@ -581,14 +581,14 @@ Remark eval_same_expr:
   eval_expr ge sp e m le a1 v1 ->
   eval_expr ge sp e m le a2 v2 ->
   a1 = a2 /\ v1 = v2.
-Proof.
+Proof using.
   intros. destruct a1; try discriminate. destruct a2; try discriminate.
   simpl in H; destruct (ident_eq i i0); inv H.
   split. auto. inv H0; inv H1; congruence.
 Qed.
 
 Theorem eval_or: binary_constructor_sound or Val.or.
-Proof.
+Proof using.
   red; intros until y; unfold or; case (or_match a b); intros; InvEval; subst.
 - rewrite Val.or_commut. apply eval_orimm; auto.
 - apply eval_orimm; auto.
@@ -618,7 +618,7 @@ Qed.
 
 Lemma eval_xorimm_base:
   forall n, unary_constructor_sound (xorimm_base n) (fun x => Val.xor x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros. unfold xorimm_base.
   predSpec Int.eq Int.eq_spec n Int.zero.
   intros. exists x; split. auto.
@@ -630,7 +630,7 @@ Qed.
 
 Theorem eval_xorimm:
   forall n, unary_constructor_sound (xorimm n) (fun x => Val.xor x (Vint n)).
-Proof.
+Proof using.
   intros; red; intros until x. unfold xorimm.
   destruct (xorimm_match a); intros; InvEval; subst.
 - rewrite Int.xor_commut; TrivialExists.
@@ -639,7 +639,7 @@ Proof.
 Qed.
 
 Theorem eval_xor: binary_constructor_sound xor Val.xor.
-Proof.
+Proof using.
   red; intros until y; unfold xor; case (xor_match a b); intros; InvEval; subst.
 - rewrite Val.xor_commut; apply eval_xorimm; auto.
 - apply eval_xorimm; auto.
@@ -660,7 +660,7 @@ Theorem eval_divs_base:
   eval_expr ge sp e m le b y ->
   Val.divs x y = Some z ->
   exists v, eval_expr ge sp e m le (divs_base a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   intros; unfold divs_base; TrivialExists.
 Qed.
 
@@ -670,7 +670,7 @@ Theorem eval_mods_base:
   eval_expr ge sp e m le b y ->
   Val.mods x y = Some z ->
   exists v, eval_expr ge sp e m le (mods_base a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   intros; unfold mods_base, mod_aux.
   exploit Val.mods_divs; eauto. intros (q & A & B). subst z.
   TrivialExists. repeat (econstructor; eauto with evalexpr). exact A.
@@ -682,7 +682,7 @@ Theorem eval_divu_base:
   eval_expr ge sp e m le b y ->
   Val.divu x y = Some z ->
   exists v, eval_expr ge sp e m le (divu_base a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   intros; unfold divu_base; TrivialExists.
 Qed.
 
@@ -692,7 +692,7 @@ Theorem eval_modu_base:
   eval_expr ge sp e m le b y ->
   Val.modu x y = Some z ->
   exists v, eval_expr ge sp e m le (modu_base a b) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   intros; unfold modu_base, mod_aux.
   exploit Val.modu_divu; eauto. intros (q & A & B). subst z.
   TrivialExists. repeat (econstructor; eauto with evalexpr). exact A.
@@ -703,7 +703,7 @@ Theorem eval_shrximm:
   eval_expr ge sp e m le a x ->
   Val.shrx x (Vint n) = Some z ->
   exists v, eval_expr ge sp e m le (shrximm a n) v /\ Val.lessdef z v.
-Proof.
+Proof using.
   intros; unfold shrximm. 
   predSpec Int.eq Int.eq_spec n Int.zero.
 - subst n. exists x; split; auto.
@@ -716,21 +716,21 @@ Qed.
 (** General shifts *)
 
 Theorem eval_shl: binary_constructor_sound shl Val.shl.
-Proof.
+Proof using.
   red; intros until y; unfold shl; case (shl_match b); intros.
   InvEval. apply eval_shlimm; auto.
   TrivialExists.
 Qed.
 
 Theorem eval_shr: binary_constructor_sound shr Val.shr.
-Proof.
+Proof using.
   red; intros until y; unfold shr; case (shr_match b); intros.
   InvEval. apply eval_shrimm; auto.
   TrivialExists.
 Qed.
 
 Theorem eval_shru: binary_constructor_sound shru Val.shru.
-Proof.
+Proof using.
   red; intros until y; unfold shru; case (shru_match b); intros.
   InvEval. apply eval_shruimm; auto.
   TrivialExists.
@@ -739,52 +739,52 @@ Qed.
 (** Floating-point operations *)
 
 Theorem eval_negf: unary_constructor_sound negf Val.negf.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_absf: unary_constructor_sound absf Val.absf.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_addf: binary_constructor_sound addf Val.addf.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_subf: binary_constructor_sound subf Val.subf.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_mulf: binary_constructor_sound mulf Val.mulf.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_negfs: unary_constructor_sound negfs Val.negfs.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_absfs: unary_constructor_sound absfs Val.absfs.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_addfs: binary_constructor_sound addfs Val.addfs.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_subfs: binary_constructor_sound subfs Val.subfs.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_mulfs: binary_constructor_sound mulfs Val.mulfs.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
@@ -805,7 +805,7 @@ Lemma eval_compimm:
   eval_expr ge sp e m le a x ->
   exists v, eval_expr ge sp e m le (compimm default intsem c a n2) v
          /\ Val.lessdef (sem c x (Vint n2)) v.
-Proof.
+Proof using.
   intros until x.
   unfold compimm; case (compimm_match c a); intros; InvEval; subst.
 - (* constant *)
@@ -863,7 +863,7 @@ Lemma eval_compimm_swap:
   eval_expr ge sp e m le a x ->
   exists v, eval_expr ge sp e m le (compimm default intsem (swap_comparison c) a n2) v
          /\ Val.lessdef (sem c (Vint n2) x) v.
-Proof.
+Proof using.
   intros. rewrite <- sem_swap. eapply eval_compimm; eauto.
 Qed.
 
@@ -871,7 +871,7 @@ End COMP_IMM.
 
 Theorem eval_comp:
   forall c, binary_constructor_sound (comp c) (Val.cmp c).
-Proof.
+Proof using.
   intros; red; intros until y. unfold comp; case (comp_match a b); intros; InvEval; subst.
 - eapply eval_compimm_swap; eauto.
   intros. unfold Val.cmp. rewrite Val.swap_cmp_bool; auto.
@@ -883,7 +883,7 @@ Qed.
 
 Theorem eval_compu:
   forall c, binary_constructor_sound (compu c) (Val.cmpu (Mem.valid_pointer m) c).
-Proof.
+Proof using.
   intros; red; intros until y. unfold compu; case (compu_match a b); intros; InvEval; subst.
 - eapply eval_compimm_swap; eauto.
   intros. unfold Val.cmpu. rewrite Val.swap_cmpu_bool; auto.
@@ -895,25 +895,25 @@ Qed.
 
 Theorem eval_compf:
   forall c, binary_constructor_sound (compf c) (Val.cmpf c).
-Proof.
+Proof using.
   intros; red; intros. unfold compf. TrivialExists.
 Qed.
 
 Theorem eval_compfs:
   forall c, binary_constructor_sound (compfs c) (Val.cmpfs c).
-Proof.
+Proof using.
   intros; red; intros. unfold compfs. TrivialExists.
 Qed.
 
 (** Floating-point conversions *)
 
 Theorem eval_singleoffloat: unary_constructor_sound singleoffloat Val.singleoffloat.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
 Theorem eval_floatofsingle: unary_constructor_sound floatofsingle Val.floatofsingle.
-Proof.
+Proof using.
   red; intros; TrivialExists.
 Qed.
 
@@ -922,7 +922,7 @@ Theorem eval_intoffloat:
   eval_expr ge sp e m le a x ->
   Val.intoffloat x = Some y ->
   exists v, eval_expr ge sp e m le (intoffloat a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros; TrivialExists.
 Qed.
 
@@ -931,7 +931,7 @@ Theorem eval_floatofint:
   eval_expr ge sp e m le a x ->
   Val.floatofint x = Some y ->
   exists v, eval_expr ge sp e m le (floatofint a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros until y; unfold floatofint. case (floatofint_match a); intros; InvEval.
 - TrivialExists.
 - TrivialExists.
@@ -942,7 +942,7 @@ Theorem eval_intuoffloat:
   eval_expr ge sp e m le a x ->
   Val.intuoffloat x = Some y ->
   exists v, eval_expr ge sp e m le (intuoffloat a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros; TrivialExists.
 Qed.
 
@@ -951,7 +951,7 @@ Theorem eval_floatofintu:
   eval_expr ge sp e m le a x ->
   Val.floatofintu x = Some y ->
   exists v, eval_expr ge sp e m le (floatofintu a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros until y; unfold floatofintu. case (floatofintu_match a); intros; InvEval.
 - TrivialExists.
 - TrivialExists.
@@ -962,7 +962,7 @@ Theorem eval_intofsingle:
   eval_expr ge sp e m le a x ->
   Val.intofsingle x = Some y ->
   exists v, eval_expr ge sp e m le (intofsingle a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros; TrivialExists.
 Qed.
 
@@ -971,7 +971,7 @@ Theorem eval_singleofint:
   eval_expr ge sp e m le a x ->
   Val.singleofint x = Some y ->
   exists v, eval_expr ge sp e m le (singleofint a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros until y; unfold singleofint. case (singleofint_match a); intros; InvEval.
 - TrivialExists.
 - TrivialExists.
@@ -982,7 +982,7 @@ Theorem eval_intuofsingle:
   eval_expr ge sp e m le a x ->
   Val.intuofsingle x = Some y ->
   exists v, eval_expr ge sp e m le (intuofsingle a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros; TrivialExists.
 Qed.
 
@@ -991,7 +991,7 @@ Theorem eval_singleofintu:
   eval_expr ge sp e m le a x ->
   Val.singleofintu x = Some y ->
   exists v, eval_expr ge sp e m le (singleofintu a) v /\ Val.lessdef y v.
-Proof.
+Proof using.
   intros until y; unfold singleofintu. case (singleofintu_match a); intros; InvEval.
 - TrivialExists.
 - TrivialExists.
@@ -1009,7 +1009,7 @@ Theorem eval_select:
   exists v, 
      eval_expr ge sp e m le a v
   /\ Val.lessdef (Val.select (Some b) v1 v2 ty) v.
-Proof.
+Proof using.
   unfold select; intros.
   destruct (match ty with Tint | Tlong | Tfloat | Tsingle => true | _ => false end); inv H.
   rewrite <- H3; TrivialExists. 
@@ -1026,7 +1026,7 @@ Theorem eval_addressing:
     eval_exprlist ge sp e m le args vl /\
     eval_addressing ge sp mode vl = Some v
   end.
-Proof.
+Proof using.
   intros until v. unfold addressing; case (addressing_match a); intros; InvEval.
 - econstructor; split. EvalOp. simpl; auto.
 - destruct (symbol_is_relocatable id).
@@ -1050,7 +1050,7 @@ Theorem eval_builtin_arg:
   forall a v,
   eval_expr ge sp e m nil a v ->
   CminorSel.eval_builtin_arg ge sp e m (builtin_arg a) v.
-Proof.
+Proof using.
   intros until v. unfold builtin_arg; case (builtin_arg_match a); intros; InvEval.
 - constructor.
 - constructor.
@@ -1069,7 +1069,7 @@ Theorem eval_platform_builtin:
   eval_exprlist ge sp e m le al vl ->
   platform_builtin_sem bf vl = Some v ->
   exists v', eval_expr ge sp e m le a v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros. discriminate.
 Qed.
 

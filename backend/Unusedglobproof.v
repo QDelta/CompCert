@@ -86,18 +86,18 @@ Inductive workset_incl (w1 w2: workset) : Prop :=
 
 Lemma seen_workset_incl:
   forall w1 w2 id, workset_incl w1 w2 -> IS.In id w1 -> IS.In id w2.
-Proof.
+Proof using.
   intros. destruct H. auto.
 Qed.
 
 Lemma workset_incl_refl: forall w, workset_incl w w.
-Proof.
+Proof using.
   intros; split. red; auto. red; auto. auto.
 Qed.
 
 Lemma workset_incl_trans:
   forall w1 w2 w3, workset_incl w1 w2 -> workset_incl w2 w3 -> workset_incl w1 w3.
-Proof.
+Proof using.
   intros. destruct H, H0; split.
   red; eauto.
   red; eauto.
@@ -106,7 +106,7 @@ Qed.
 
 Lemma add_workset_incl:
   forall id w, workset_incl w (add_workset id w).
-Proof.
+Proof using.
   unfold add_workset; intros. destruct (IS.mem id w) eqn:MEM.
 - apply workset_incl_refl.
 - split; simpl.
@@ -117,7 +117,7 @@ Qed.
 
 Lemma addlist_workset_incl:
   forall l w, workset_incl w (addlist_workset l w).
-Proof.
+Proof using.
   induction l; simpl; intros.
   apply workset_incl_refl.
   eapply workset_incl_trans. apply add_workset_incl. eauto.
@@ -125,7 +125,7 @@ Qed.
 
 Lemma add_ref_function_incl:
   forall f w, workset_incl w (add_ref_function f w).
-Proof.
+Proof using.
   unfold add_ref_function; intros. apply PTree_Properties.fold_rec.
 - auto.
 - apply workset_incl_refl.
@@ -135,7 +135,7 @@ Qed.
 
 Lemma add_ref_globvar_incl:
   forall gv w, workset_incl w (add_ref_globvar gv w).
-Proof.
+Proof using.
   unfold add_ref_globvar; intros.
   revert w. induction (gvar_init gv); simpl; intros.
   apply workset_incl_refl.
@@ -146,7 +146,7 @@ Qed.
 
 Lemma add_ref_definition_incl:
   forall pm id w, workset_incl w (add_ref_definition pm id w).
-Proof.
+Proof using.
   unfold add_ref_definition; intros.
   destruct (pm!id) as [[[] | ? ] | ].
   apply add_ref_function_incl.
@@ -157,7 +157,7 @@ Qed.
 
 Lemma initial_workset_incl:
   forall p, workset_incl {| w_seen := IS.empty; w_todo := nil |} (initial_workset p).
-Proof.
+Proof using.
   unfold initial_workset; intros.
   eapply workset_incl_trans. 2: apply add_workset_incl.
   generalize {| w_seen := IS.empty; w_todo := nil |}. induction (prog_public p); simpl; intros.
@@ -169,7 +169,7 @@ Qed.
 
 Lemma seen_add_workset:
   forall id (w: workset), IS.In id (add_workset id w).
-Proof.
+Proof using.
   unfold add_workset; intros.
   destruct (IS.mem id w) eqn:MEM.
   apply IS.mem_2; auto.
@@ -179,7 +179,7 @@ Qed.
 Lemma seen_addlist_workset:
   forall id l (w: workset),
   In id l -> IS.In id (addlist_workset l w).
-Proof.
+Proof using.
   induction l; simpl; intros.
   tauto.
   destruct H. subst a.
@@ -190,7 +190,7 @@ Qed.
 Lemma seen_add_ref_function:
   forall id f w,
   ref_function f id -> IS.In id (add_ref_function f w).
-Proof.
+Proof using.
   intros until w. unfold ref_function, add_ref_function. apply PTree_Properties.fold_rec; intros.
 - destruct H1 as (pc & i & A & B). apply H0; auto. exists pc, i; split; auto. rewrite H; auto.
 - destruct H as (pc & i & A & B). rewrite PTree.gempty in A; discriminate.
@@ -203,7 +203,7 @@ Qed.
 Lemma seen_add_ref_definition:
   forall pm id gd id' w,
   pm!id = Some gd -> ref_def gd id' -> IS.In id' (add_ref_definition pm id w).
-Proof.
+Proof using.
   unfold add_ref_definition; intros. rewrite H. red in H0; destruct gd as [[f|ef]|gv].
   apply seen_add_ref_function; auto.
   contradiction.
@@ -224,13 +224,13 @@ Qed.
 
 Lemma seen_main_initial_workset:
   forall p, IS.In p.(prog_main) (initial_workset p).
-Proof.
+Proof using.
   intros. apply seen_add_workset.
 Qed.
 
 Lemma seen_public_initial_workset:
   forall p id, In id p.(prog_public) -> IS.In id (initial_workset p).
-Proof.
+Proof using.
   intros. unfold initial_workset. eapply seen_workset_incl. apply add_workset_incl.
   assert (forall l (w: workset),
           IS.In id w \/ In id l -> IS.In id (fold_left (fun w id => add_workset id w) l w)).
@@ -269,7 +269,7 @@ Lemma iter_step_invariant:
   | inl u => used_set_closed u
   | inr w' => workset_invariant w'
   end.
-Proof.
+Proof using.
   unfold iter_step, workset_invariant, used_set_closed; intros.
   destruct (w_todo w) as [ | id rem ]; intros.
 - eapply H; eauto.
@@ -287,7 +287,7 @@ Qed.
 
 Theorem used_globals_sound:
   forall u, used_globals p pm = Some u -> used_set_closed u.
-Proof.
+Proof using.
   unfold used_globals; intros. eapply PrimIter.iterate_prop with (P := workset_invariant); eauto.
 - intros. apply iter_step_invariant; auto.
 - destruct (initial_workset_incl p).
@@ -298,7 +298,7 @@ Qed.
 
 Theorem used_globals_incl:
   forall u, used_globals p pm = Some u -> IS.Subset (initial_workset p) u.
-Proof.
+Proof using.
   unfold used_globals; intros.
   eapply PrimIter.iterate_prop with (P := fun (w: workset) => IS.Subset (initial_workset p) w); eauto.
 - fold pm; unfold iter_step; intros. destruct (w_todo a) as [ | id rem ].
@@ -313,7 +313,7 @@ Corollary used_globals_valid:
   used_globals p pm = Some u ->
   IS.for_all (global_defined p pm) u = true ->
   valid_used_set p u.
-Proof.
+Proof using.
   intros. constructor.
 - intros. eapply used_globals_sound; eauto.
 - eapply used_globals_incl; eauto. apply seen_main_initial_workset.
@@ -340,7 +340,7 @@ Let add_def (m: prog_map) idg := PTree.set (fst idg) (snd idg) m.
 Remark filter_globdefs_accu:
   forall defs accu1 accu2 u,
   filter_globdefs u (accu1 ++ accu2) defs = filter_globdefs u accu1 defs ++ accu2.
-Proof.
+Proof using.
   induction defs; simpl; intros.
   auto.
   destruct a as [id gd]. destruct (IS.mem id u); auto.
@@ -350,7 +350,7 @@ Qed.
 Remark filter_globdefs_nil:
   forall u accu defs,
   filter_globdefs u accu defs = filter_globdefs u nil defs ++ accu.
-Proof.
+Proof using.
   intros. rewrite <- filter_globdefs_accu. auto.
 Qed.
 
@@ -359,7 +359,7 @@ Lemma filter_globdefs_map_1:
   IS.mem id u = false ->
   m1!id = None ->
   (fold_left add_def (filter_globdefs u nil l) m1)!id = None.
-Proof.
+Proof using.
   induction l as [ | [id1 gd1] l]; simpl; intros.
 - auto.
 - destruct (IS.mem id1 u) eqn:MEM.
@@ -374,7 +374,7 @@ Lemma filter_globdefs_map_2:
   IS.mem id u = true ->
   m1!id = m2!id ->
   (fold_left add_def (filter_globdefs u nil l) m1)!id = (fold_left add_def (List.rev l) m2)!id.
-Proof.
+Proof using.
   induction l as [ | [id1 gd1] l]; simpl; intros.
 - auto.
 - rewrite fold_left_app. simpl.
@@ -391,7 +391,7 @@ Lemma filter_globdefs_map:
   forall id u defs,
   (PTree_Properties.of_list (filter_globdefs u nil (List.rev defs)))! id =
   if IS.mem id u then (PTree_Properties.of_list defs)!id else None.
-Proof.
+Proof using.
   intros. unfold PTree_Properties.of_list. fold prog_map. unfold PTree.elt. fold add_def.
   destruct (IS.mem id u) eqn:MEM.
 - erewrite filter_globdefs_map_2. rewrite List.rev_involutive. reflexivity.
@@ -402,7 +402,7 @@ Qed.
 Lemma filter_globdefs_domain:
   forall id l u,
   In id (map fst (filter_globdefs u nil l)) -> IS.In id u /\ In id (map fst l).
-Proof.
+Proof using.
   induction l as [ | [id1 gd1] l]; simpl; intros.
 - tauto.
 - destruct (IS.mem id1 u) eqn:MEM.
@@ -414,7 +414,7 @@ Qed.
 
 Lemma filter_globdefs_unique_names:
   forall l u, list_norepet (map fst (filter_globdefs u nil l)).
-Proof.
+Proof using.
   induction l as [ | [id1 gd1] l]; simpl; intros.
 - constructor.
 - destruct (IS.mem id1 u) eqn:MEM; auto.
@@ -429,7 +429,7 @@ End TRANSFORMATION.
 
 Theorem transf_program_match:
   forall p tp, transform_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   unfold transform_program; intros p tp TR. set (pm := prog_defmap p) in *.
   destruct (used_globals p pm) as [u|] eqn:U; try discriminate.
   destruct (IS.for_all (global_defined p pm) u) eqn:DEF; inv TR.
@@ -458,19 +458,19 @@ Definition kept (id: ident) : Prop := IS.In id used.
 Lemma kept_closed:
   forall id gd id',
   kept id -> pm!id = Some gd -> ref_def gd id' -> kept id'.
-Proof.
+Proof using USED_VALID.
   intros. eapply used_closed; eauto.
 Qed.
 
 Lemma kept_main:
   kept p.(prog_main).
-Proof.
+Proof using USED_VALID.
   eapply used_main; eauto.
 Qed.
 
 Lemma kept_public:
   forall id, In id p.(prog_public) -> kept id.
-Proof.
+Proof using USED_VALID.
   intros. eapply used_public; eauto.
 Qed.
 
@@ -479,7 +479,7 @@ Qed.
 Lemma transform_find_symbol_1:
   forall id b,
   Genv.find_symbol ge id = Some b -> kept id -> exists b', Genv.find_symbol tge id = Some b'.
-Proof.
+Proof using TRANSF.
   intros.
   assert (A: exists g, (prog_defmap p)!id = Some g).
   { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
@@ -492,7 +492,7 @@ Qed.
 Lemma transform_find_symbol_2:
   forall id b,
   Genv.find_symbol tge id = Some b -> kept id /\ exists b', Genv.find_symbol ge id = Some b'.
-Proof.
+Proof using TRANSF.
   intros.
   assert (A: exists g, (prog_defmap tp)!id = Some g).
   { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
@@ -540,7 +540,7 @@ Remark init_meminj_eq:
   forall id b b',
   Genv.find_symbol ge id = Some b -> Genv.find_symbol tge id = Some b' ->
   init_meminj b = Some(b', 0).
-Proof.
+Proof using.
   intros. unfold init_meminj. erewrite Genv.find_invert_symbol by eauto. rewrite H0. auto.
 Qed.
 
@@ -548,7 +548,7 @@ Remark init_meminj_invert:
   forall b b' delta,
   init_meminj b = Some(b', delta) ->
   delta = 0 /\ exists id, Genv.find_symbol ge id = Some b /\ Genv.find_symbol tge id = Some b'.
-Proof.
+Proof using.
   unfold init_meminj; intros.
   destruct (Genv.invert_symbol ge b) as [id|] eqn:S; try discriminate.
   destruct (Genv.find_symbol tge id) as [b''|] eqn:F; inv H.
@@ -557,7 +557,7 @@ Qed.
 
 Lemma init_meminj_preserves_globals:
   meminj_preserves_globals init_meminj.
-Proof.
+Proof using USED_VALID TRANSF.
   constructor; intros.
 - exploit init_meminj_invert; eauto. intros (A & id1 & B & C).
   assert (id1 = id) by (eapply (Genv.genv_vars_inj ge); eauto). subst id1.
@@ -586,7 +586,7 @@ Qed.
 
 Lemma globals_symbols_inject:
   forall j, meminj_preserves_globals j -> symbols_inject j ge tge.
-Proof.
+Proof using USED_VALID TRANSF.
   intros.
   assert (E1: Genv.genv_public ge = p.(prog_public)).
   { apply Genv.globalenv_public. }
@@ -624,7 +624,7 @@ Lemma symbol_address_inject:
   forall j id ofs,
   meminj_preserves_globals j -> kept id ->
   Val.inject j (Genv.symbol_address ge id ofs) (Genv.symbol_address tge id ofs).
-Proof.
+Proof using.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:FS; auto.
   exploit symbols_inject_2; eauto. intros (b' & TFS & INJ). rewrite TFS.
   econstructor; eauto. rewrite Ptrofs.add_zero; auto.
@@ -637,7 +637,7 @@ Definition regset_inject (f: meminj) (rs rs': regset): Prop :=
 
 Lemma regs_inject:
   forall f rs rs', regset_inject f rs rs' -> forall l, Val.inject_list f rs##l rs'##l.
-Proof.
+Proof using.
   induction l; simpl. constructor. constructor; auto.
 Qed.
 
@@ -645,7 +645,7 @@ Lemma set_reg_inject:
   forall f rs rs' r v v',
   regset_inject f rs rs' -> Val.inject f v v' ->
   regset_inject f (rs#r <- v) (rs'#r <- v').
-Proof.
+Proof using.
   intros; red; intros. rewrite ! Regmap.gsspec. destruct (peq r0 r); auto.
 Qed.
 
@@ -653,19 +653,19 @@ Lemma set_res_inject:
   forall f rs rs' res v v',
   regset_inject f rs rs' -> Val.inject f v v' ->
   regset_inject f (regmap_setres res v rs) (regmap_setres res v' rs').
-Proof.
+Proof using.
   intros. destruct res; auto. apply set_reg_inject; auto.
 Qed.
 
 Lemma regset_inject_incr:
   forall f f' rs rs', regset_inject f rs rs' -> inject_incr f f' -> regset_inject f' rs rs'.
-Proof.
+Proof using.
   intros; red; intros. apply val_inject_incr with f; auto.
 Qed.
 
 Lemma regset_undef_inject:
   forall f, regset_inject f (Regmap.init Vundef) (Regmap.init Vundef).
-Proof.
+Proof using.
   intros; red; intros. rewrite Regmap.gi. auto.
 Qed.
 
@@ -673,7 +673,7 @@ Lemma init_regs_inject:
   forall f args args', Val.inject_list f args args' ->
   forall params,
   regset_inject f (init_regs args params) (init_regs args' params).
-Proof.
+Proof using.
   induction 1; intros; destruct params; simpl; try (apply regset_undef_inject).
   apply set_reg_inject; auto.
 Qed.
@@ -699,7 +699,7 @@ Lemma match_stacks_preserves_globals:
   forall j s ts bound tbound,
   match_stacks j s ts bound tbound ->
   meminj_preserves_globals j.
-Proof.
+Proof using.
   induction 1; auto.
 Qed.
 
@@ -709,7 +709,7 @@ Lemma match_stacks_incr:
   (forall b1 b2 delta,
       j b1 = None -> j' b1 = Some(b2, delta) -> Ple bound b1 /\ Ple tbound b2) ->
   match_stacks j' s ts bound tbound.
-Proof.
+Proof using.
   induction 2; intros.
 - assert (SAME: forall b b' delta, Plt b (Genv.genv_next ge) ->
                                    j' b = Some(b', delta) -> j b = Some(b', delta)).
@@ -746,7 +746,7 @@ Lemma match_stacks_bound:
   match_stacks j s ts bound tbound ->
   Ple bound bound' -> Ple tbound tbound' ->
   match_stacks j s ts bound' tbound'.
-Proof.
+Proof using.
   induction 1; intros.
 - constructor; auto. eapply Ple_trans; eauto. eapply Ple_trans; eauto.
 - econstructor; eauto. eapply Plt_Ple_trans; eauto. eapply Plt_Ple_trans; eauto.
@@ -789,7 +789,7 @@ Lemma external_call_inject:
     /\ Mem.unchanged_on (loc_out_of_reach f m1) m1' m2'
     /\ inject_incr f f'
     /\ inject_separated f f' m1 m1'.
-Proof.
+Proof using USED_VALID TRANSF.
   intros. eapply external_call_mem_inject_gen; eauto.
   apply globals_symbols_inject; auto.
 Qed.
@@ -800,7 +800,7 @@ Lemma find_function_inject:
   find_function ge ros rs = Some fd ->
   match ros with inl r => regset_inject j rs trs | inr id => kept id end ->
   find_function tge ros trs = Some fd /\ (forall id, ref_fundef fd id -> kept id).
-Proof.
+Proof using.
   intros. destruct ros as [r|id]; simpl in *.
 - exploit Genv.find_funct_inv; eauto. intros (b & R). rewrite R in H0.
   rewrite Genv.find_funct_find_funct_ptr in H0.
@@ -828,7 +828,7 @@ Lemma eval_builtin_arg_inject:
   exists v',
      eval_builtin_arg tge (fun r => rs'#r) (Vptr sp' Ptrofs.zero) m' a v'
   /\ Val.inject j v v'.
-Proof.
+Proof using.
   induction 1; intros SP GL RS MI K; simpl in K.
 - exists rs'#x; split; auto. constructor.
 - econstructor; eauto with barg.
@@ -870,7 +870,7 @@ Lemma eval_builtin_args_inject:
   exists vl',
      eval_builtin_args tge (fun r => rs'#r) (Vptr sp' Ptrofs.zero) m' al vl'
   /\ Val.inject_list j vl vl'.
-Proof.
+Proof using.
   induction 1; intros.
 - exists (@nil val); split; constructor.
 - simpl in H5.
@@ -883,7 +883,7 @@ Theorem step_simulation:
   forall S1 t S2, step ge S1 t S2 ->
   forall S1' (MS: match_states S1 S1'),
   exists S2', step tge S1' t S2' /\ match_states S2 S2'.
-Proof.
+Proof using USED_VALID TRANSF.
   induction 1; intros; inv MS.
 
 - (* nop *)
@@ -1053,7 +1053,7 @@ Remark genv_find_def_exists:
   forall (F V: Type) (p: AST.program F V) b,
   Plt b (Genv.genv_next (Genv.globalenv p)) ->
   exists gd, Genv.find_def (Genv.globalenv p) b = Some gd.
-Proof.
+Proof using.
   intros until b.
   set (P := fun (g: Genv.t F V) =>
         Plt b (Genv.genv_next g) -> exists gd, (Genv.genv_defs g)!b = Some gd).
@@ -1077,7 +1077,7 @@ Lemma init_meminj_invert_strong:
   /\ Genv.find_def ge b = Some gd
   /\ Genv.find_def tge b' = Some gd
   /\ (forall i, ref_def gd i -> kept i).
-Proof.
+Proof using USED_VALID TRANSF.
   intros. exploit init_meminj_invert; eauto. intros (A & id & B & C).
   assert (exists gd, (prog_defmap p)!id = Some gd).
   { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
@@ -1098,7 +1098,7 @@ Lemma bytes_of_init_inject:
   forall il,
   (forall id, ref_init il id -> kept id) ->
   list_forall2 (memval_inject init_meminj) (Genv.bytes_of_init_data_list ge il) (Genv.bytes_of_init_data_list tge il).
-Proof.
+Proof using USED_VALID TRANSF.
   induction il as [ | i1 il]; simpl; intros.
 - constructor.
 - apply list_forall2_app.
@@ -1121,7 +1121,7 @@ Lemma Mem_getN_forall2:
   list_forall2 P (Mem.getN n p c1) (Mem.getN n p c2) ->
   p <= i -> i < p + Z.of_nat n ->
   P (ZMap.get i c1) (ZMap.get i c2).
-Proof.
+Proof using.
   induction n; simpl Mem.getN; intros.
 - simpl in H1. extlia.
 - inv H. rewrite Nat2Z.inj_succ in H1. destruct (zeq i p0).
@@ -1131,7 +1131,7 @@ Qed.
 
 Lemma init_mem_inj_1:
   Mem.mem_inj init_meminj m tm.
-Proof.
+Proof using USED_VALID TRANSF TIM IM.
   intros; constructor; intros.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
@@ -1168,7 +1168,7 @@ Qed.
 
 Lemma init_mem_inj_2:
   Mem.inject init_meminj m tm.
-Proof.
+Proof using USED_VALID TRANSF TIM IM.
   constructor; intros.
 - apply init_mem_inj_1.
 - destruct (init_meminj b) as [[b' delta]|] eqn:INJ; auto.
@@ -1200,7 +1200,7 @@ End INIT_MEM.
 Lemma init_mem_exists:
   forall m, Genv.init_mem p = Some m ->
   exists tm, Genv.init_mem tp = Some tm.
-Proof.
+Proof using USED_VALID TRANSF.
   intros. apply Genv.init_mem_exists.
   intros.
   assert (P: (prog_defmap tp)!id = Some (Gvar v)).
@@ -1218,7 +1218,7 @@ Theorem init_mem_inject:
   forall m,
   Genv.init_mem p = Some m ->
   exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals f.
-Proof.
+Proof using USED_VALID TRANSF.
   intros.
   exploit init_mem_exists; eauto. intros [tm INIT].
   exists init_meminj, tm.
@@ -1229,7 +1229,7 @@ Qed.
 
 Lemma transf_initial_states:
   forall S1, initial_state p S1 -> exists S2, initial_state tp S2 /\ match_states S1 S2.
-Proof.
+Proof using USED_VALID TRANSF.
   intros. inv H. exploit init_mem_inject; eauto. intros (j & tm & A & B & C).
   exploit symbols_inject_2. eauto. eapply kept_main. eexact H1. intros (tb & P & Q).
   rewrite Genv.find_funct_ptr_iff in H2.
@@ -1248,13 +1248,13 @@ Qed.
 Lemma transf_final_states:
   forall S1 S2 r,
   match_states S1 S2 -> final_state S1 r -> final_state S2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STACKS. inv RESINJ. constructor.
 Qed.
 
 Lemma transf_program_correct_1:
   forward_simulation (semantics p) (semantics tp).
-Proof.
+Proof using USED_VALID TRANSF.
   intros.
   eapply forward_simulation_step.
   exploit globals_symbols_inject. apply init_meminj_preserves_globals. intros [A B]. exact A.
@@ -1267,7 +1267,7 @@ End SOUNDNESS.
 
 Theorem transf_program_correct:
   forall p tp, match_prog p tp -> forward_simulation (semantics p) (semantics tp).
-Proof.
+Proof using.
   intros p tp (used & A & B).  apply transf_program_correct_1 with used; auto.
 Qed.
 
@@ -1276,7 +1276,7 @@ Qed.
 Remark link_def_either:
   forall (gd1 gd2 gd: globdef fundef unit),
   link_def gd1 gd2 = Some gd -> gd = gd1 \/ gd = gd2.
-Proof with (try discriminate).
+Proof using () with (try discriminate).
   intros until gd.
 Local Transparent Linker_def Linker_fundef Linker_varinit Linker_vardef Linker_unit.
   destruct gd1 as [f1|v1], gd2 as [f2|v2]...
@@ -1307,7 +1307,7 @@ Remark used_not_defined:
   valid_used_set p used ->
   (prog_defmap p)!id = None ->
   IS.mem id used = false \/ id = prog_main p.
-Proof.
+Proof using.
   intros. destruct (IS.mem id used) eqn:M; auto.
   exploit used_defined; eauto using IS.mem_2. intros [A|A]; auto.
   apply prog_defmap_dom in A. destruct A as [g E]; congruence.
@@ -1319,7 +1319,7 @@ Remark used_not_defined_2:
   id <> prog_main p ->
   (prog_defmap p)!id = None ->
   ~IS.In id used.
-Proof.
+Proof using.
   intros. exploit used_not_defined; eauto. intros [A|A].
   red; intros; apply IS.mem_1 in H2; congruence.
   congruence.
@@ -1331,7 +1331,7 @@ Lemma link_valid_used_set:
   valid_used_set p1 used1 ->
   valid_used_set p2 used2 ->
   valid_used_set p (IS.union used1 used2).
-Proof.
+Proof using.
   intros until used2; intros L V1 V2.
   destruct (link_prog_inv _ _ _ L) as (X & Y & Z).
   rewrite Z; clear Z; constructor.
@@ -1388,7 +1388,7 @@ Theorem link_match_program:
   link p1 p2 = Some p ->
   match_prog p1 tp1 -> match_prog p2 tp2 ->
   exists tp, link tp1 tp2 = Some tp /\ match_prog p tp.
-Proof.
+Proof using.
   intros. destruct H0 as (used1 & A1 & B1). destruct H1 as (used2 & A2 & B2).
   destruct (link_prog_inv _ _ _ H) as (U & V & W).
   econstructor; split.

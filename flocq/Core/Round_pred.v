@@ -52,7 +52,7 @@ Theorem round_val_of_pred :
   forall rnd : R -> R -> Prop,
   round_pred rnd ->
   forall x, { f : R | rnd x f }.
-Proof.
+Proof using.
 intros rnd (H1,H2) x.
 specialize (H1 x).
 (* . *)
@@ -79,7 +79,7 @@ Theorem round_fun_of_pred :
   forall rnd : R -> R -> Prop,
   round_pred rnd ->
   { f : R -> R | forall x, rnd x (f x) }.
-Proof.
+Proof using.
 intros rnd H.
 exists (fun x => proj1_sig (round_val_of_pred rnd H x)).
 intros x.
@@ -93,7 +93,7 @@ Theorem round_unique :
   rnd x f1 ->
   rnd x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros rnd Hr x f1 f2 H1 H2.
 apply Rle_antisym.
 now apply Hr with (3 := Rle_refl x).
@@ -103,7 +103,7 @@ Qed.
 Theorem Rnd_DN_pt_monotone :
   forall F : R -> Prop,
   round_pred_monotone (Rnd_DN_pt F).
-Proof.
+Proof using.
 intros F x y f g (Hx1,(Hx2,_)) (Hy1,(_,Hy2)) Hxy.
 apply Hy2.
 apply Hx1.
@@ -115,7 +115,7 @@ Theorem Rnd_DN_pt_unique :
   forall x f1 f2 : R,
   Rnd_DN_pt F x f1 -> Rnd_DN_pt F x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F.
 apply round_unique.
 apply Rnd_DN_pt_monotone.
@@ -126,7 +126,7 @@ Theorem Rnd_DN_unique :
   forall rnd1 rnd2 : R -> R,
   Rnd_DN F rnd1 -> Rnd_DN F rnd2 ->
   forall x, rnd1 x = rnd2 x.
-Proof.
+Proof using.
 intros F rnd1 rnd2 H1 H2 x.
 now eapply Rnd_DN_pt_unique.
 Qed.
@@ -134,7 +134,7 @@ Qed.
 Theorem Rnd_UP_pt_monotone :
   forall F : R -> Prop,
   round_pred_monotone (Rnd_UP_pt F).
-Proof.
+Proof using.
 intros F x y f g (Hx1,(_,Hx2)) (Hy1,(Hy2,_)) Hxy.
 apply Hx2.
 apply Hy1.
@@ -146,7 +146,7 @@ Theorem Rnd_UP_pt_unique :
   forall x f1 f2 : R,
   Rnd_UP_pt F x f1 -> Rnd_UP_pt F x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F.
 apply round_unique.
 apply Rnd_UP_pt_monotone.
@@ -157,7 +157,7 @@ Theorem Rnd_UP_unique :
   forall rnd1 rnd2 : R -> R,
   Rnd_UP F rnd1 -> Rnd_UP F rnd2 ->
   forall x, rnd1 x = rnd2 x.
-Proof.
+Proof using.
 intros F rnd1 rnd2 H1 H2 x.
 now eapply Rnd_UP_pt_unique.
 Qed.
@@ -167,7 +167,7 @@ Theorem Rnd_UP_pt_opp :
   ( forall x, F x -> F (- x) ) ->
   forall x f : R,
   Rnd_DN_pt F x f -> Rnd_UP_pt F (-x) (-f).
-Proof.
+Proof using.
 intros F HF x f H.
 repeat split.
 apply HF.
@@ -188,7 +188,7 @@ Theorem Rnd_DN_pt_opp :
   ( forall x, F x -> F (- x) ) ->
   forall x f : R,
   Rnd_UP_pt F x f -> Rnd_DN_pt F (-x) (-f).
-Proof.
+Proof using.
 intros F HF x f H.
 repeat split.
 apply HF.
@@ -210,7 +210,7 @@ Theorem Rnd_DN_opp :
   forall rnd1 rnd2 : R -> R,
   Rnd_DN F rnd1 -> Rnd_UP F rnd2 ->
   forall x, rnd1 (- x) = - rnd2 x.
-Proof.
+Proof using.
 intros F HF rnd1 rnd2 H1 H2 x.
 rewrite <- (Ropp_involutive (rnd1 (-x))).
 apply f_equal.
@@ -229,7 +229,7 @@ Theorem Rnd_DN_UP_pt_split :
   Rnd_UP_pt F x u ->
   forall f, F f ->
   (f <= d) \/ (u <= f).
-Proof.
+Proof using.
 intros F x d u Hd Hu f Hf.
 destruct (Rle_or_lt f x).
 left.
@@ -243,7 +243,7 @@ Theorem Rnd_DN_pt_refl :
   forall F : R -> Prop,
   forall x : R, F x ->
   Rnd_DN_pt F x x.
-Proof.
+Proof using.
 intros F x Hx.
 repeat split.
 exact Hx.
@@ -256,7 +256,7 @@ Theorem Rnd_DN_pt_idempotent :
   forall x f : R,
   Rnd_DN_pt F x f -> F x ->
   f = x.
-Proof.
+Proof using.
 intros F x f (_,(Hx1,Hx2)) Hx.
 apply Rle_antisym.
 exact Hx1.
@@ -269,7 +269,7 @@ Theorem Rnd_UP_pt_refl :
   forall F : R -> Prop,
   forall x : R, F x ->
   Rnd_UP_pt F x x.
-Proof.
+Proof using.
 intros F x Hx.
 repeat split.
 exact Hx.
@@ -282,7 +282,7 @@ Theorem Rnd_UP_pt_idempotent :
   forall x f : R,
   Rnd_UP_pt F x f -> F x ->
   f = x.
-Proof.
+Proof using.
 intros F x f (_,(Hx1,Hx2)) Hx.
 apply Rle_antisym.
 apply Hx2.
@@ -297,7 +297,7 @@ Theorem Only_DN_or_UP :
   Rnd_DN_pt F x fd -> Rnd_UP_pt F x fu ->
   F f -> (fd <= f <= fu)%R ->
   f = fd \/ f = fu.
-Proof.
+Proof using.
 intros F x fd fu f Hd Hu Hf [Hdf Hfu].
 destruct (Rle_or_lt x f) ; [right|left].
 apply Rle_antisym with (1 := Hfu).
@@ -311,7 +311,7 @@ Theorem Rnd_ZR_abs :
   forall (F : R -> Prop) (rnd: R-> R),
   Rnd_ZR F rnd ->
   forall x : R,  (Rabs (rnd x) <= Rabs x)%R.
-Proof.
+Proof using.
 intros F rnd H x.
 assert (F 0%R).
 replace 0%R with (rnd 0%R).
@@ -342,7 +342,7 @@ Qed.
 Theorem Rnd_ZR_pt_monotone :
   forall F : R -> Prop, F 0 ->
   round_pred_monotone (Rnd_ZR_pt F).
-Proof.
+Proof using.
 intros F F0 x y f g (Hx1, Hx2) (Hy1, Hy2) Hxy.
 destruct (Rle_or_lt 0 x) as [Hx|Hx].
 (* . *)
@@ -370,7 +370,7 @@ Theorem Rnd_N_pt_DN_or_UP :
   forall x f : R,
   Rnd_N_pt F x f ->
   Rnd_DN_pt F x f \/ Rnd_UP_pt F x f.
-Proof.
+Proof using.
 intros F x f (Hf1,Hf2).
 destruct (Rle_or_lt x f) as [Hxf|Hxf].
 (* . *)
@@ -403,7 +403,7 @@ Theorem Rnd_N_pt_DN_or_UP_eq :
   Rnd_DN_pt F x fd -> Rnd_UP_pt F x fu ->
   Rnd_N_pt F x f ->
   f = fd \/ f = fu.
-Proof.
+Proof using.
 intros F x fd fu f Hd Hu Hf.
 destruct (Rnd_N_pt_DN_or_UP F x f Hf) as [H|H].
 left.
@@ -417,7 +417,7 @@ Theorem Rnd_N_pt_opp_inv :
   ( forall x, F x -> F (- x) ) ->
   forall x f : R,
   Rnd_N_pt F (-x) (-f) -> Rnd_N_pt F x f.
-Proof.
+Proof using.
 intros F HF x f (H1,H2).
 rewrite <- (Ropp_involutive f).
 repeat split.
@@ -437,7 +437,7 @@ Theorem Rnd_N_pt_monotone :
   forall x y f g : R,
   Rnd_N_pt F x f -> Rnd_N_pt F y g ->
   x < y -> f <= g.
-Proof.
+Proof using.
 intros F x y f g (Hf,Hx) (Hg,Hy) Hxy.
 apply Rnot_lt_le.
 intros Hgf.
@@ -491,7 +491,7 @@ Theorem Rnd_N_pt_unique :
   Rnd_N_pt F x f1 ->
   Rnd_N_pt F x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F x d u f1 f2 Hd Hu Hdu.
 assert (forall f1 f2, Rnd_N_pt F x f1 -> Rnd_N_pt F x f2 -> f1 < f2 -> False).
 clear f1 f2. intros f1 f2 Hf1 Hf2 H12.
@@ -526,7 +526,7 @@ Theorem Rnd_N_pt_refl :
   forall F : R -> Prop,
   forall x : R, F x ->
   Rnd_N_pt F x x.
-Proof.
+Proof using.
 intros F x Hx.
 repeat split.
 exact Hx.
@@ -541,7 +541,7 @@ Theorem Rnd_N_pt_idempotent :
   forall x f : R,
   Rnd_N_pt F x f -> F x ->
   f = x.
-Proof.
+Proof using.
 intros F x f (_,Hf) Hx.
 apply Rminus_diag_uniq.
 destruct (Req_dec (f - x) 0) as [H|H].
@@ -560,7 +560,7 @@ Theorem Rnd_N_pt_0 :
   forall F : R -> Prop,
   F 0 ->
   Rnd_N_pt F 0 0.
-Proof.
+Proof using.
 intros F HF.
 split.
 exact HF.
@@ -574,7 +574,7 @@ Theorem Rnd_N_pt_ge_0 :
   forall x f, 0 <= x ->
   Rnd_N_pt F x f ->
   0 <= f.
-Proof.
+Proof using.
 intros F HF x f [Hx|Hx] Hxf.
 eapply Rnd_N_pt_monotone ; try eassumption.
 now apply Rnd_N_pt_0.
@@ -590,7 +590,7 @@ Theorem Rnd_N_pt_le_0 :
   forall x f, x <= 0 ->
   Rnd_N_pt F x f ->
   f <= 0.
-Proof.
+Proof using.
 intros F HF x f [Hx|Hx] Hxf.
 eapply Rnd_N_pt_monotone ; try eassumption.
 now apply Rnd_N_pt_0.
@@ -606,7 +606,7 @@ Theorem Rnd_N_pt_abs :
   ( forall x, F x -> F (- x) ) ->
   forall x f : R,
   Rnd_N_pt F x f -> Rnd_N_pt F (Rabs x) (Rabs f).
-Proof.
+Proof using.
 intros F HF0 HF x f Hxf.
 unfold Rabs at 1.
 destruct (Rcase_abs x) as [Hx|Hx].
@@ -633,7 +633,7 @@ Theorem Rnd_N_pt_DN_UP :
   (Rabs (f - x) <= x - d)%R ->
   (Rabs (f - x) <= u - x)%R ->
   Rnd_N_pt F x f.
-Proof.
+Proof using.
 intros F x d u f Hf Hxd Hxu Hd Hu.
 split.
 exact Hf.
@@ -664,7 +664,7 @@ Theorem Rnd_N_pt_DN :
   Rnd_UP_pt F x u ->
   (x - d <= u - x)%R ->
   Rnd_N_pt F x d.
-Proof.
+Proof using.
 intros F x d u Hd Hu Hx.
 assert (Hdx: (Rabs (d - x) = x - d)%R).
 rewrite Rabs_minus_sym.
@@ -685,7 +685,7 @@ Theorem Rnd_N_pt_UP :
   Rnd_UP_pt F x u ->
   (u - x <= x - d)%R ->
   Rnd_N_pt F x u.
-Proof.
+Proof using.
 intros F x d u Hd Hu Hx.
 assert (Hux: (Rabs (u - x) = u - x)%R).
 apply Rabs_pos_eq.
@@ -710,7 +710,7 @@ Theorem Rnd_NG_pt_unique :
   forall x f1 f2 : R,
   Rnd_NG_pt F P x f1 -> Rnd_NG_pt F P x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F P HP x f1 f2 (H1a,H1b) (H2a,H2b).
 destruct H1b as [H1b|H1b].
 destruct H2b as [H2b|H2b].
@@ -730,7 +730,7 @@ Theorem Rnd_NG_pt_monotone :
   forall (F : R -> Prop) (P : R -> R -> Prop),
   Rnd_NG_pt_unique_prop F P ->
   round_pred_monotone (Rnd_NG_pt F P).
-Proof.
+Proof using.
 intros F P HP x y f g (Hf,Hx) (Hg,Hy) [Hxy|Hxy].
 now apply Rnd_N_pt_monotone with F x y.
 apply Req_le.
@@ -741,7 +741,7 @@ Qed.
 Theorem Rnd_NG_pt_refl :
   forall (F : R -> Prop) (P : R -> R -> Prop),
   forall x, F x -> Rnd_NG_pt F P x x.
-Proof.
+Proof using.
 intros F P x Hx.
 split.
 now apply Rnd_N_pt_refl.
@@ -756,7 +756,7 @@ Theorem Rnd_NG_pt_opp_inv :
   ( forall x f, P x f -> P (-x) (-f) ) ->
   forall x f : R,
   Rnd_NG_pt F P (-x) (-f) -> Rnd_NG_pt F P x f.
-Proof.
+Proof using.
 intros F P HF HP x f (H1,H2).
 split.
 now apply Rnd_N_pt_opp_inv.
@@ -781,7 +781,7 @@ Theorem Rnd_NG_unique :
   forall rnd1 rnd2 : R -> R,
   Rnd_NG F P rnd1 -> Rnd_NG F P rnd2 ->
   forall x, rnd1 x = rnd2 x.
-Proof.
+Proof using.
 intros F P HP rnd1 rnd2 H1 H2 x.
 now apply Rnd_NG_pt_unique with F P x.
 Qed.
@@ -791,7 +791,7 @@ Theorem Rnd_NA_NG_pt :
   F 0 ->
   forall x f,
   Rnd_NA_pt F x f <-> Rnd_NG_pt F (fun x f => Rabs x <= Rabs f) x f.
-Proof.
+Proof using.
 intros F HF x f.
 destruct (Rle_or_lt 0 x) as [Hx|Hx].
 (* *)
@@ -891,7 +891,7 @@ Lemma Rnd_NA_pt_unique_prop :
   forall F : R -> Prop,
   F 0 ->
   Rnd_NG_pt_unique_prop F (fun a b => (Rabs a <= Rabs b)%R).
-Proof.
+Proof using.
 intros F HF x d u Hxd1 Hxd2 Hxu1 Hxu2 Hd Hu.
 apply Rle_antisym.
 apply Rle_trans with x.
@@ -920,7 +920,7 @@ Theorem Rnd_NA_pt_unique :
   forall x f1 f2 : R,
   Rnd_NA_pt F x f1 -> Rnd_NA_pt F x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F HF x f1 f2 H1 H2.
 apply (Rnd_NG_pt_unique F _ (Rnd_NA_pt_unique_prop F HF) x).
 now apply -> Rnd_NA_NG_pt.
@@ -934,7 +934,7 @@ Theorem Rnd_NA_pt_N :
   Rnd_N_pt F x f ->
   (Rabs x <= Rabs f)%R ->
   Rnd_NA_pt F x f.
-Proof.
+Proof using.
 intros F HF x f Rxf Hxf.
 split.
 apply Rxf.
@@ -986,7 +986,7 @@ Theorem Rnd_NA_unique :
   forall rnd1 rnd2 : R -> R,
   Rnd_NA F rnd1 -> Rnd_NA F rnd2 ->
   forall x, rnd1 x = rnd2 x.
-Proof.
+Proof using.
 intros F HF rnd1 rnd2 H1 H2 x.
 now apply Rnd_NA_pt_unique with F x.
 Qed.
@@ -995,7 +995,7 @@ Theorem Rnd_NA_pt_monotone :
   forall F : R -> Prop,
   F 0 ->
   round_pred_monotone (Rnd_NA_pt F).
-Proof.
+Proof using.
 intros F HF x y f g Hxf Hyg Hxy.
 apply (Rnd_NG_pt_monotone F _ (Rnd_NA_pt_unique_prop F HF) x y).
 now apply -> Rnd_NA_NG_pt.
@@ -1007,7 +1007,7 @@ Theorem Rnd_NA_pt_refl :
   forall F : R -> Prop,
   forall x : R, F x ->
   Rnd_NA_pt F x x.
-Proof.
+Proof using.
 intros F x Hx.
 split.
 now apply Rnd_N_pt_refl.
@@ -1022,7 +1022,7 @@ Theorem Rnd_NA_pt_idempotent :
   forall x f : R,
   Rnd_NA_pt F x f -> F x ->
   f = x.
-Proof.
+Proof using.
 intros F x f (Hf,_) Hx.
 now apply Rnd_N_pt_idempotent with F.
 Qed.
@@ -1032,7 +1032,7 @@ Theorem Rnd_N0_NG_pt :
   F 0 ->
   forall x f,
   Rnd_N0_pt F x f <-> Rnd_NG_pt F (fun x f => Rabs f <= Rabs x) x f.
-Proof.
+Proof using.
 intros F HF x f.
 destruct (Rle_or_lt 0 x) as [Hx|Hx].
 (* *)
@@ -1132,7 +1132,7 @@ Lemma Rnd_N0_pt_unique_prop :
   forall F : R -> Prop,
   F 0 ->
   Rnd_NG_pt_unique_prop F (fun x f => Rabs f <= Rabs x).
-Proof.
+Proof using.
 intros F HF x d u Hxd1 Hxd2 Hxu1 Hxu2 Hd Hu.
 apply Rle_antisym.
 apply Rle_trans with x.
@@ -1162,7 +1162,7 @@ Theorem Rnd_N0_pt_unique :
   forall x f1 f2 : R,
   Rnd_N0_pt F x f1 -> Rnd_N0_pt F x f2 ->
   f1 = f2.
-Proof.
+Proof using.
 intros F HF x f1 f2 H1 H2.
 apply (Rnd_NG_pt_unique F _ (Rnd_N0_pt_unique_prop F HF) x).
 now apply -> Rnd_N0_NG_pt.
@@ -1176,7 +1176,7 @@ Theorem Rnd_N0_pt_N :
   Rnd_N_pt F x f ->
   (Rabs f <= Rabs x)%R ->
   Rnd_N0_pt F x f.
-Proof.
+Proof using.
 intros F HF x f Rxf Hxf.
 split.
 apply Rxf.
@@ -1228,7 +1228,7 @@ Theorem Rnd_N0_unique :
   forall rnd1 rnd2 : R -> R,
   Rnd_N0 F rnd1 -> Rnd_N0 F rnd2 ->
   forall x, rnd1 x = rnd2 x.
-Proof.
+Proof using.
 intros F HF rnd1 rnd2 H1 H2 x.
 now apply Rnd_N0_pt_unique with F x.
 Qed.
@@ -1237,7 +1237,7 @@ Theorem Rnd_N0_pt_monotone :
   forall F : R -> Prop,
   F 0 ->
   round_pred_monotone (Rnd_N0_pt F).
-Proof.
+Proof using.
 intros F HF x y f g Hxf Hyg Hxy.
 apply (Rnd_NG_pt_monotone F _ (Rnd_N0_pt_unique_prop F HF) x y).
 now apply -> Rnd_N0_NG_pt.
@@ -1249,7 +1249,7 @@ Theorem Rnd_N0_pt_refl :
   forall F : R -> Prop,
   forall x : R, F x ->
   Rnd_N0_pt F x x.
-Proof.
+Proof using.
 intros F x Hx.
 split.
 now apply Rnd_N_pt_refl.
@@ -1264,7 +1264,7 @@ Theorem Rnd_N0_pt_idempotent :
   forall x f : R,
   Rnd_N0_pt F x f -> F x ->
   f = x.
-Proof.
+Proof using.
 intros F x f (Hf,_) Hx.
 now apply Rnd_N_pt_idempotent with F.
 Qed.
@@ -1277,7 +1277,7 @@ Theorem round_pred_ge_0 :
   round_pred_monotone P ->
   P 0 0 ->
   forall x f, P x f -> 0 <= x -> 0 <= f.
-Proof.
+Proof using.
 intros P HP HP0 x f Hxf Hx.
 now apply (HP 0 x).
 Qed.
@@ -1287,7 +1287,7 @@ Theorem round_pred_gt_0 :
   round_pred_monotone P ->
   P 0 0 ->
   forall x f, P x f -> 0 < f -> 0 < x.
-Proof.
+Proof using.
 intros P HP HP0 x f Hxf Hf.
 apply Rnot_le_lt.
 intros Hx.
@@ -1300,7 +1300,7 @@ Theorem round_pred_le_0 :
   round_pred_monotone P ->
   P 0 0 ->
   forall x f, P x f -> x <= 0 -> f <= 0.
-Proof.
+Proof using.
 intros P HP HP0 x f Hxf Hx.
 now apply (HP x 0).
 Qed.
@@ -1310,7 +1310,7 @@ Theorem round_pred_lt_0 :
   round_pred_monotone P ->
   P 0 0 ->
   forall x f, P x f -> f < 0 -> x < 0.
-Proof.
+Proof using.
 intros P HP HP0 x f Hxf Hf.
 apply Rnot_le_lt.
 intros Hx.
@@ -1324,7 +1324,7 @@ Theorem Rnd_DN_pt_equiv_format :
   F1 a ->
   ( forall x, a <= x <= b -> (F1 x <-> F2 x) ) ->
   forall x f, a <= x <= b -> Rnd_DN_pt F1 x f -> Rnd_DN_pt F2 x f.
-Proof.
+Proof using.
 intros F1 F2 a b Ha HF x f Hx (H1, (H2, H3)).
 split.
 apply -> HF.
@@ -1354,7 +1354,7 @@ Theorem Rnd_UP_pt_equiv_format :
   F1 b ->
   ( forall x, a <= x <= b -> (F1 x <-> F2 x) ) ->
   forall x f, a <= x <= b -> Rnd_UP_pt F1 x f -> Rnd_UP_pt F2 x f.
-Proof.
+Proof using.
 intros F1 F2 a b Hb HF x f Hx (H1, (H2, H3)).
 split.
 apply -> HF.
@@ -1389,7 +1389,7 @@ Theorem satisfies_any_eq :
   ( forall x, F1 x <-> F2 x ) ->
   satisfies_any F1 ->
   satisfies_any F2.
-Proof.
+Proof using.
 intros F1 F2 Heq (Hzero, Hsym, Hrnd).
 split.
 now apply -> Heq.
@@ -1414,7 +1414,7 @@ Theorem satisfies_any_imp_DN :
   forall F : R -> Prop,
   satisfies_any F ->
   round_pred (Rnd_DN_pt F).
-Proof.
+Proof using.
 intros F (_,_,Hrnd).
 split.
 apply Hrnd.
@@ -1425,7 +1425,7 @@ Theorem satisfies_any_imp_UP :
   forall F : R -> Prop,
   satisfies_any F ->
   round_pred (Rnd_UP_pt F).
-Proof.
+Proof using.
 intros F Hany.
 split.
 intros x.
@@ -1442,7 +1442,7 @@ Theorem satisfies_any_imp_ZR :
   forall F : R -> Prop,
   satisfies_any F ->
   round_pred (Rnd_ZR_pt F).
-Proof.
+Proof using.
 intros F Hany.
 split.
 intros x.
@@ -1483,7 +1483,7 @@ Theorem satisfies_any_imp_NG :
   satisfies_any F ->
   NG_existence_prop F P ->
   round_pred_total (Rnd_NG_pt F P).
-Proof.
+Proof using.
 intros F P Hany HP x.
 destruct (proj1 (satisfies_any_imp_DN F Hany) x) as (d, Hd).
 destruct (proj1 (satisfies_any_imp_UP F Hany) x) as (u, Hu).
@@ -1624,7 +1624,7 @@ Theorem satisfies_any_imp_NA :
   forall F : R -> Prop,
   satisfies_any F ->
   round_pred (Rnd_NA_pt F).
-Proof.
+Proof using.
 intros F Hany.
 split.
 assert (H : round_pred_total (Rnd_NG_pt F (fun a b => (Rabs a <= Rabs b)%R))).
@@ -1660,7 +1660,7 @@ Theorem satisfies_any_imp_N0 :
   forall F : R -> Prop,
   F 0 -> satisfies_any F ->
   round_pred (Rnd_N0_pt F).
-Proof.
+Proof using.
 intros F HF0 Hany.
 split.
 assert (H : round_pred_total (Rnd_NG_pt F (fun a b => (Rabs b <= Rabs a)%R))).

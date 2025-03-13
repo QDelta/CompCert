@@ -112,19 +112,19 @@ Definition update (r: reg) (v: val) (e: env) : env :=
 
 Lemma update_s:
   forall r v e, update r v e r = v.
-Proof.
+Proof using.
   unfold update; intros. destruct (reg_eq r r). auto. congruence.
 Qed.
 
 Lemma update_o:
   forall r v e r', r' <> r -> update r v e r' =  e r'.
-Proof.
+Proof using.
   unfold update; intros. destruct (reg_eq r' r). congruence. auto.
 Qed.
 
 Lemma update_ident:
   forall r e, update r (e r) e = e.
-Proof.
+Proof using.
   intros. apply env_ext; intro. unfold update. destruct (reg_eq r0 r); congruence.
 Qed.
 
@@ -132,7 +132,7 @@ Lemma update_commut:
   forall r1 v1 r2 v2 e,
   r1 <> r2 ->
   update r1 v1 (update r2 v2 e) = update r2 v2 (update r1 v1 e).
-Proof.
+Proof using.
   intros. apply env_ext; intro; unfold update.
   destruct (reg_eq r r1); destruct (reg_eq r r2); auto.
   congruence.
@@ -141,7 +141,7 @@ Qed.
 Lemma update_twice:
   forall r v e,
   update r v (update r v e) = update r v e.
-Proof.
+Proof using.
   intros. apply env_ext; intro; unfold update.
   destruct (reg_eq r0 r); auto.
 Qed.
@@ -274,25 +274,25 @@ Inductive state_wf: state -> Prop :=
 
 Lemma dests_append:
   forall m1 m2, dests (m1 ++ m2) = dests m1 ++ dests m2.
-Proof.
+Proof using.
   intros. unfold dests. apply map_app.
 Qed.
 
 Lemma dests_decomp:
   forall m1 s d m2, dests (m1 ++ (s, d) :: m2) = dests m1 ++ d :: dests m2.
-Proof.
+Proof using.
   intros. unfold dests. rewrite map_app. reflexivity.
 Qed.
 
 Lemma srcs_append:
   forall m1 m2, srcs (m1 ++ m2) = srcs m1 ++ srcs m2.
-Proof.
+Proof using.
   intros. unfold srcs. apply map_app.
 Qed.
 
 Lemma srcs_decomp:
   forall m1 s d m2, srcs (m1 ++ (s, d) :: m2) = srcs m1 ++ s :: srcs m2.
-Proof.
+Proof using.
   intros. unfold srcs. rewrite map_app. reflexivity.
 Qed.
 
@@ -301,7 +301,7 @@ Lemma srcs_dests_combine:
   List.length s = List.length d ->
   srcs (List.combine s d) = s /\
   dests (List.combine s d) = d.
-Proof.
+Proof using.
   induction s; destruct d; simpl; intros.
   tauto.
   discriminate.
@@ -317,7 +317,7 @@ Definition dests_disjoint (m1 m2: moves) : Prop :=
 Lemma dests_disjoint_sym:
   forall m1 m2,
   dests_disjoint m1 m2 <-> dests_disjoint m2 m1.
-Proof.
+Proof using.
   unfold dests_disjoint; intros.
   split; intros; apply list_disjoint_sym; auto.
 Qed.
@@ -326,7 +326,7 @@ Lemma dests_disjoint_cons_left:
   forall m1 s d m2,
   dests_disjoint ((s, d) :: m1) m2 <->
   dests_disjoint m1 m2 /\ ~In d (dests m2).
-Proof.
+Proof using temp reg_eq.
   unfold dests_disjoint, list_disjoint.
   simpl; intros; split; intros.
   split. auto. firstorder.
@@ -339,7 +339,7 @@ Lemma dests_disjoint_cons_right:
   forall m1 s d m2,
   dests_disjoint m1 ((s, d) :: m2) <->
   dests_disjoint m1 m2 /\ ~In d (dests m1).
-Proof.
+Proof using temp reg_eq.
   intros. rewrite dests_disjoint_sym. rewrite dests_disjoint_cons_left.
   rewrite dests_disjoint_sym. tauto.
 Qed.
@@ -348,7 +348,7 @@ Lemma dests_disjoint_append_left:
   forall m1 m2 m3,
   dests_disjoint (m1 ++ m2) m3 <->
   dests_disjoint m1 m3 /\ dests_disjoint m2 m3.
-Proof.
+Proof using.
   unfold dests_disjoint, list_disjoint.
   intros; split; intros. split; intros.
   apply H; eauto. rewrite dests_append. apply in_or_app. auto.
@@ -361,7 +361,7 @@ Lemma dests_disjoint_append_right:
   forall m1 m2 m3,
   dests_disjoint m1 (m2 ++ m3) <->
   dests_disjoint m1 m2 /\ dests_disjoint m1 m3.
-Proof.
+Proof using.
   intros. rewrite dests_disjoint_sym. rewrite dests_disjoint_append_left.
   intuition; rewrite dests_disjoint_sym; assumption.
 Qed.
@@ -370,7 +370,7 @@ Lemma is_mill_cons:
   forall s d m,
   is_mill ((s, d) :: m) <->
   is_mill m /\ ~In d (dests m).
-Proof.
+Proof using temp.
   unfold is_mill, dests_disjoint; intros. simpl.
   split; intros.
   inversion H; tauto.
@@ -381,7 +381,7 @@ Lemma is_mill_append:
   forall m1 m2,
   is_mill (m1 ++ m2) <->
   is_mill m1 /\ is_mill m2 /\ dests_disjoint m1 m2.
-Proof.
+Proof using.
   unfold is_mill, dests_disjoint; intros. rewrite dests_append.
   apply list_norepet_app.
 Qed.
@@ -391,14 +391,14 @@ Qed.
 Lemma move_no_temp_append:
   forall m1 m2,
   move_no_temp m1 -> move_no_temp m2 -> move_no_temp (m1 ++ m2).
-Proof.
+Proof using.
   intros; red; intros. elim (in_app_or _ _ _ H1); intro.
   apply H; auto. apply H0; auto.
 Qed.
 
 Lemma move_no_temp_rev:
   forall m, move_no_temp (List.rev m) -> move_no_temp m.
-Proof.
+Proof using.
   intros; red; intros. apply H. rewrite <- List.In_rev. auto.
 Qed.
 
@@ -408,7 +408,7 @@ Lemma temp_last_change_last_source:
   forall s d s' sigma,
   temp_last (sigma ++ (s, d) :: nil) ->
   temp_last (sigma ++ (s', d) :: nil).
-Proof.
+Proof using.
   intros until sigma. unfold temp_last.
   repeat rewrite rev_unit. auto.
 Qed.
@@ -418,7 +418,7 @@ Lemma temp_last_push:
   temp_last ((s2, d2) :: sigma) ->
   is_not_temp s1 -> is_not_temp d1 ->
   temp_last ((s1, d1) :: (s2, d2) :: sigma).
-Proof.
+Proof using.
   unfold temp_last; intros. simpl. simpl in H.
   destruct (rev sigma); simpl in *.
   intuition. red; simpl; intros.
@@ -433,7 +433,7 @@ Lemma temp_last_pop:
   forall s1 d1 sigma s2 d2,
   temp_last ((s1, d1) :: sigma ++ (s2, d2) :: nil) ->
   temp_last (sigma ++ (s2, d2) :: nil).
-Proof.
+Proof using.
   intros until d2.
   change ((s1, d1) :: sigma ++ (s2, d2) :: nil)
     with ((((s1, d1) :: nil) ++ sigma) ++ ((s2, d2) :: nil)).
@@ -447,7 +447,7 @@ Qed.
 Lemma is_path_pop:
   forall s d m,
   is_path ((s, d) :: m) -> is_path m.
-Proof.
+Proof using.
   intros. inversion H; subst. auto.
 Qed.
 
@@ -455,7 +455,7 @@ Lemma is_path_change_last_source:
   forall s s' d sigma,
   is_path (sigma ++ (s, d) :: nil) ->
   is_path (sigma ++ (s', d) :: nil).
-Proof.
+Proof using.
   induction sigma; simpl; intros.
   constructor. red; auto. constructor.
   inversion H; subst; clear H.
@@ -469,7 +469,7 @@ Lemma path_sources_dests:
   is_path (sigma ++ (s0, d0) :: nil) ->
   List.incl (srcs (sigma ++ (s0, d0) :: nil))
             (s0 :: dests (sigma ++ (s0, d0) :: nil)).
-Proof.
+Proof using temp.
   induction sigma; simpl; intros.
   red; simpl; tauto.
   inversion H; subst; clear H. simpl.
@@ -487,7 +487,7 @@ Lemma no_read_path:
   is_path (sigma ++ (s0, d0) :: nil) ->
   ~In d1 (dests (sigma ++ (s0, d0) :: nil)) ->
   no_read (sigma ++ (s0, d0) :: nil) d1.
-Proof.
+Proof using temp.
   intros.
   generalize (path_sources_dests _ _ _ H0). intro.
   intro. elim H1. elim (H2 _ H3); intro. congruence. auto.
@@ -499,14 +499,14 @@ Qed.
 Lemma notin_dests_cons:
   forall x s d m,
   ~In x (dests ((s, d) :: m)) <-> x <> d /\ ~In x (dests m).
-Proof.
+Proof using temp.
   intros. simpl. intuition auto.
 Qed.
 
 Lemma notin_dests_append:
   forall d m1 m2,
   ~In d (dests (m1 ++ m2)) <-> ~In d (dests m1) /\ ~In d (dests m2).
-Proof.
+Proof using temp.
   intros. rewrite dests_append. rewrite in_app. tauto.
 Qed.
 
@@ -520,7 +520,7 @@ Hint Rewrite is_mill_cons is_mill_append
 Lemma transition_preserves_wf:
   forall st st',
   transition st st' -> state_wf st -> state_wf st'.
-Proof.
+Proof using reg_eq.
   induction 1; intro WF; inversion WF as [mu0 sigma0 tau0 A B C D];
   subst;
   autorewrite with pmov in A; constructor; autorewrite with pmov.
@@ -566,7 +566,7 @@ Qed.
 
 Lemma transitions_preserve_wf:
   forall st st', transitions st st' -> state_wf st -> state_wf st'.
-Proof.
+Proof using reg_eq.
   induction 1; intros; eauto.
   eapply transition_preserves_wf; eauto.
 Qed.
@@ -588,7 +588,7 @@ Definition statemove (st: state) (e: env) :=
 
 Lemma exec_par_outside:
   forall m e r, ~In r (dests m) -> exec_par m e r = e r.
-Proof.
+Proof using temp.
   induction m; simpl; intros. auto.
   destruct a as [s d]. rewrite update_o. apply IHm. tauto.
   simpl in H. intuition.
@@ -598,7 +598,7 @@ Lemma exec_par_lift:
   forall m1 s d m2 e,
   ~In d (dests m1) ->
   exec_par (m1 ++ (s, d) :: m2) e = exec_par ((s, d) :: m1 ++ m2) e.
-Proof.
+Proof using temp.
   induction m1; simpl; intros.
   auto.
   destruct a as [s0 d0]. simpl in H. rewrite IHm1. simpl.
@@ -609,7 +609,7 @@ Lemma exec_par_ident:
   forall m1 r m2 e,
   is_mill (m1 ++ (r, r) :: m2) ->
   exec_par (m1 ++ (r, r) :: m2) e = exec_par (m1 ++ m2) e.
-Proof.
+Proof using temp.
   intros. autorewrite with pmov in H.
   rewrite exec_par_lift. simpl.
   replace (e r) with (exec_par (m1 ++ m2) e r). apply update_ident.
@@ -619,7 +619,7 @@ Qed.
 Lemma exec_seq_app:
   forall m1 m2 e,
   exec_seq (m1 ++ m2) e = exec_seq m2 (exec_seq m1 e).
-Proof.
+Proof using.
   induction m1; simpl; intros. auto.
   destruct a as [s d]. rewrite IHm1. auto.
 Qed.
@@ -627,7 +627,7 @@ Qed.
 Lemma exec_seq_rev_app:
   forall m1 m2 e,
   exec_seq_rev (m1 ++ m2) e = exec_seq_rev m1 (exec_seq_rev m2 e).
-Proof.
+Proof using.
   induction m1; simpl; intros. auto.
   destruct a as [s d]. rewrite IHm1. auto.
 Qed.
@@ -635,7 +635,7 @@ Qed.
 Lemma exec_seq_exec_seq_rev:
   forall m e,
   exec_seq_rev m e = exec_seq (List.rev m) e.
-Proof.
+Proof using.
   induction m; simpl; intros.
   auto.
   destruct a as [s d]. rewrite exec_seq_app. simpl. rewrite IHm. auto.
@@ -644,7 +644,7 @@ Qed.
 Lemma exec_seq_rev_exec_seq:
   forall m e,
   exec_seq m e = exec_seq_rev (List.rev m) e.
-Proof.
+Proof using.
   intros. generalize (exec_seq_exec_seq_rev (List.rev m) e).
   rewrite List.rev_involutive. auto.
 Qed.
@@ -655,7 +655,7 @@ Lemma exec_par_update_no_read:
   ~In d (dests m) ->
   exec_par m (update d (e s) e) =
   update d (e s) (exec_par m e).
-Proof.
+Proof using temp.
   unfold no_read; induction m; simpl; intros.
   auto.
   destruct a as [s0 d0]; simpl in *. rewrite IHm.
@@ -668,7 +668,7 @@ Lemma exec_par_append_eq:
   exec_par m2 e2 = exec_par m3 e3 ->
   (forall r, In r (srcs m1) -> e2 r = e3 r) ->
   exec_par (m1 ++ m2) e2 = exec_par (m1 ++ m3) e3.
-Proof.
+Proof using.
   induction m1; simpl; intros.
   auto. destruct a as [s d]. f_equal; eauto.
 Qed.
@@ -680,7 +680,7 @@ Lemma exec_par_combine:
   let e' := exec_par (combine sl dl) e in
   List.map e' dl = List.map e sl /\
   (forall l, ~In l dl -> e' l = e l).
-Proof.
+Proof using temp.
   induction sl; destruct dl; simpl; intros; try discriminate.
   split; auto.
   inversion H0; subst; clear H0.
@@ -704,25 +704,25 @@ Definition env_equiv (e1 e2: env) : Prop :=
 
 Lemma env_equiv_refl:
   forall e, env_equiv e e.
-Proof.
+Proof using.
   unfold env_equiv; auto.
 Qed.
 
 Lemma env_equiv_refl':
   forall e1 e2, e1 = e2 -> env_equiv e1 e2.
-Proof.
+Proof using.
   unfold env_equiv; intros. rewrite H. auto.
 Qed.
 
 Lemma env_equiv_sym:
   forall e1 e2, env_equiv e1 e2 -> env_equiv e2 e1.
-Proof.
+Proof using.
   unfold env_equiv; intros. symmetry; auto.
 Qed.
 
 Lemma env_equiv_trans:
   forall e1 e2 e3, env_equiv e1 e2 -> env_equiv e2 e3 -> env_equiv e1 e3.
-Proof.
+Proof using.
   unfold env_equiv; intros. transitivity (e2 r); auto.
 Qed.
 
@@ -731,7 +731,7 @@ Lemma exec_par_env_equiv:
   move_no_temp m ->
   env_equiv e1 e2 ->
   env_equiv (exec_par m e1) (exec_par m e2).
-Proof.
+Proof using.
   unfold move_no_temp; induction m; simpl; intros.
   auto.
   destruct a as [s d].
@@ -747,7 +747,7 @@ Lemma transition_preserves_semantics:
   forall st st' e,
   transition st st' -> state_wf st ->
   env_equiv (statemove st' e) (statemove st e).
-Proof.
+Proof using.
   induction 1; intro WF; inversion WF as [mu0 sigma0 tau0 A B C D]; subst; simpl.
 
   (* nop *)
@@ -814,7 +814,7 @@ Lemma transitions_preserve_semantics:
   forall st st' e,
   transitions st st' -> state_wf st ->
   env_equiv (statemove st' e) (statemove st e).
-Proof.
+Proof using.
   induction 1; intros.
   eapply transition_preserves_semantics; eauto.
   apply env_equiv_refl.
@@ -827,7 +827,7 @@ Lemma state_wf_start:
   move_no_temp mu ->
   is_mill mu ->
   state_wf (State mu nil nil).
-Proof.
+Proof using.
   intros. constructor. rewrite app_nil_r. auto.
   auto.
   red. simpl. auto.
@@ -846,7 +846,7 @@ Theorem transitions_correctness:
   is_mill mu ->
   transitions (State mu nil nil) (State nil nil tau) ->
   forall e, env_equiv (exec_seq (List.rev tau) e) (exec_par mu e).
-Proof.
+Proof using.
   intros.
   generalize (transitions_preserve_semantics _ _ e H1
               (state_wf_start _ H H0)).
@@ -896,7 +896,7 @@ Lemma transition_determ:
   dtransition st st' ->
   state_wf st ->
   transitions st st'.
-Proof.
+Proof using.
   induction 1; intro; unfold transitions.
   apply rt_step. exact (tr_nop nil r mu nil tau).
   apply rt_step. exact (tr_start nil s d mu tau).
@@ -922,7 +922,7 @@ Lemma transitions_determ:
   dtransitions st st' ->
   state_wf st ->
   transitions st st'.
-Proof.
+Proof using reg_eq.
   unfold transitions; induction 1; intros.
   eapply transition_determ; eauto.
   apply rt_refl.
@@ -939,7 +939,7 @@ Theorem dtransitions_correctness:
   is_mill mu ->
   dtransitions (State mu nil nil) (State nil nil tau) ->
   forall e, env_equiv (exec_seq (List.rev tau) e) (exec_par mu e).
-Proof.
+Proof using.
   intros.
   eapply transitions_correctness; eauto.
   apply transitions_determ. auto. apply state_wf_start; auto.
@@ -1015,7 +1015,7 @@ Lemma split_move_charact:
   | Some (before, d, after) => m = before ++ (r, d) :: after /\ no_read before r
   | None => no_read m r
   end.
-Proof.
+Proof using temp.
   unfold no_read. induction m; simpl; intros.
 - tauto.
 - destruct a as [s d]. destruct (reg_eq s r).
@@ -1030,7 +1030,7 @@ Lemma is_last_source_charact:
   if is_last_source r (m ++ (s, d) :: nil)
   then s = r
   else s <> r.
-Proof.
+Proof using.
   induction m; simpl.
   destruct (reg_eq s r); congruence.
   destruct a as [s0 d0]. case_eq (m ++ (s, d) :: nil); intros.
@@ -1042,7 +1042,7 @@ Lemma replace_last_source_charact:
   forall s d s' m,
   replace_last_source s' (m ++ (s, d) :: nil) =
   m ++ (s', d) :: nil.
-Proof.
+Proof using.
   induction m; simpl.
   auto.
   destruct a as [s0 d0]. case_eq (m ++ (s, d) :: nil); intros.
@@ -1054,7 +1054,7 @@ Lemma parmove_step_compatible:
   forall st,
   final_state st = false ->
   dtransition st (parmove_step st).
-Proof.
+Proof using.
   intros st NOTFINAL. destruct st as [mu sigma tau]. unfold parmove_step.
   case_eq mu; [intros MEQ | intros [ms md] mtl MEQ].
   case_eq sigma; [intros SEQ | intros [ss sd] stl SEQ].
@@ -1106,7 +1106,7 @@ Definition measure (st: state) : nat :=
 Lemma measure_decreasing_1:
   forall st st',
   dtransition st st' -> measure st' < measure st.
-Proof.
+Proof using.
   induction 1; repeat (simpl; rewrite List.app_length); simpl; lia.
 Qed.
 
@@ -1114,7 +1114,7 @@ Lemma measure_decreasing_2:
   forall st,
   final_state st = false ->
   measure (parmove_step st) < measure st.
-Proof.
+Proof using.
   intros. apply measure_decreasing_1. apply parmove_step_compatible; auto.
 Qed.
 
@@ -1124,14 +1124,14 @@ Function parmove_aux (st: state) {measure measure st} : moves :=
   if final_state st
   then match st with State _ _ tau => tau end
   else parmove_aux (parmove_step st).
-Proof.
+Proof using.
   intros. apply measure_decreasing_2. auto.
 Qed.
 
 Lemma parmove_aux_transitions:
   forall st,
   dtransitions st (State nil nil (parmove_aux st)).
-Proof.
+Proof using.
   unfold dtransitions. intro st. functional induction (parmove_aux st).
   destruct _x; destruct _x0; simpl in e; discriminate || apply rt_refl.
   eapply rt_trans. apply rt_step. apply parmove_step_compatible; eauto.
@@ -1150,7 +1150,7 @@ Theorem parmove_correctness:
   move_no_temp mu -> is_mill mu ->
   forall e,
   env_equiv (exec_seq (parmove mu) e) (exec_par mu e).
-Proof.
+Proof using.
   intros. unfold parmove. apply dtransitions_correctness; auto.
   apply parmove_aux_transitions.
 Qed.
@@ -1172,7 +1172,7 @@ Theorem parmove2_correctness:
   let e' := exec_seq (parmove2 sl dl) e in
   List.map e' dl = List.map e sl /\
   forall r, ~In r dl -> is_not_temp r -> e' r = e r.
-Proof.
+Proof using.
   intros.
   destruct (srcs_dests_combine sl dl H) as [A B].
   assert (env_equiv e' (exec_par (List.combine sl dl) e)).
@@ -1213,14 +1213,14 @@ Definition wf_moves (m: moves) : Prop :=
 
 Lemma wf_moves_cons: forall s d m,
   wf_moves ((s, d) :: m) <-> wf_move s d /\ wf_moves m.
-Proof.
+Proof using.
   unfold wf_moves; intros; simpl. firstorder.
   inversion H0; subst s0 d0. auto.
 Qed.
 
 Lemma wf_moves_append: forall m1 m2,
   wf_moves (m1 ++ m2) <-> wf_moves m1 /\ wf_moves m2.
-Proof.
+Proof using.
   unfold wf_moves; intros. split; intros.
   split; intros; apply H; apply in_or_app; auto.
   destruct H. elim (in_app_or _ _ _ H0); intro; auto.
@@ -1236,7 +1236,7 @@ Inductive wf_state: state -> Prop :=
 Lemma dtransition_preserves_wf_state:
   forall st st',
   dtransition st st' -> wf_state st -> wf_state st'.
-Proof.
+Proof using.
   induction 1; intro WF; inv WF; constructor; autorewrite with pmov in *; intuition.
   apply wf_move_temp_left; auto.
   eapply wf_move_temp_right; eauto.
@@ -1245,7 +1245,7 @@ Qed.
 Lemma dtransitions_preserve_wf_state:
   forall st st',
   dtransitions st st' -> wf_state st -> wf_state st'.
-Proof.
+Proof using.
   induction 1; intros; eauto.
   eapply dtransition_preserves_wf_state; eauto.
 Qed.
@@ -1254,7 +1254,7 @@ End PROPERTIES.
 
 Lemma parmove_wf_moves:
   forall mu, wf_moves mu (parmove mu).
-Proof.
+Proof using.
   intros.
   assert (wf_state mu (State mu nil nil)).
     constructor. red; intros. apply wf_move_same. auto.
@@ -1269,7 +1269,7 @@ Qed.
 
 Lemma parmove2_wf_moves:
   forall sl dl, wf_moves (List.combine sl dl) (parmove2 sl dl).
-Proof.
+Proof using.
   intros. unfold parmove2. apply parmove_wf_moves.
 Qed.
 
@@ -1282,7 +1282,7 @@ Remark wf_move_initial_reg_or_temp:
   forall mu s d,
   wf_move mu s d ->
   (In s (srcs mu) \/ is_temp s) /\ (In d (dests mu) \/ is_temp d).
-Proof.
+Proof using.
   induction 1.
   split; left.
   change s with (fst (s, d)). unfold srcs. apply List.in_map; auto.
@@ -1295,20 +1295,20 @@ Lemma parmove_initial_reg_or_temp:
   forall mu s d,
   In (s, d) (parmove mu) ->
   (In s (srcs mu) \/ is_temp s) /\ (In d (dests mu) \/ is_temp d).
-Proof.
+Proof using.
   intros. apply wf_move_initial_reg_or_temp. apply parmove_wf_moves. auto.
 Qed.
 
 Remark in_srcs:
   forall mu s, In s (srcs mu) -> exists d, In (s, d) mu.
-Proof.
+Proof using.
   intros. destruct (list_in_map_inv (@fst reg reg) _ _ H) as [[s' d'] [A B]].
   simpl in A. exists d'; congruence.
 Qed.
 
 Remark in_dests:
   forall mu d, In d (dests mu) -> exists s, In (s, d) mu.
-Proof.
+Proof using.
   intros. destruct (list_in_map_inv (@snd reg reg) _ _ H) as [[s' d'] [A B]].
   simpl in A. exists s'; congruence.
 Qed.
@@ -1316,7 +1316,7 @@ Qed.
 Lemma parmove_srcs_initial_reg_or_temp:
   forall mu s,
   In s (srcs (parmove mu)) -> In s (srcs mu) \/ is_temp s.
-Proof.
+Proof using.
   intros. destruct (in_srcs _ _ H) as [d A].
   destruct (parmove_initial_reg_or_temp _ _ _ A). auto.
 Qed.
@@ -1324,7 +1324,7 @@ Qed.
 Lemma parmove_dests_initial_reg_or_temp:
   forall mu d,
   In d (dests (parmove mu)) -> In d (dests mu) \/ is_temp d.
-Proof.
+Proof using.
   intros. destruct (in_dests _ _ H) as [s A].
   destruct (parmove_initial_reg_or_temp _ _ _ A). auto.
 Qed.
@@ -1345,7 +1345,7 @@ Lemma parmove_preserves_register_classes:
   forall mu,
   is_class_compatible mu ->
   is_class_compatible (parmove mu).
-Proof.
+Proof using temp_preserves_class.
   intros.
   assert (forall s d, wf_move mu s d -> regclass s = regclass d).
     induction 1.
@@ -1381,7 +1381,7 @@ Definition no_overlap (r1 r2: reg) : Prop :=
 
 Lemma no_overlap_sym:
   forall r1 r2, no_overlap r1 r2 -> no_overlap r2 r1.
-Proof.
+Proof using disjoint_sym.
   intros. destruct H. left; auto. right; auto.
 Qed.
 
@@ -1455,7 +1455,7 @@ Hypothesis temps_no_overlap:
 
 Lemma disjoint_list_notin:
   forall r l, disjoint_list r l -> ~In r l.
-Proof.
+Proof using disjoint_not_equal.
   intros. red; intro.
   assert (r <> r). apply disjoint_not_equal. apply H; auto.
   congruence.
@@ -1463,7 +1463,7 @@ Qed.
 
 Lemma pairwise_disjoint_norepet:
   forall l, pairwise_disjoint l -> list_norepet l.
-Proof.
+Proof using disjoint_not_equal.
   induction 1.
   constructor.
   constructor. apply disjoint_list_notin; auto. auto.
@@ -1471,19 +1471,19 @@ Qed.
 
 Lemma disjoint_temps_not_temp:
   forall r, disjoint_temps r -> is_not_temp r.
-Proof.
+Proof using disjoint_not_equal.
   intros; red; intros. apply disjoint_not_equal. apply H. exists d; auto.
 Qed.
 
 Lemma mu_is_mill:
   is_mill mu.
-Proof.
+Proof using mu_dest_pairwise_disjoint disjoint_not_equal disjoint.
   red. apply pairwise_disjoint_norepet. auto.
 Qed.
 
 Lemma mu_move_no_temp:
   move_no_temp mu.
-Proof.
+Proof using mu_no_temporaries_src mu_no_temporaries_dst disjoint_not_equal disjoint.
   red; intros.
   split; apply disjoint_temps_not_temp.
   apply mu_no_temporaries_src; auto.
@@ -1506,7 +1506,7 @@ Definition no_adherence (r: reg) : Prop :=
 
 Lemma no_overlap_pairwise:
   forall r1 r2 m, pairwise_disjoint m -> In r1 m -> In r2 m -> no_overlap r1 r2.
-Proof.
+Proof using disjoint_sym.
   induction 1; intros.
   elim H.
   simpl in *. destruct H1; destruct H2.
@@ -1518,7 +1518,7 @@ Qed.
 
 Lemma no_adherence_dst:
   forall d, In d (dests mu) -> no_adherence d.
-Proof.
+Proof using mu_no_temporaries_dst mu_dest_pairwise_disjoint disjoint_sym.
   intros; red; intros.
   destruct H0. apply no_overlap_pairwise with (dests mu); auto.
   right. apply disjoint_sym. apply mu_no_temporaries_dst; auto.
@@ -1526,7 +1526,7 @@ Qed.
 
 Lemma no_adherence_src:
   forall s, In s (srcs mu) -> no_adherence s.
-Proof.
+Proof using mu_src_dst_no_overlap mu_no_temporaries_src disjoint_sym.
   intros; red; intros.
   destruct H0.
   apply no_overlap_sym. apply mu_src_dst_no_overlap; auto.
@@ -1535,7 +1535,7 @@ Qed.
 
 Lemma no_adherence_tmp:
   forall t, is_temp t -> no_adherence t.
-Proof.
+Proof using temps_no_overlap mu_no_temporaries_dst.
   intros; red; intros.
   destruct H0.
   right. apply mu_no_temporaries_dst; auto.
@@ -1558,7 +1558,7 @@ Lemma weak_update_match:
   env_match e1 e2 ->
   env_match (update d (e1 s) e1)
             (weak_update d (e2 s) e2).
-Proof.
+Proof using weak_update_s weak_update_d temps_no_overlap mu_src_dst_no_overlap mu_no_temporaries_src mu_no_temporaries_dst disjoint_sym disjoint_not_equal.
   intros. red; intros.
   assert (no_overlap d r). apply H2. auto.
   destruct H3.
@@ -1574,7 +1574,7 @@ Lemma weak_exec_seq_match:
   (forall d, In d (dests m) -> In d (dests mu) \/ is_temp d) ->
   env_match e1 e2 ->
   env_match (exec_seq m e1) (weak_exec_seq m e2).
-Proof.
+Proof using weak_update_s weak_update_d temps_no_overlap mu_src_dst_no_overlap mu_no_temporaries_src mu_no_temporaries_dst disjoint_sym disjoint_not_equal.
   induction m; intros; simpl.
   auto.
   destruct a as [s d]. simpl in H. simpl in H0.
@@ -1599,7 +1599,7 @@ Theorem parmove2_correctness_with_overlap:
   let e' := weak_exec_seq (parmove2 sl dl) e in
   List.map e' dl = List.map e sl /\
   forall r, disjoint_list r dl -> disjoint_temps r -> e' r = e r.
-Proof.
+Proof using weak_update_s weak_update_d disjoint_sym disjoint_not_equal.
   intros.
   assert (list_norepet dl).
     apply pairwise_disjoint_norepet; auto.

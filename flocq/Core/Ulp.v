@@ -34,7 +34,7 @@ Variable fexp : Z -> Z.
 (** Definition and basic properties about the minimal exponent, when it exists *)
 
 Lemma Z_le_dec_aux: forall x y : Z, (x <= y)%Z \/ ~ (x <= y)%Z.
-Proof.
+Proof using.
 intros.
 destruct (Z_le_dec x y).
 now left.
@@ -55,7 +55,7 @@ Inductive negligible_exp_prop: option Z -> Prop :=
 
 
 Lemma negligible_exp_spec: negligible_exp_prop negligible_exp.
-Proof.
+Proof using.
 unfold negligible_exp; destruct LPO_Z as [(n,Hn)|Hn].
 now apply negligible_Some.
 apply negligible_None.
@@ -64,7 +64,7 @@ Qed.
 
 Lemma negligible_exp_spec': (negligible_exp = None /\ forall n, (fexp n < n)%Z)
            \/ exists n, (negligible_exp = Some n /\ (n <= fexp n)%Z).
-Proof.
+Proof using.
 unfold negligible_exp; destruct LPO_Z as [(n,Hn)|Hn].
 right; simpl; exists n; now split.
 left; split; trivial.
@@ -74,7 +74,7 @@ Qed.
 Context { valid_exp : Valid_exp fexp }.
 
 Lemma fexp_negligible_exp_eq: forall n m, (n <= fexp n)%Z -> (m <= fexp m)%Z -> fexp n = fexp m.
-Proof.
+Proof using valid_exp.
 intros n m Hn Hm.
 case (Zle_or_lt n m); intros H.
 apply valid_exp; lia.
@@ -101,7 +101,7 @@ Definition ulp x := match Req_bool x 0 with
 Lemma ulp_neq_0 :
   forall x, x <> 0%R ->
   ulp x = bpow (cexp beta fexp x).
-Proof.
+Proof using.
 intros  x Hx.
 unfold ulp; case (Req_bool_spec x); trivial.
 intros H; now contradict H.
@@ -111,7 +111,7 @@ Notation F := (generic_format beta fexp).
 
 Theorem ulp_opp :
   forall x, ulp (- x) = ulp x.
-Proof.
+Proof using.
 intros x.
 unfold ulp.
 case Req_bool_spec; intros H1.
@@ -124,7 +124,7 @@ Qed.
 
 Theorem ulp_abs :
   forall x, ulp (Rabs x) = ulp x.
-Proof.
+Proof using.
 intros x.
 unfold ulp; case (Req_bool_spec x 0); intros H1.
 rewrite Req_bool_true; trivial.
@@ -136,7 +136,7 @@ Qed.
 
 Theorem ulp_ge_0:
   forall x, (0 <= ulp x)%R.
-Proof.
+Proof using.
 intros x; unfold ulp; case Req_bool_spec; intros.
 case negligible_exp; intros.
 apply bpow_ge_0.
@@ -150,7 +150,7 @@ Theorem ulp_le_id:
     (0 < x)%R ->
     F x ->
     (ulp x <= x)%R.
-Proof.
+Proof using.
 intros x Zx Fx.
 rewrite <- (Rmult_1_l (ulp x)).
 pattern x at 2; rewrite Fx.
@@ -169,7 +169,7 @@ Theorem ulp_le_abs:
     (x <> 0)%R ->
     F x ->
     (ulp x <= Rabs x)%R.
-Proof.
+Proof using.
 intros x Zx Fx.
 rewrite <- ulp_abs.
 apply ulp_le_id.
@@ -180,7 +180,7 @@ Qed.
 Theorem round_UP_DN_ulp :
   forall x, ~ F x ->
   round beta fexp Zceil x = (round beta fexp Zfloor x + ulp x)%R.
-Proof.
+Proof using.
 intros x Fx.
 rewrite ulp_neq_0.
 unfold round. simpl.
@@ -205,7 +205,7 @@ Theorem ulp_canonical :
   m <> 0%Z ->
   canonical beta fexp (Float beta m e) ->
   ulp (F2R (Float beta m e)) = bpow e.
-Proof.
+Proof using.
 intros m e Hm Hc.
 rewrite ulp_neq_0 by now apply F2R_neq_0.
 apply f_equal.
@@ -214,7 +214,7 @@ Qed.
 
 Theorem ulp_bpow :
   forall e, ulp (bpow e) = bpow (fexp (e + 1)).
-Proof.
+Proof using.
 intros e.
 rewrite ulp_neq_0.
 apply f_equal.
@@ -231,7 +231,7 @@ Qed.
 
 Lemma generic_format_ulp_0 :
   F (ulp 0).
-Proof.
+Proof using valid_exp.
 unfold ulp.
 rewrite Req_bool_true; trivial.
 case negligible_exp_spec.
@@ -244,7 +244,7 @@ Qed.
 Lemma generic_format_bpow_ge_ulp_0 :
   forall e, (ulp 0 <= bpow e)%R ->
   F (bpow e).
-Proof.
+Proof using valid_exp.
 intros e; unfold ulp.
 rewrite Req_bool_true; trivial.
 case negligible_exp_spec.
@@ -269,7 +269,7 @@ Qed.
 Lemma generic_format_ulp :
   Exp_not_FTZ fexp ->
   forall x, F (ulp x).
-Proof.
+Proof using valid_exp.
 unfold Exp_not_FTZ; intros H x.
 case (Req_dec x 0); intros Hx.
 rewrite Hx; apply generic_format_ulp_0.
@@ -281,7 +281,7 @@ Qed.
 Lemma not_FTZ_generic_format_ulp :
   (forall x,  F (ulp x)) ->
   Exp_not_FTZ fexp.
-Proof.
+Proof using.
 intros H e.
 specialize (H (bpow (e-1))).
 rewrite ulp_neq_0 in H.
@@ -296,7 +296,7 @@ Qed.
 Lemma ulp_ge_ulp_0 :
   Exp_not_FTZ fexp ->
   forall x, (ulp 0 <= ulp x)%R.
-Proof.
+Proof using valid_exp.
 unfold Exp_not_FTZ; intros H x.
 case (Req_dec x 0); intros Hx.
 rewrite Hx; now right.
@@ -321,7 +321,7 @@ Qed.
 Lemma not_FTZ_ulp_ge_ulp_0:
   (forall x, (ulp 0 <= ulp x)%R) ->
   Exp_not_FTZ fexp.
-Proof.
+Proof using valid_exp.
 intros H e.
 apply generic_format_bpow_inv' with beta.
 apply generic_format_bpow_ge_ulp_0.
@@ -335,7 +335,7 @@ Lemma ulp_le_pos :
   forall x y: R,
   (0 <= x)%R -> (x <= y)%R ->
   (ulp x <= ulp y)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros Hm x y Hx Hxy.
 destruct Hx as [Hx|Hx].
 rewrite ulp_neq_0.
@@ -356,7 +356,7 @@ Theorem ulp_le :
   forall x y: R,
   (Rabs x <= Rabs y)%R ->
   (ulp x <= ulp y)%R.
-Proof.
+Proof using valid_exp.
 intros Hm x y Hxy.
 rewrite <- ulp_abs.
 rewrite <- (ulp_abs y).
@@ -368,7 +368,7 @@ Qed.
 Theorem eq_0_round_0_negligible_exp :
    negligible_exp = None -> forall rnd {Vr: Valid_rnd rnd} x,
      round beta fexp rnd x = 0%R -> x = 0%R.
-Proof.
+Proof using valid_exp.
 intros H rnd Vr x Hx.
 case (Req_dec x 0); try easy; intros Hx2.
 absurd (Rabs (round beta fexp rnd x) = 0%R).
@@ -405,7 +405,7 @@ Definition pred x := (- succ (-x))%R.
 Theorem pred_eq_pos :
   forall x, (0 <= x)%R ->
   pred x = pred_pos x.
-Proof.
+Proof using.
 intros x Hx; unfold pred, succ.
 case Rle_bool_spec; intros Hx'.
 assert (K:(x = 0)%R).
@@ -422,21 +422,21 @@ Qed.
 Theorem succ_eq_pos :
   forall x, (0 <= x)%R ->
   succ x = (x + ulp x)%R.
-Proof.
+Proof using.
 intros x Hx; unfold succ.
 now rewrite Rle_bool_true.
 Qed.
 
 Theorem succ_opp :
   forall x, succ (-x) = (- pred x)%R.
-Proof.
+Proof using.
 intros x.
 now apply sym_eq, Ropp_involutive.
 Qed.
 
 Theorem pred_opp :
   forall x, pred (-x) = (- succ x)%R.
-Proof.
+Proof using.
 intros x.
 unfold pred.
 now rewrite Ropp_involutive.
@@ -444,7 +444,7 @@ Qed.
 
 Theorem pred_bpow :
   forall e, pred (bpow e) = (bpow e - bpow (fexp e))%R.
-Proof.
+Proof using.
 intros e.
 rewrite pred_eq_pos by apply bpow_ge_0.
 unfold pred_pos.
@@ -462,7 +462,7 @@ Theorem id_m_ulp_ge_bpow :
   x <> ulp x ->
   (bpow e < x)%R ->
   (bpow e <= x - ulp x)%R.
-Proof.
+Proof using.
 intros x e Fx Hx' Hx.
 (* *)
 assert (1 <= Ztrunc (scaled_mantissa beta fexp x))%Z.
@@ -501,7 +501,7 @@ Theorem id_p_ulp_le_bpow :
   forall x e, (0 < x)%R -> F x ->
   (x < bpow e)%R ->
   (x + ulp x <= bpow e)%R.
-Proof.
+Proof using.
 intros x e Zx Fx Hx.
 pattern x at 1 ; rewrite Fx.
 rewrite ulp_neq_0.
@@ -520,7 +520,7 @@ Lemma generic_format_pred_aux1:
   forall x, (0 < x)%R -> F x ->
   x <> bpow (mag beta x - 1) ->
   F (x - ulp x).
-Proof.
+Proof using.
 intros x Zx Fx Hx.
 destruct (mag beta x) as (ex, Ex).
 simpl in Hx.
@@ -585,7 +585,7 @@ Lemma generic_format_pred_aux2 :
   let e := mag_val beta x (mag beta x) in
   x = bpow (e - 1) ->
   F (x - bpow (fexp (e - 1))).
-Proof.
+Proof using valid_exp.
 intros x Zx Fx e Hx.
 pose (f:=(x - bpow (fexp (e - 1)))%R).
 fold f.
@@ -646,7 +646,7 @@ Qed.
 Lemma generic_format_succ_aux1 :
   forall x, (0 < x)%R -> F x ->
   F (x + ulp x).
-Proof.
+Proof using valid_exp.
 intros x Zx Fx.
 destruct (mag beta x) as (ex, Ex).
 specialize (Ex (Rgt_not_eq _ _ Zx)).
@@ -705,7 +705,7 @@ Qed.
 Lemma generic_format_pred_pos :
   forall x, F x -> (0 < x)%R ->
   F (pred_pos x).
-Proof.
+Proof using valid_exp.
 intros x Fx Zx.
 unfold pred_pos; case Req_bool_spec; intros H.
 now apply generic_format_pred_aux2.
@@ -715,7 +715,7 @@ Qed.
 Theorem generic_format_succ :
   forall x, F x ->
   F (succ x).
-Proof.
+Proof using valid_exp.
 intros x Fx.
 unfold succ; case Rle_bool_spec; intros Zx.
 destruct Zx as [Zx|Zx].
@@ -731,7 +731,7 @@ Qed.
 Theorem generic_format_pred :
   forall x, F x ->
   F (pred x).
-Proof.
+Proof using valid_exp.
 intros x Fx.
 unfold pred.
 apply generic_format_opp.
@@ -742,7 +742,7 @@ Qed.
 Lemma pred_pos_lt_id :
   forall x, (x <> 0)%R ->
   (pred_pos x < x)%R.
-Proof.
+Proof using.
 intros x Zx.
 unfold pred_pos.
 case Req_bool_spec; intros H.
@@ -764,7 +764,7 @@ Qed.
 Theorem succ_gt_id :
   forall x, (x <> 0)%R ->
   (x < succ x)%R.
-Proof.
+Proof using.
 intros x Zx; unfold succ.
 case Rle_bool_spec; intros Hx.
 pattern x at 1; rewrite <- (Rplus_0_r x).
@@ -781,7 +781,7 @@ Qed.
 Theorem pred_lt_id :
   forall x,  (x <> 0)%R ->
   (pred x < x)%R.
-Proof.
+Proof using.
 intros x Zx; unfold pred.
 pattern x at 2; rewrite <- (Ropp_involutive x).
 apply Ropp_lt_contravar.
@@ -791,7 +791,7 @@ Qed.
 
 Theorem succ_ge_id :
   forall x, (x <= succ x)%R.
-Proof.
+Proof using.
 intros x; case (Req_dec x 0).
 intros V; rewrite V.
 unfold succ; rewrite Rle_bool_true;[idtac|now right].
@@ -802,7 +802,7 @@ Qed.
 
 Theorem pred_le_id :
   forall x, (pred x <= x)%R.
-Proof.
+Proof using.
 intros x; unfold pred.
 pattern x at 2; rewrite <- (Ropp_involutive x).
 apply Ropp_le_contravar.
@@ -813,7 +813,7 @@ Qed.
 Lemma pred_pos_ge_0 :
   forall x,
   (0 < x)%R -> F x -> (0 <= pred_pos x)%R.
-Proof.
+Proof using valid_exp.
 intros x Zx Fx.
 unfold pred_pos.
 case Req_bool_spec; intros H.
@@ -834,7 +834,7 @@ Qed.
 Theorem pred_ge_0 :
   forall x,
   (0 < x)%R -> F x -> (0 <= pred x)%R.
-Proof.
+Proof using valid_exp.
 intros x Zx Fx.
 rewrite pred_eq_pos.
 now apply pred_pos_ge_0.
@@ -846,7 +846,7 @@ Lemma pred_pos_plus_ulp_aux1 :
   forall x, (0 < x)%R -> F x ->
   x <> bpow (mag beta x - 1) ->
   ((x - ulp x) + ulp (x-ulp x) = x)%R.
-Proof.
+Proof using.
 intros x Zx Fx Hx.
 replace (ulp (x - ulp x)) with (ulp x).
 ring.
@@ -909,7 +909,7 @@ Lemma pred_pos_plus_ulp_aux2 :
   x =  bpow (e - 1) ->
   (x - bpow (fexp (e-1)) <> 0)%R ->
   ((x - bpow (fexp (e-1))) + ulp (x - bpow (fexp (e-1))) = x)%R.
-Proof.
+Proof using valid_exp.
 intros x Zx Fx e Hxe Zp.
 replace (ulp (x - bpow (fexp (e - 1)))) with (bpow (fexp (e - 1))).
 ring.
@@ -963,7 +963,7 @@ Lemma pred_pos_plus_ulp_aux3 :
   x =  bpow (e - 1) ->
   (x - bpow (fexp (e-1)) = 0)%R ->
   (ulp 0 = x)%R.
-Proof.
+Proof using valid_exp.
 intros x Hx Fx e H1 H2.
 assert (H3:(x = bpow (fexp (e - 1)))).
 now apply Rminus_diag_uniq.
@@ -980,14 +980,14 @@ rewrite H3; apply f_equal.
 case (Zle_or_lt n (e-1)); intros H6.
 apply valid_exp; lia.
 apply sym_eq, valid_exp; lia.
-Qed.
+ Qed.
 
 (** The following one is false for x = 0 in FTZ *)
 
 Lemma pred_pos_plus_ulp :
   forall x, (0 < x)%R -> F x ->
   (pred_pos x + ulp (pred_pos x) = x)%R.
-Proof.
+Proof using valid_exp.
 intros x Zx Fx.
 unfold pred_pos.
 case Req_bool_spec; intros H.
@@ -1001,7 +1001,7 @@ Qed.
 Theorem pred_plus_ulp :
   forall x, (0 < x)%R -> F x ->
   (pred x + ulp (pred x))%R = x.
-Proof.
+Proof using valid_exp.
 intros x Hx Fx.
 rewrite pred_eq_pos.
 now apply pred_pos_plus_ulp.
@@ -1014,7 +1014,7 @@ Theorem mag_plus_eps :
   forall x, (0 < x)%R -> F x ->
   forall eps, (0 <= eps < ulp x)%R ->
   mag beta (x + eps) = mag beta x :> Z.
-Proof.
+Proof using.
 intros x Zx Fx eps Heps.
 destruct (mag beta x) as (ex, He).
 simpl.
@@ -1049,7 +1049,7 @@ Theorem round_DN_plus_eps_pos :
   forall x, (0 <= x)%R -> F x ->
   forall eps, (0 <= eps < ulp x)%R ->
   round beta fexp Zfloor (x + eps) = x.
-Proof.
+Proof using valid_exp.
 intros x Zx Fx eps Heps.
 destruct Zx as [Zx|Zx].
 (* . 0 < x *)
@@ -1130,7 +1130,7 @@ Theorem round_UP_plus_eps_pos :
   forall x, (0 <= x)%R -> F x ->
   forall eps, (0 < eps <= ulp x)%R ->
   round beta fexp Zceil (x + eps) = (x + ulp x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x Zx Fx eps.
 case Zx; intros Zx1.
 (* . 0 < x *)
@@ -1196,7 +1196,7 @@ Theorem round_UP_pred_plus_eps_pos :
   forall x, (0 < x)%R -> F x ->
   forall eps, (0 < eps <= ulp (pred x) )%R ->
   round beta fexp Zceil (pred x + eps) = x.
-Proof.
+Proof using valid_exp.
 intros x Hx Fx eps Heps.
 rewrite round_UP_plus_eps_pos; trivial.
 rewrite pred_eq_pos.
@@ -1210,7 +1210,7 @@ Theorem round_DN_minus_eps_pos :
   forall x,  (0 < x)%R -> F x ->
   forall eps, (0 < eps <= ulp (pred x))%R ->
   round beta fexp Zfloor (x - eps) = pred x.
-Proof.
+Proof using valid_exp.
 intros x Hpx Fx eps.
 rewrite pred_eq_pos;[intros Heps|now left].
 replace (x-eps)%R with (pred_pos x + (ulp (pred_pos x)-eps))%R.
@@ -1234,7 +1234,7 @@ Theorem round_DN_plus_eps:
   forall eps, (0 <= eps < if (Rle_bool 0 x) then (ulp x)
                                      else (ulp (pred (-x))))%R ->
   round beta fexp Zfloor (x + eps) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx eps Heps.
 case (Rle_or_lt 0 x); intros Zx.
 apply round_DN_plus_eps_pos; try assumption.
@@ -1271,7 +1271,7 @@ Theorem round_UP_plus_eps :
   forall eps, (0 < eps <= if (Rle_bool 0 x) then (ulp x)
                                      else (ulp (pred (-x))))%R ->
   round beta fexp Zceil (x + eps) = (succ x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x Fx eps Heps.
 case (Rle_or_lt 0 x); intros Zx.
 rewrite succ_eq_pos; try assumption.
@@ -1312,7 +1312,7 @@ Lemma le_pred_pos_lt :
   F x -> F y ->
   (0 <= x < y)%R ->
   (x <= pred_pos y)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x y Fx Fy H.
 case (proj1 H); intros V.
 assert (Zy:(0 < y)%R).
@@ -1433,7 +1433,7 @@ Lemma succ_le_lt_aux:
   F x -> F y ->
   (0 <= x)%R -> (x < y)%R ->
   (succ x <= y)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x y Hx Hy Zx H.
 rewrite succ_eq_pos; trivial.
 case (Rle_or_lt (ulp x) (y-x)); intros H1.
@@ -1456,7 +1456,7 @@ Theorem succ_le_lt:
   F x -> F y ->
   (x < y)%R ->
   (succ x <= y)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x y Fx Fy H.
 destruct (Rle_or_lt 0 x) as [Hx|Hx].
 now apply succ_le_lt_aux.
@@ -1483,7 +1483,7 @@ Theorem pred_ge_gt :
   F x -> F y ->
   (x < y)%R ->
   (x <= pred y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 rewrite <- (Ropp_involutive x).
 unfold pred; apply Ropp_le_contravar.
@@ -1498,7 +1498,7 @@ Theorem succ_gt_ge :
   (y <> 0)%R ->
   (x <= y)%R ->
   (x < succ y)%R.
-Proof.
+Proof using.
 intros x y Zy Hxy.
 apply Rle_lt_trans with (1 := Hxy).
 now apply succ_gt_id.
@@ -1509,7 +1509,7 @@ Theorem pred_lt_le :
   (x <> 0)%R ->
   (x <= y)%R ->
   (pred x < y)%R.
-Proof.
+Proof using.
 intros x y Zy Hxy.
 apply Rlt_le_trans with (2 := Hxy).
 now apply pred_lt_id.
@@ -1517,7 +1517,7 @@ Qed.
 
 Lemma succ_pred_pos :
   forall x, F x -> (0 < x)%R -> succ (pred x) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx Hx.
 rewrite pred_eq_pos by now left.
 rewrite succ_eq_pos by now apply pred_pos_ge_0.
@@ -1526,7 +1526,7 @@ Qed.
 
 Theorem pred_ulp_0 :
   pred (ulp 0) = 0%R.
-Proof.
+Proof using valid_exp.
 rewrite pred_eq_pos.
 2: apply ulp_ge_0.
 unfold ulp; rewrite Req_bool_true; trivial.
@@ -1549,7 +1549,7 @@ Qed.
 
 Theorem succ_0 :
   succ 0 = ulp 0.
-Proof.
+Proof using.
 unfold succ.
 rewrite Rle_bool_true.
 apply Rplus_0_l.
@@ -1558,7 +1558,7 @@ Qed.
 
 Theorem pred_0 :
   pred 0 = Ropp (ulp 0).
-Proof.
+Proof using.
 rewrite <- succ_0.
 rewrite <- Ropp_0 at 1.
 apply pred_opp.
@@ -1567,7 +1567,7 @@ Qed.
 Lemma pred_succ_pos :
   forall x, F x -> (0 < x)%R ->
   pred (succ x) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx Hx.
 apply Rle_antisym.
 - apply Rnot_lt_le.
@@ -1589,7 +1589,7 @@ Qed.
 Theorem succ_pred :
   forall x, F x ->
   succ (pred x) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx.
 destruct (Rle_or_lt 0 x) as [[Hx|Hx]|Hx].
 now apply succ_pred_pos.
@@ -1606,7 +1606,7 @@ Qed.
 Theorem pred_succ :
   forall x, F x ->
   pred (succ x) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx.
 rewrite <- (Ropp_involutive x).
 rewrite succ_opp, pred_opp.
@@ -1619,7 +1619,7 @@ Theorem round_UP_pred_plus_eps :
   forall eps, (0 < eps <= if Rle_bool x 0 then ulp x
                           else ulp (pred x))%R ->
   round beta fexp Zceil (pred x + eps) = x.
-Proof.
+Proof using valid_exp.
 intros x Fx eps Heps.
 rewrite round_UP_plus_eps.
 now apply succ_pred.
@@ -1651,7 +1651,7 @@ Theorem round_DN_minus_eps:
   forall eps, (0 < eps <= if (Rle_bool x 0) then (ulp x)
                                      else (ulp (pred x)))%R ->
   round beta fexp Zfloor (x - eps) = pred x.
-Proof.
+Proof using valid_exp.
 intros x Fx eps Heps.
 replace (x-eps)%R with (-(-x+eps))%R by ring.
 rewrite round_DN_opp.
@@ -1687,7 +1687,7 @@ Theorem error_lt_ulp :
   forall rnd { Zrnd : Valid_rnd rnd } x,
   (x <> 0)%R ->
   (Rabs (round beta fexp rnd x - x) < ulp x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros rnd Zrnd x Zx.
 destruct (generic_format_EM beta fexp x) as [Hx|Hx].
 (* x = rnd x *)
@@ -1733,7 +1733,7 @@ Qed.
 Theorem error_le_ulp :
   forall rnd { Zrnd : Valid_rnd rnd } x,
   (Rabs (round beta fexp rnd x - x) <= ulp x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros  rnd Zrnd x.
 case (Req_dec x 0).
 intros Zx; rewrite Zx, round_0...
@@ -1746,7 +1746,7 @@ Qed.
 Theorem error_le_half_ulp :
   forall choice x,
   (Rabs (round beta fexp (Znearest choice) x - x) <= /2 * ulp x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice x.
 destruct (generic_format_EM beta fexp x) as [Hx|Hx].
 (* x = rnd x *)
@@ -1800,7 +1800,7 @@ Qed.
 Theorem ulp_DN :
   forall x, (0 <= x)%R ->
   ulp (round beta fexp Zfloor x) = ulp x.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x [Hx|Hx].
 - rewrite (ulp_neq_0 x) by now apply Rgt_not_eq.
   destruct (round_ge_generic beta fexp Zfloor 0 x) as [Hd|Hd].
@@ -1826,7 +1826,7 @@ Qed.
 Theorem round_neq_0_negligible_exp :
   negligible_exp = None -> forall rnd { Zrnd : Valid_rnd rnd } x,
   (x <> 0)%R -> (round beta fexp rnd x <> 0)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros H rndn Hrnd x Hx K.
 case negligible_exp_spec'.
 intros (_,Hn).
@@ -1844,7 +1844,7 @@ Theorem error_lt_ulp_round :
   forall { Hm : Monotone_exp fexp } rnd { Zrnd : Valid_rnd rnd } x,
   (x <> 0)%R ->
   (Rabs (round beta fexp rnd x - x) < ulp (round beta fexp rnd x))%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros Hm.
 (* wlog *)
 cut (forall rnd : R -> Z, Valid_rnd rnd -> forall x : R, (0 < x)%R  ->
@@ -1884,7 +1884,7 @@ Qed.
 Lemma error_le_ulp_round :
   forall { Hm : Monotone_exp fexp } rnd { Zrnd : Valid_rnd rnd } x,
   (Rabs (round beta fexp rnd x - x) <= ulp (round beta fexp rnd x))%R.
-Proof.
+Proof using valid_exp.
 intros Mexp rnd Vrnd x.
 destruct (Req_dec x 0) as [Zx|Nzx].
 { rewrite Zx, round_0; [|exact Vrnd].
@@ -1897,7 +1897,7 @@ Theorem error_le_half_ulp_round :
   forall { Hm : Monotone_exp fexp },
   forall choice x,
   (Rabs (round beta fexp (Znearest choice) x - x) <= /2 * ulp (round beta fexp (Znearest choice) x))%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros Hm choice x.
 case (Req_dec (round beta fexp (Znearest choice) x) 0); intros Hfx.
 (* *)
@@ -1977,7 +1977,7 @@ Qed.
 Theorem pred_le :
   forall x y, F x -> F y -> (x <= y)%R ->
   (pred x <= pred y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy [Hxy| ->].
 2: apply Rle_refl.
 apply pred_ge_gt with (2 := Fy).
@@ -1989,7 +1989,7 @@ Qed.
 Theorem succ_le :
   forall x y, F x -> F y -> (x <= y)%R ->
   (succ x <= succ y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 apply Ropp_le_cancel.
 rewrite <- 2!pred_opp.
@@ -2001,7 +2001,7 @@ Qed.
 
 Theorem pred_le_inv: forall x y, F x -> F y
    -> (pred x <= pred y)%R -> (x <= y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 rewrite <- (succ_pred x), <- (succ_pred y); try assumption.
 apply succ_le; trivial; now apply generic_format_pred.
@@ -2009,7 +2009,7 @@ Qed.
 
 Theorem succ_le_inv: forall x y, F x -> F y
    -> (succ x <= succ y)%R -> (x <= y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 rewrite <- (pred_succ x), <- (pred_succ y); try assumption.
 apply pred_le; trivial; now apply generic_format_succ.
@@ -2018,7 +2018,7 @@ Qed.
 Theorem pred_lt :
   forall x y, F x -> F y -> (x < y)%R ->
   (pred x < pred y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 apply Rnot_le_lt.
 intros H.
@@ -2029,7 +2029,7 @@ Qed.
 Theorem succ_lt :
   forall x y, F x -> F y -> (x < y)%R ->
   (succ x < succ y)%R.
-Proof.
+Proof using valid_exp.
 intros x y Fx Fy Hxy.
 apply Rnot_le_lt.
 intros H.
@@ -2041,7 +2041,7 @@ Qed.
 Lemma succ_le_plus_ulp :
   forall { Hm : Monotone_exp fexp } x,
   (succ x <= x + ulp x)%R.
-Proof.
+Proof using.
 intros Mexp x.
 destruct (Rle_or_lt 0 x) as [Px|Nx]; [now right; apply succ_eq_pos|].
 replace (_ + _)%R with (- (-x - ulp x))%R by ring.
@@ -2060,7 +2060,7 @@ Lemma generic_format_plus_ulp :
   forall { Hm : Monotone_exp fexp } x,
   generic_format beta fexp x ->
   generic_format beta fexp (x + ulp x).
-Proof.
+Proof using valid_exp.
 intros Mexp x Fx.
 destruct (Rle_or_lt 0 x) as [Px|Nx].
 { now rewrite <-(succ_eq_pos _ Px); apply generic_format_succ. }
@@ -2128,7 +2128,7 @@ Qed.
 Theorem round_DN_ge_UP_gt :
   forall x y, F y ->
   (y < round beta fexp Zceil x -> y <= round beta fexp Zfloor x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x y Fy Hlt.
 apply round_DN_pt...
 apply Rnot_lt_le.
@@ -2141,7 +2141,7 @@ Qed.
 Theorem round_UP_le_DN_lt :
   forall x y, F y ->
   (round beta fexp Zfloor x < y -> round beta fexp Zceil x <= y)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x y Fy Hlt.
 apply round_UP_pt...
 apply Rnot_lt_le.
@@ -2153,7 +2153,7 @@ Qed.
 
 Theorem pred_UP_le_DN :
   forall x, (pred (round beta fexp Zceil x) <= round beta fexp Zfloor x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x.
 destruct (generic_format_EM beta fexp x) as [Fx|Fx].
 rewrite !round_generic...
@@ -2184,7 +2184,7 @@ Qed.
 
 Theorem UP_le_succ_DN :
   forall x, (round beta fexp Zceil x <= succ (round beta fexp Zfloor x))%R.
-Proof.
+Proof using valid_exp.
 intros x.
 rewrite <- (Ropp_involutive x).
 rewrite round_DN_opp, round_UP_opp, succ_opp.
@@ -2195,7 +2195,7 @@ Qed.
 Theorem pred_UP_eq_DN :
   forall x,  ~ F x ->
   (pred (round beta fexp Zceil x) = round beta fexp Zfloor x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x Fx.
 apply Rle_antisym.
 now apply pred_UP_le_DN.
@@ -2207,7 +2207,7 @@ Qed.
 Theorem succ_DN_eq_UP :
   forall x,  ~ F x ->
   (succ (round beta fexp Zfloor x) = round beta fexp Zceil x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x Fx.
 rewrite <- pred_UP_eq_DN; trivial.
 rewrite succ_pred; trivial.
@@ -2217,7 +2217,7 @@ Qed.
 Theorem round_DN_eq :
   forall x d, F d -> (d <= x < succ d)%R ->
   round beta fexp Zfloor x = d.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x d Fd (Hxd1,Hxd2).
 generalize (round_DN_pt beta fexp x); intros (T1,(T2,T3)).
 apply sym_eq, Rle_antisym.
@@ -2237,7 +2237,7 @@ Qed.
 Theorem round_UP_eq :
   forall x u, F u -> (pred u < x <= u)%R ->
   round beta fexp Zceil x = u.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros x u Fu Hux.
 rewrite <- (Ropp_involutive (round beta fexp Zceil x)).
 rewrite <- round_DN_opp.
@@ -2252,7 +2252,7 @@ Qed.
 
 Lemma ulp_ulp_0 : forall {H : Exp_not_FTZ fexp},
   ulp (ulp 0) = ulp 0.
-Proof.
+Proof using valid_exp.
 intros H; case (negligible_exp_spec').
 intros (K1,K2).
 replace (ulp 0) with 0%R at 1; try easy.
@@ -2272,7 +2272,7 @@ Qed.
 Lemma ulp_succ_pos :
   forall x, F x -> (0 < x)%R ->
   ulp (succ x) = ulp x \/ succ x = bpow (mag beta x).
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros x Fx Hx.
 generalize (Rlt_le _ _ Hx); intros Hx'.
 rewrite succ_eq_pos;[idtac|now left].
@@ -2301,7 +2301,7 @@ Qed.
 Theorem ulp_pred_pos :
   forall x, F x -> (0 < pred x)%R ->
   ulp (pred x) = ulp x \/ x = bpow (mag beta x - 1).
-Proof.
+Proof using valid_exp.
 intros x Fx Hx.
 assert (Hx': (0 < x)%R).
   apply Rlt_le_trans with (1 := Hx).
@@ -2337,7 +2337,7 @@ Lemma ulp_round_pos :
    forall rnd { Zrnd : Valid_rnd rnd } x,
   (0 < x)%R -> ulp (round beta fexp rnd x) = ulp x
      \/ round beta fexp rnd x = bpow (mag beta x).
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros Not_FTZ_ rnd Zrnd x Hx.
 case (generic_format_EM beta fexp x); intros Fx.
 rewrite round_generic...
@@ -2387,7 +2387,7 @@ Theorem ulp_round : forall { Not_FTZ_ : Exp_not_FTZ fexp},
    forall rnd { Zrnd : Valid_rnd rnd } x,
      ulp (round beta fexp rnd x) = ulp x
          \/ Rabs (round beta fexp rnd x) = bpow (mag beta x).
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros Not_FTZ_ rnd Zrnd x.
 case (Rtotal_order x 0); intros Zx.
 case (ulp_round_pos (Zrnd_opp rnd) (-x)).
@@ -2413,7 +2413,7 @@ Qed.
 Lemma succ_round_ge_id :
   forall rnd { Zrnd : Valid_rnd rnd } x,
   (x <= succ (round beta fexp rnd x))%R.
-Proof.
+Proof using valid_exp.
 intros rnd Vrnd x.
 apply (Rle_trans _ (round beta fexp Raux.Zceil x)).
 { now apply round_UP_pt. }
@@ -2425,7 +2425,7 @@ Qed.
 Lemma pred_round_le_id :
   forall rnd { Zrnd : Valid_rnd rnd } x,
   (pred (round beta fexp rnd x) <= x)%R.
-Proof.
+Proof using valid_exp.
 intros rnd Vrnd x.
 apply (Rle_trans _ (round beta fexp Raux.Zfloor x)).
 2: now apply round_DN_pt.
@@ -2439,7 +2439,7 @@ Qed.
 Theorem round_N_le_midp: forall choice u v,
   F u -> (v < (u + succ u)/2)%R
       -> (round beta fexp (Znearest choice)  v <= u)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice u v Fu H.
 (* . *)
 assert (V: ((succ u = 0 /\ u = 0) \/ u < succ u)%R).
@@ -2478,7 +2478,7 @@ Qed.
 Theorem round_N_ge_midp: forall choice u v,
  F u ->  ((u + pred u)/2 < v)%R
       -> (u <= round beta fexp (Znearest choice)  v)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice u v Fu H.
 rewrite <- (Ropp_involutive v).
 rewrite round_N_opp.
@@ -2497,7 +2497,7 @@ Lemma round_N_ge_ge_midp : forall choice u v,
        F u ->
        (u <= round beta fexp (Znearest choice) v)%R ->
        ((u + pred u) / 2 <= v)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice u v Hu H2.
 assert (K: ((u=0)%R /\ negligible_exp = None) \/ (pred u < u)%R).
 case (Req_dec u 0); intros Zu.
@@ -2547,7 +2547,7 @@ Lemma round_N_le_le_midp : forall choice u v,
        F u ->
        (round beta fexp (Znearest choice) v <= u)%R ->
        (v <= (u + succ u) / 2)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice u v Hu H2.
 apply Ropp_le_cancel.
 apply Rle_trans with (((-u)+pred (-u))/2)%R.
@@ -2566,7 +2566,7 @@ Lemma round_N_eq_DN: forall choice x,
        let u:=round beta fexp Zceil x in
       (x<(d+u)/2)%R ->
      round beta fexp (Znearest choice) x = d.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice x d u H.
 apply Rle_antisym.
 destruct (generic_format_EM beta fexp x) as [Fx|Fx].
@@ -2584,7 +2584,7 @@ Lemma round_N_eq_DN_pt: forall choice x d u,
       Rnd_DN_pt F x d -> Rnd_UP_pt F x u ->
       (x<(d+u)/2)%R ->
      round beta fexp (Znearest choice) x = d.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice x d u Hd Hu H.
 assert (H0:(d = round beta fexp Zfloor x)%R).
 apply Rnd_DN_pt_unique with (1:=Hd).
@@ -2601,7 +2601,7 @@ Lemma round_N_eq_UP: forall choice x,
       let u:=round beta fexp Zceil x in
      ((d+u)/2 < x)%R ->
      round beta fexp (Znearest choice) x = u.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice x d u H.
 apply Rle_antisym.
 apply round_le_generic; try apply round_UP_pt...
@@ -2619,7 +2619,7 @@ Lemma round_N_eq_UP_pt: forall choice x d u,
       Rnd_DN_pt F x d -> Rnd_UP_pt F x u ->
       ((d+u)/2 < x)%R ->
      round beta fexp (Znearest choice) x = u.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros choice x d u Hd Hu H.
 assert (H0:(u = round beta fexp Zceil x)%R).
 apply Rnd_UP_pt_unique with (1:=Hu).
@@ -2635,7 +2635,7 @@ Lemma round_N_plus_ulp_ge :
   forall { Hm : Monotone_exp fexp } choice1 choice2 x,
   let rx := round beta fexp (Znearest choice2) x in
   (x <= round beta fexp (Znearest choice1) (rx + ulp rx))%R.
-Proof.
+Proof using valid_exp.
 intros Hm choice1 choice2 x.
 simpl.
 set (rx := round _ _ _ x).
@@ -2650,7 +2650,7 @@ Qed.
 Lemma round_N_eq_ties: forall c1 c2 x,
    (x - round beta fexp Zfloor x <> round beta fexp Zceil x - x)%R ->
    (round beta fexp (Znearest c1) x = round beta fexp (Znearest c2) x)%R.
-Proof with auto with typeclass_instances.
+Proof using valid_exp with auto with typeclass_instances.
 intros c1 c2 x.
 pose (d:=round beta fexp Zfloor x); pose (u:=round beta fexp Zceil x); fold d; fold u; intros H.
 case (Rle_or_lt ((d+u)/2) x); intros L.

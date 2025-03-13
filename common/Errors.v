@@ -81,7 +81,7 @@ Remark bind_inversion:
   forall (A B: Type) (f: res A) (g: A -> res B) (y: B),
   bind f g = OK y ->
   exists x, f = OK x /\ g x = OK y.
-Proof.
+Proof using.
   intros until y. destruct f; simpl; intros.
   exists a; auto.
   discriminate.
@@ -91,7 +91,7 @@ Remark bind2_inversion:
   forall (A B C: Type) (f: res (A*B)) (g: A -> B -> res C) (z: C),
   bind2 f g = OK z ->
   exists x, exists y, f = OK (x, y) /\ g x y = OK z.
-Proof.
+Proof using.
   intros until z. destruct f; simpl.
   destruct p; simpl; intros. exists a; exists b; auto.
   intros; discriminate.
@@ -123,7 +123,7 @@ Section mmap.
     forall (l: list A) (l': list B),
       mmap l = OK l' ->
       list_forall2 (fun x y => f x = OK y) l l'.
-  Proof.
+  Proof using.
     induction l; simpl; intros.
     inversion_clear H. constructor.
     destruct (bind_inversion _ _ H) as [hd' [P Q]].

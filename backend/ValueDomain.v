@@ -26,7 +26,7 @@ Inductive block_class : Type :=
   | BCother.
 
 Definition block_class_eq: forall (x y: block_class), {x=y} + {x<>y}.
-Proof. decide equality. apply peq. Defined.
+Proof using. decide equality. apply peq. Defined.
 
 Record block_classification : Type := BC {
   bc_img :> block -> block_class;
@@ -39,7 +39,7 @@ Definition bc_below (bc: block_classification) (bound: block) : Prop :=
 
 Lemma bc_below_invalid:
   forall b bc bound, ~Plt b bound -> bc_below bc bound -> bc b = BCinvalid.
-Proof.
+Proof using.
   intros. destruct (block_class_eq (bc b) BCinvalid); auto.
   elim H. apply H0; auto.
 Qed.
@@ -86,7 +86,7 @@ Definition club (x y: abool) : abool :=
 
 Lemma cmatch_lub_l:
   forall ob x y, cmatch ob x -> cmatch ob (club x y).
-Proof.
+Proof using.
   intros. unfold club; inv H; destruct y; try constructor;
   destruct (eqb b b0) eqn:EQ; try constructor.
   replace b0 with b by (apply eqb_prop; auto). constructor.
@@ -94,7 +94,7 @@ Qed.
 
 Lemma cmatch_lub_r:
   forall ob x y, cmatch ob y -> cmatch ob (club x y).
-Proof.
+Proof using.
   intros. unfold club; inv H; destruct x; try constructor;
   destruct (eqb b0 b) eqn:EQ; try constructor.
   replace b with b0 by (apply eqb_prop; auto). constructor.
@@ -111,7 +111,7 @@ Definition cnot (x: abool) : abool :=
 
 Lemma cnot_sound:
   forall ob x, cmatch ob x -> cmatch (option_map negb ob) (cnot x).
-Proof.
+Proof using.
   destruct 1; constructor.
 Qed.
 
@@ -128,7 +128,7 @@ Inductive aptr : Type :=
   | Ptop.                        (**r any valid pointer *)
 
 Definition eq_aptr: forall (p1 p2: aptr), {p1=p2} + {p1<>p2}.
-Proof.
+Proof using.
   intros. generalize ident_eq, Ptrofs.eq_dec; intros. decide equality.
 Defined.
 
@@ -173,18 +173,18 @@ Hint Constructors pge: va.
 
 Lemma pge_trans:
   forall p q, pge p q -> forall r, pge q r -> pge p r.
-Proof.
+Proof using.
   induction 1; intros r PM; inv PM; auto with va.
 Qed.
 
 Lemma pmatch_ge:
   forall b ofs p q, pge p q -> pmatch b ofs q -> pmatch b ofs p.
-Proof.
+Proof using.
   induction 1; intros PM; inv PM; eauto with va.
 Qed.
 
 Lemma pmatch_top': forall b ofs p, pmatch b ofs p -> pmatch b ofs Ptop.
-Proof.
+Proof using.
   intros. apply pmatch_ge with p; auto with va.
 Qed.
 
@@ -217,7 +217,7 @@ Definition plub (p q: aptr) : aptr :=
 
 Lemma plub_comm:
   forall p q, plub p q = plub q p.
-Proof.
+Proof using.
   intros; unfold plub; destruct p; destruct q; auto.
   destruct (ident_eq id id0). subst id0.
   rewrite dec_eq_true.
@@ -239,7 +239,7 @@ Qed.
 
 Lemma pge_lub_l:
   forall p q, pge (plub p q) p.
-Proof.
+Proof using.
   unfold plub; destruct p, q; auto with va.
 - destruct (ident_eq id id0).
   destruct (Ptrofs.eq_dec ofs ofs0); subst; constructor.
@@ -252,25 +252,25 @@ Qed.
 
 Lemma pge_lub_r:
   forall p q, pge (plub p q) q.
-Proof.
+Proof using.
   intros. rewrite plub_comm. apply pge_lub_l.
 Qed.
 
 Lemma pmatch_lub_l:
   forall b ofs p q, pmatch b ofs p -> pmatch b ofs (plub p q).
-Proof.
+Proof using.
   intros. eapply pmatch_ge; eauto. apply pge_lub_l.
 Qed.
 
 Lemma pmatch_lub_r:
   forall b ofs p q, pmatch b ofs q -> pmatch b ofs (plub p q).
-Proof.
+Proof using.
   intros. eapply pmatch_ge; eauto. apply pge_lub_r.
 Qed.
 
 Lemma plub_least:
   forall r p q, pge r p -> pge r q -> pge r (plub p q).
-Proof.
+Proof using.
   intros. inv H; inv H0; simpl; try constructor.
 - destruct p; constructor.
 - unfold plub; destruct q; repeat rewrite dec_eq_true; constructor.
@@ -304,13 +304,13 @@ Definition pincl (p q: aptr) : bool :=
   end.
 
 Lemma pincl_ge: forall p q, pincl p q = true -> pge q p.
-Proof.
+Proof using.
   unfold pincl; destruct p, q; intros; try discriminate; auto with va;
   InvBooleans; subst; auto with va.
 Qed.
 
 Lemma ge_pincl: forall p q, pge p q -> pincl q p = true.
-Proof.
+Proof using.
   destruct 1; simpl; auto.
 - destruct p; auto.
 - destruct p; simpl; auto; rewrite ! proj_sumbool_is_true; auto.
@@ -320,7 +320,7 @@ Qed.
 Lemma pincl_sound:
   forall b ofs p q,
   pincl p q = true -> pmatch b ofs p -> pmatch b ofs q.
-Proof.
+Proof using.
   intros. eapply pmatch_ge; eauto. apply pincl_ge; auto.
 Qed.
 
@@ -335,7 +335,7 @@ Lemma padd_sound:
   forall b ofs p delta,
   pmatch b ofs p ->
   pmatch b (Ptrofs.add ofs delta) (padd p delta).
-Proof.
+Proof using.
   intros. inv H; simpl padd; eauto with va.
 Qed.
 
@@ -350,7 +350,7 @@ Lemma psub_sound:
   forall b ofs p delta,
   pmatch b ofs p ->
   pmatch b (Ptrofs.sub ofs delta) (psub p delta).
-Proof.
+Proof using.
   intros. inv H; simpl psub; eauto with va.
 Qed.
 
@@ -365,7 +365,7 @@ Lemma poffset_sound:
   forall b ofs1 ofs2 p,
   pmatch b ofs1 p ->
   pmatch b ofs2 (poffset p).
-Proof.
+Proof using.
   intros. inv H; simpl poffset; eauto with va.
 Qed.
 
@@ -378,13 +378,13 @@ Definition cmp_different_blocks (c: comparison) : abool :=
 
 Lemma cmp_different_blocks_none:
   forall c, cmatch None (cmp_different_blocks c).
-Proof.
+Proof using.
   unfold cmp_different_blocks. destruct c, (va_strict tt); constructor.
 Qed.
 
 Lemma cmp_different_blocks_sound:
   forall c, cmatch (Val.cmp_different_blocks c) (cmp_different_blocks c).
-Proof.
+Proof using.
   unfold cmp_different_blocks. destruct c, (va_strict tt); constructor.
 Qed.
 
@@ -402,7 +402,7 @@ Lemma pcmp_sound:
   forall valid c b1 ofs1 p1 b2 ofs2 p2,
   pmatch b1 ofs1 p1 -> pmatch b2 ofs2 p2 ->
   cmatch (Val.cmpu_bool valid c (Vptr b1 ofs1) (Vptr b2 ofs2)) (pcmp c p1 p2).
-Proof.
+Proof using.
   intros.
   assert (DIFF: b1 <> b2 ->
             cmatch (Val.cmpu_bool valid c (Vptr b1 ofs1) (Vptr b2 ofs2))
@@ -437,7 +437,7 @@ Lemma pcmp_sound_64:
   forall valid c b1 ofs1 p1 b2 ofs2 p2,
   pmatch b1 ofs1 p1 -> pmatch b2 ofs2 p2 ->
   cmatch (Val.cmplu_bool valid c (Vptr b1 ofs1) (Vptr b2 ofs2)) (pcmp c p1 p2).
-Proof.
+Proof using.
   intros.
   assert (DIFF: b1 <> b2 ->
             cmatch (Val.cmplu_bool valid c (Vptr b1 ofs1) (Vptr b2 ofs2))
@@ -470,7 +470,7 @@ Qed.
 
 Lemma pcmp_none:
   forall c p1 p2, cmatch None (pcmp c p1 p2).
-Proof.
+Proof using.
   intros.
   unfold pcmp; destruct p1; try constructor; destruct p2;
   try (destruct (peq id id0));  try constructor; try (apply cmp_different_blocks_none).
@@ -501,7 +501,7 @@ Definition Vtop := Ifptr Ptop.
   See the section "Tracking leakage of pointers" below. *)
 
 Definition eq_aval: forall (v1 v2: aval), {v1=v2} + {v1<>v2}.
-Proof.
+Proof using.
   intros. generalize zeq Int.eq_dec Int64.eq_dec Float.eq_dec Float32.eq_dec eq_aptr; intros.
   decide equality.
 Defined.
@@ -542,7 +542,7 @@ Lemma vmatch_num:
   forall v p,
   match v with Vptr _ _ => False | _ => True end ->
   vmatch v (Num p).
-Proof.
+Proof using.
   intros. destruct v; auto with va; contradiction.
 Qed.
 
@@ -550,29 +550,29 @@ Lemma vmatch_ifptr:
   forall v p,
   (forall b ofs, v = Vptr b ofs -> pmatch b ofs p) ->
   vmatch v (Ifptr p).
-Proof.
+Proof using.
   intros. destruct v; constructor; auto.
 Qed.
 
 Lemma vmatch_top: forall v x, vmatch v x -> vmatch v Vtop.
-Proof.
+Proof using.
   intros. apply vmatch_ifptr. intros. subst v. inv H; eapply pmatch_top'; eauto.
 Qed.
 
 (** Some properties of [is_uns] and [is_sgn]. *)
 
 Lemma is_uns_mon: forall n1 n2 i, is_uns n1 i -> n1 <= n2 -> is_uns n2 i.
-Proof.
+Proof using.
   intros; red; intros. apply H; lia.
 Qed.
 
 Lemma is_sgn_mon: forall n1 n2 i, is_sgn n1 i -> n1 <= n2 -> is_sgn n2 i.
-Proof.
+Proof using.
   intros; red; intros. apply H; lia.
 Qed.
 
 Lemma is_uns_sgn: forall n1 n2 i, is_uns n1 i -> n1 < n2 -> is_sgn n2 i.
-Proof.
+Proof using.
   intros; red; intros. rewrite ! H by lia. auto.
 Qed.
 
@@ -581,26 +581,26 @@ Definition usize := Int.size.
 Definition ssize (i: int) := Int.size (if Int.lt i Int.zero then Int.not i else i) + 1.
 
 Lemma usize_pos: forall n, 0 <= usize n.
-Proof.
+Proof using.
   unfold usize; intros. generalize (Int.size_range n); lia.
 Qed.
 
 Lemma ssize_pos: forall n, 0 < ssize n.
-Proof.
+Proof using.
   unfold ssize; intros.
   generalize (Int.size_range (if Int.lt n Int.zero then Int.not n else n)); lia.
 Qed.
 
 Lemma is_uns_usize:
   forall i, is_uns (usize i) i.
-Proof.
+Proof using.
   unfold usize; intros; red; intros.
   apply Int.bits_size_2. lia.
 Qed.
 
 Lemma is_sgn_ssize:
   forall i, is_sgn (ssize i) i.
-Proof.
+Proof using.
   unfold ssize; intros; red; intros.
   destruct (Int.lt i Int.zero) eqn:LT.
 - rewrite <- (negb_involutive (Int.testbit i m)).
@@ -616,7 +616,7 @@ Qed.
 
 Lemma is_uns_zero_ext:
   forall n i, is_uns n i <-> Int.zero_ext n i = i.
-Proof.
+Proof using.
   intros; split; intros.
   Int.bit_solve. destruct (zlt i0 n); auto. symmetry; apply H; auto. lia.
   rewrite <- H. red; intros. rewrite Int.bits_zero_ext by lia. rewrite zlt_false by lia. auto.
@@ -624,7 +624,7 @@ Qed.
 
 Lemma is_sgn_sign_ext:
   forall n i, 0 < n -> (is_sgn n i <-> Int.sign_ext n i = i).
-Proof.
+Proof using.
   intros; split; intros.
   Int.bit_solve. destruct (zlt i0 n); auto.
   transitivity (Int.testbit i (Int.zwordsize - 1)).
@@ -637,7 +637,7 @@ Qed.
 Lemma is_zero_ext_uns:
   forall i n m,
   is_uns m i \/ n <= m -> is_uns m (Int.zero_ext n i).
-Proof.
+Proof using.
   intros. red; intros. rewrite Int.bits_zero_ext by lia.
   destruct (zlt m0 n); auto. destruct H. apply H; lia. extlia.
 Qed.
@@ -646,7 +646,7 @@ Lemma is_zero_ext_sgn:
   forall i n m,
   n < m ->
   is_sgn m (Int.zero_ext n i).
-Proof.
+Proof using.
   intros. red; intros. rewrite ! Int.bits_zero_ext by lia.
   transitivity false. apply zlt_false; lia.
   symmetry; apply zlt_false; lia.
@@ -657,7 +657,7 @@ Lemma is_sign_ext_uns:
   0 <= m < n ->
   is_uns m i ->
   is_uns m (Int.sign_ext n i).
-Proof.
+Proof using.
   intros; red; intros. rewrite Int.bits_sign_ext by lia.
   apply H0. destruct (zlt m0 n); lia. destruct (zlt m0 n); lia.
 Qed.
@@ -666,7 +666,7 @@ Lemma is_sign_ext_sgn:
   forall i n m,
   0 < n -> 0 < m ->
   is_sgn m i \/ n <= m -> is_sgn m (Int.sign_ext n i).
-Proof.
+Proof using.
   intros. apply is_sgn_sign_ext; auto.
   destruct (zlt m n). destruct H1. apply is_sgn_sign_ext in H1; auto.
   rewrite <- H1. rewrite (Int.sign_ext_widen i) by lia. apply Int.sign_ext_idem; auto.
@@ -675,12 +675,12 @@ Proof.
 Qed.
 
 Lemma is_uns_wordsize: forall i, is_uns Int.zwordsize i.
-Proof.
+Proof using.
   intros; red; intros. lia.
 Qed.
 
 Lemma is_sgn_wordsize: forall i, is_sgn Int.zwordsize i.
-Proof.
+Proof using.
   intros; red; intros. f_equal. lia.
 Qed.
 
@@ -689,14 +689,14 @@ Hint Resolve is_uns_mon is_sgn_mon is_uns_sgn is_uns_usize is_sgn_ssize
 
 Lemma is_uns_0:
   forall n, is_uns 0 n -> n = Int.zero.
-Proof.
+Proof using.
   intros. apply Int.same_bits_eq; intros.
   rewrite Int.bits_zero. apply H; lia.
 Qed.
 
 Lemma is_uns_1:
   forall n, is_uns 1 n -> n = Int.zero \/ n = Int.one.
-Proof.
+Proof using.
   intros. destruct (Int.testbit n 0) eqn:B0; [right|left]; apply Int.same_bits_eq; intros.
   rewrite Int.bits_one. destruct (zeq i 0). subst i; auto. apply H; lia.
   rewrite Int.bits_zero. destruct (zeq i 0). subst i; auto. apply H; lia.
@@ -704,14 +704,14 @@ Qed.
 
 Lemma is_uns_range: forall z n,
   0 <= n -> 0 <= z < two_p n -> is_uns n (Int.repr z).
-Proof.
+Proof using.
   intros; red; intros. rewrite Int.testbit_repr by auto.
   apply (Zbits_unsigned_range n); auto.
 Qed.
 
 Lemma range_is_uns: forall i n,
   0 <= n -> is_uns n i -> 0 <= Int.unsigned i < two_p n.
-Proof.
+Proof using.
   intros. destruct (zlt n Int.zwordsize).
 - apply is_uns_zero_ext in H0; auto.
   rewrite <- H0. rewrite Int.zero_ext_mod by lia.
@@ -723,14 +723,14 @@ Qed.
 
 Lemma is_sgn_range: forall z n,
   0 < n -> -(two_p (n - 1)) <= z < two_p (n - 1) -> is_sgn n (Int.repr z).
-Proof.
+Proof using.
   intros; red; intros. rewrite ! Int.testbit_repr by lia.
   apply (Zbits_signed_range (n - 1)); lia.
 Qed.
 
 Lemma range_is_sgn: forall i n,
   0 < n -> is_sgn n i -> -(two_p (n - 1)) <= Int.signed i < two_p (n - 1).
-Proof.
+Proof using.
   intros. destruct (zlt n Int.zwordsize).
 - apply is_sgn_sign_ext in H0; auto. rewrite <- H0. apply Int.sign_ext_range; lia.
 - assert (Int.half_modulus <= two_p (n - 1)).
@@ -755,13 +755,13 @@ Definition srange (a: aval) : Z :=
 
 Lemma urange_sound: forall i a,
   vmatch (Vint i) a -> 0 <= urange a /\ is_uns (urange a) i.
-Proof.
+Proof using.
   intros. pose proof Int.wordsize_pos. inv H; simpl; auto with va.
 Qed.
 
 Lemma srange_sound: forall i a,
   vmatch (Vint i) a -> 0 < srange a /\ is_sgn (srange a) i.
-Proof.
+Proof using.
   intros. pose proof Int.wordsize_pos. inv H; simpl; eauto with va.
 Qed.
 
@@ -846,7 +846,7 @@ Definition sgn (p: aptr) (n: Z) : aval :=
 
 Lemma vmatch_uns':
   forall p i n, is_uns (Z.max 0 n) i -> vmatch (Vint i) (uns p n).
-Proof.
+Proof using.
   intros.
   assert (A: forall n', n' >= 0 -> n' >= n -> is_uns n' i) by (eauto with va).
   unfold uns. repeat destruct zle; auto with va.
@@ -857,18 +857,18 @@ Qed.
 
 Lemma vmatch_uns:
   forall p i n, is_uns n i -> vmatch (Vint i) (uns p n).
-Proof.
+Proof using.
   intros. apply vmatch_uns'. eauto with va.
 Qed.
 
 Lemma vmatch_uns_undef: forall p n, vmatch Vundef (uns p n).
-Proof.
+Proof using.
   intros. unfold uns. repeat destruct zle; auto with va.
 Qed.
 
 Lemma vmatch_sgn':
   forall p i n, is_sgn (Z.max 1 n) i -> vmatch (Vint i) (sgn p n).
-Proof.
+Proof using.
   intros.
   assert (A: forall n', n' >= 1 -> n' >= n -> is_sgn n' i) by (eauto with va).
   unfold sgn. repeat destruct zle; auto with va.
@@ -876,17 +876,17 @@ Qed.
 
 Lemma vmatch_sgn:
   forall p i n, is_sgn n i -> vmatch (Vint i) (sgn p n).
-Proof.
+Proof using.
   intros. apply vmatch_sgn'. eauto with va.
 Qed.
 
 Lemma vmatch_sgn_undef: forall p n, vmatch Vundef (sgn p n).
-Proof.
+Proof using.
   intros. unfold sgn. repeat destruct zle; auto with va.
 Qed.
 
 Lemma vmatch_norm_bool_uns: forall v p, vmatch (Val.norm_bool v) (Uns p 1).
-Proof.
+Proof using.
   intros. destruct (Val.norm_bool_cases v) as [A | [A | A]]; rewrite A; constructor.
   lia. apply is_uns_zero_ext; auto.
   lia. apply is_uns_zero_ext; auto.
@@ -896,13 +896,13 @@ Hint Resolve vmatch_uns vmatch_uns_undef vmatch_sgn vmatch_sgn_undef vmatch_norm
 
 Lemma vmatch_Uns_1:
   forall p v, vmatch v (Uns p 1) -> v = Vundef \/ v = Vint Int.zero \/ v = Vint Int.one.
-Proof.
+Proof using.
   intros. inv H; auto. right. exploit is_uns_1; eauto. intuition congruence.
 Qed.
 
 Lemma vmatch_Uns_0:
   forall p v, vmatch v (Uns p 0) -> v = Vundef \/ v = Vint Int.zero.
-Proof.
+Proof using.
   intros. inv H; auto. right. exploit is_uns_0; eauto. intuition congruence.
 Qed.
 
@@ -947,26 +947,26 @@ Inductive vge: aval -> aval -> Prop :=
 Hint Constructors vge : va.
 
 Lemma vge_top: forall x, vge Vtop x.
-Proof.
+Proof using.
   unfold Vtop; destruct x; auto with va.
 Qed.
 
 Lemma vge_refl: forall x, vge x x.
-Proof.
+Proof using.
   destruct x; auto with va.
 Qed.
 
 Hint Resolve vge_top vge_refl : va.
 
 Lemma vge_trans: forall x y z, vge x y -> vge y z -> vge x z.
-Proof.
+Proof using.
   intros x y z XY YZ; revert y z YZ x XY.
   destruct 1; intros x V; auto with va; inv V; eauto using pge_trans with va.
 Qed.
 
 Lemma vmatch_ge:
   forall v x y, vge x y -> vmatch v y -> vmatch v x.
-Proof.
+Proof using.
   induction 1; intros V; inv V; eauto using pmatch_ge with va.
 Qed.
 
@@ -1030,7 +1030,7 @@ Definition vlub (v w: aval) : aval :=
 
 Lemma vlub_comm:
   forall v w, vlub v w = vlub w v.
-Proof.
+Proof using.
   assert (INT: forall cstr i j, vlub_int cstr i j = vlub_int cstr j i).
   { intros. unfold vlub_int. rewrite Int.eq_sym, orb_comm.
     predSpec Int.eq Int.eq_spec j i. congruence.
@@ -1042,32 +1042,32 @@ Proof.
 Qed.
 
 Lemma vge_uns_uns': forall p n, vge (uns1 p n) (Uns p n).
-Proof.
+Proof using.
   unfold uns1; intros. repeat (destruct zle); eauto with va.
 Qed.
 
 Lemma vge_uns_i': forall p n i, 0 <= n -> is_uns n i -> vge (uns1 p n) (I i).
-Proof.
+Proof using.
   intros. apply vge_trans with (Uns p n). apply vge_uns_uns'. auto with va.
 Qed.
 
 Lemma vge_uns_iu': forall p n i, 0 <= n -> is_uns n i -> vge (uns1 p n) (IU i).
-Proof.
+Proof using.
   intros. apply vge_trans with (Uns p n). apply vge_uns_uns'. auto with va.
 Qed.
 
 Lemma vge_sgn_sgn': forall p n, vge (sgn p n) (Sgn p n).
-Proof.
+Proof using.
   unfold sgn; intros. repeat (destruct zle); eauto with va.
 Qed.
 
 Lemma vge_sgn_i': forall p n i, 0 < n -> is_sgn n i -> vge (sgn p n) (I i).
-Proof.
+Proof using.
   intros. apply vge_trans with (Sgn p n). apply vge_sgn_sgn'. auto with va.
 Qed.
 
 Lemma vge_sgn_iu': forall p n i, 0 < n -> is_sgn n i -> vge (sgn p n) (IU i).
-Proof.
+Proof using.
   intros. apply vge_trans with (Sgn p n). apply vge_sgn_sgn'. auto with va.
 Qed.
 
@@ -1075,7 +1075,7 @@ Hint Resolve vge_uns_uns' vge_uns_i' vge_uns_iu' vge_sgn_sgn' vge_sgn_i' vge_sgn
 
 Lemma vge_lub_l:
   forall x y, vge (vlub x y) x.
-Proof.
+Proof using.
   assert (INT: forall i j, vge (vlub_int I i j) (I i)).
   { unfold vlub_int; intros. predSpec Int.eq Int.eq_spec i j. auto with va.
     destruct orb. eauto with va.
@@ -1110,19 +1110,19 @@ Qed.
 
 Lemma vge_lub_r:
   forall x y, vge (vlub x y) y.
-Proof.
+Proof using.
   intros. rewrite vlub_comm. apply vge_lub_l.
 Qed.
 
 Lemma vmatch_lub_l:
   forall v x y, vmatch v x -> vmatch v (vlub x y).
-Proof.
+Proof using.
   intros. eapply vmatch_ge; eauto. apply vge_lub_l.
 Qed.
 
 Lemma vmatch_lub_r:
   forall v x y, vmatch v y -> vmatch v (vlub x y).
-Proof.
+Proof using.
   intros. rewrite vlub_comm. apply vmatch_lub_l; auto.
 Qed.
 
@@ -1148,7 +1148,7 @@ Definition aptr_of_aval (v: aval) : aptr :=
 Lemma match_aptr_of_aval:
   forall b ofs av,
   vmatch (Vptr b ofs) av -> pmatch b ofs (aptr_of_aval av).
-Proof.
+Proof using.
   unfold aptr_of_aval; intros. inv H; auto.
 Qed.
 
@@ -1161,13 +1161,13 @@ Definition vplub (v: aval) (p: aptr) : aptr :=
 
 Lemma vmatch_vplub_l:
   forall v x p, vmatch v x -> vmatch v (Ifptr (vplub x p)).
-Proof.
+Proof using.
   intros. unfold vplub; inv H; auto with va; constructor; eapply pmatch_lub_l; eauto.
 Qed.
 
 Lemma pmatch_vplub:
   forall b ofs x p, pmatch b ofs p -> pmatch b ofs (vplub x p).
-Proof.
+Proof using.
   intros.
   assert (DFL: pmatch b ofs (if va_strict tt then p else Ptop)).
   { destruct (va_strict tt); auto. eapply pmatch_top'; eauto. }
@@ -1176,7 +1176,7 @@ Qed.
 
 Lemma vmatch_vplub_r:
   forall v x p, vmatch v (Ifptr p) -> vmatch v (Ifptr (vplub x p)).
-Proof.
+Proof using.
   intros. apply vmatch_ifptr; intros; subst v. inv H. apply pmatch_vplub; auto.
 Qed.
 
@@ -1190,13 +1190,13 @@ Definition vpincl (v: aval) (p: aptr) : bool :=
 
 Lemma vpincl_ge:
   forall x p, vpincl x p = true -> vge (Ifptr p) x.
-Proof.
+Proof using.
   unfold vpincl; intros. destruct x; eauto using pincl_ge with va. 
 Qed.
 
 Lemma vpincl_sound:
   forall v x p, vpincl x p = true -> vmatch v x -> vmatch v (Ifptr p).
-Proof.
+Proof using.
   intros. apply vmatch_ge with x; auto. apply vpincl_ge; auto.
 Qed.
 
@@ -1222,7 +1222,7 @@ Definition vincl (v w: aval) : bool :=
   end.
 
 Lemma vincl_ge: forall v w, vincl v w = true -> vge w v.
-Proof.
+Proof using.
   unfold vincl; destruct v; destruct w;
   intros; try discriminate; try InvBooleans; try subst; eauto using pincl_ge with va.
 - constructor; auto. rewrite is_uns_zero_ext; auto.
@@ -1232,7 +1232,7 @@ Proof.
 Qed.
 
 Lemma ge_vincl: forall v w, vge v w -> vincl w v = true.
-Proof.
+Proof using.
   induction 1; simpl; try (apply andb_true_intro; split); auto using ge_pincl, proj_sumbool_is_true.
   all: try (unfold proj_sumbool; rewrite zle_true by lia; auto).
   all: try (unfold proj_sumbool; rewrite zlt_true by lia; auto).
@@ -1250,7 +1250,7 @@ Lemma symbol_address_sound:
   forall ge id ofs,
   genv_match ge ->
   vmatch (Genv.symbol_address ge id ofs) (Ptr (Gl id ofs)).
-Proof.
+Proof using.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:F.
   constructor. constructor. apply H; auto.
   constructor.
@@ -1261,7 +1261,7 @@ Lemma vmatch_ptr_gl:
   genv_match ge ->
   vmatch v (Ptr (Gl id ofs)) ->
   Val.lessdef v (Genv.symbol_address ge id ofs).
-Proof.
+Proof using.
   intros. unfold Genv.symbol_address. inv H0.
 - inv H3. replace (Genv.find_symbol ge id) with (Some b). constructor.
   symmetry. apply H; auto.
@@ -1273,7 +1273,7 @@ Lemma vmatch_ptr_stk:
   vmatch v (Ptr(Stk ofs)) ->
   bc sp = BCstack ->
   Val.lessdef v (Vptr sp ofs).
-Proof.
+Proof using.
   intros. inv H.
 - inv H3. replace b with sp by (eapply bc_stack; eauto). constructor.
 - constructor.
@@ -1288,7 +1288,7 @@ Lemma unop_int_sound:
   forall sem v x,
   vmatch v x ->
   vmatch (match v with Vint i => Vint(sem i) | _ => Vundef end) (unop_int sem x).
-Proof.
+Proof using.
   intros. unfold unop_int; inv H; auto with va.
 Qed.
 
@@ -1302,7 +1302,7 @@ Lemma binop_int_sound:
   forall sem v x w y,
   vmatch v x -> vmatch w y ->
   vmatch (match v, w with Vint i, Vint j => Vint(sem i j) | _, _ => Vundef end) (binop_int sem x y).
-Proof.
+Proof using.
   intros. unfold binop_int; inv H; auto with va; inv H0; auto with va.
 Qed.
 
@@ -1313,7 +1313,7 @@ Lemma unop_long_sound:
   forall sem v x,
   vmatch v x ->
   vmatch (match v with Vlong i => Vlong(sem i) | _ => Vundef end) (unop_long sem x).
-Proof.
+Proof using.
   intros. unfold unop_long; inv H; auto with va.
 Qed.
 
@@ -1324,7 +1324,7 @@ Lemma binop_long_sound:
   forall sem v x w y,
   vmatch v x -> vmatch w y ->
   vmatch (match v, w with Vlong i, Vlong j => Vlong(sem i j) | _, _ => Vundef end) (binop_long sem x y).
-Proof.
+Proof using.
   intros. unfold binop_long; inv H; auto with va; inv H0; auto with va.
 Qed.
 
@@ -1335,7 +1335,7 @@ Lemma unop_float_sound:
   forall sem v x,
   vmatch v x ->
   vmatch (match v with Vfloat i => Vfloat(sem i) | _ => Vundef end) (unop_float sem x).
-Proof.
+Proof using.
   intros. unfold unop_float; inv H; auto with va.
 Qed.
 
@@ -1346,7 +1346,7 @@ Lemma binop_float_sound:
   forall sem v x w y,
   vmatch v x -> vmatch w y ->
   vmatch (match v, w with Vfloat i, Vfloat j => Vfloat(sem i j) | _, _ => Vundef end) (binop_float sem x y).
-Proof.
+Proof using.
   intros. unfold binop_float; inv H; auto with va; inv H0; auto with va.
 Qed.
 
@@ -1357,7 +1357,7 @@ Lemma unop_single_sound:
   forall sem v x,
   vmatch v x ->
   vmatch (match v with Vsingle i => Vsingle(sem i) | _ => Vundef end) (unop_single sem x).
-Proof.
+Proof using.
   intros. unfold unop_single; inv H; auto with va.
 Qed.
 
@@ -1368,7 +1368,7 @@ Lemma binop_single_sound:
   forall sem v x w y,
   vmatch v x -> vmatch w y ->
   vmatch (match v, w with Vsingle i, Vsingle j => Vsingle(sem i j) | _, _ => Vundef end) (binop_single sem x y).
-Proof.
+Proof using.
   intros. unfold binop_single; inv H; auto with va; inv H0; auto with va.
 Qed.
 
@@ -1391,7 +1391,7 @@ Definition shl (v w: aval) :=
 
 Lemma shl_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.shl v w) (shl x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: vmatch (Val.shl v w) (ntop1 x)).
   {
@@ -1427,7 +1427,7 @@ Definition shru (v w: aval) :=
 
 Lemma shru_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.shru v w) (shru x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: vmatch (Val.shru v w) (ntop1 x)).
   {
@@ -1467,7 +1467,7 @@ Definition shr (v w: aval) :=
 
 Lemma shr_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.shr v w) (shr x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: vmatch (Val.shr v w) (ntop1 x)).
   {
@@ -1517,7 +1517,7 @@ Definition and (v w: aval) :=
 
 Lemma and_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.and v w) (and x y).
-Proof.
+Proof using.
   assert (UNS_l: forall i j n, is_uns n i -> is_uns n (Int.and i j)).
   {
     intros; red; intros. rewrite Int.bits_and by auto. rewrite (H m) by auto.
@@ -1551,7 +1551,7 @@ Definition or (v w: aval) :=
 
 Lemma or_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.or v w) (or x y).
-Proof.
+Proof using.
   assert (UNS: forall i j n m, is_uns n i -> is_uns m j -> is_uns (Z.max n m) (Int.or i j)).
   {
     intros; red; intros. rewrite Int.bits_or by auto.
@@ -1577,7 +1577,7 @@ Definition xor (v w: aval) :=
 
 Lemma xor_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.xor v w) (xor x y).
-Proof.
+Proof using.
   assert (UNS: forall i j n m, is_uns n i -> is_uns m j -> is_uns (Z.max n m) (Int.xor i j)).
   {
     intros; red; intros. rewrite Int.bits_xor by auto.
@@ -1602,7 +1602,7 @@ Definition notint (v: aval) :=
 
 Lemma notint_sound:
   forall v x, vmatch v x -> vmatch (Val.notint v) (notint x).
-Proof.
+Proof using.
   assert (SGN: forall n i, is_sgn n i -> is_sgn n (Int.not i)).
   {
     intros; red; intros. rewrite ! Int.bits_not by lia.
@@ -1622,7 +1622,7 @@ Definition rol (x y: aval) :=
 
 Lemma rol_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.rol v w) (rol x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: forall p, vmatch (Val.rol v w) (Num p)).
   {
@@ -1651,7 +1651,7 @@ Definition ror (x y: aval) :=
 
 Lemma ror_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.ror v w) (ror x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: forall p, vmatch (Val.ror v w) (Num p)).
   {
@@ -1667,7 +1667,7 @@ Definition rolm (x: aval) (amount mask: int) :=
 Lemma rolm_sound:
   forall v x amount mask,
   vmatch v x -> vmatch (Val.rolm v amount mask) (rolm x amount mask).
-Proof.
+Proof using.
   intros.
   replace (Val.rolm v amount mask) with (Val.and (Val.rol v (Vint amount)) (Vint mask)).
   apply and_sound. apply rol_sound. auto. constructor. constructor.
@@ -1686,7 +1686,7 @@ Definition neg (x: aval) :=
 
 Lemma neg_sound:
   forall v x, vmatch v x -> vmatch (Val.neg v) (neg x).
-Proof.
+Proof using.
   destruct 1; simpl; eauto with va.
   assert (A: Int.neg i = Int.repr (- Int.signed i)).
   { intros. apply Int.eqm_samerepr. apply eqmod_neg. apply Int.eqm_sym. apply Int.eqm_signed_unsigned. }
@@ -1717,7 +1717,7 @@ Definition add (x y: aval) :=
 
 Lemma add_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.add v w) (add x y).
-Proof.
+Proof using.
   assert (UNS: forall n i m j,
                0 <= n -> 0 <= m -> is_uns n i -> is_uns m j ->
                is_uns (Z.max n m + 1) (Int.add i j)).
@@ -1768,7 +1768,7 @@ Definition sub (v w: aval) :=
 
 Lemma sub_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.sub v w) (sub x y).
-Proof.
+Proof using.
   assert (UNS: forall n i m j,
                0 <= n -> 0 <= m -> is_uns n i -> is_uns m j ->
                is_sgn (Z.max n m + 1) (Int.sub i j)).
@@ -1811,7 +1811,7 @@ Definition mul_base (v w: aval) :=
 
 Lemma mul_base_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mul v w) (mul_base x y).
-Proof.
+Proof using.
   intros.
   assert (UNS: forall i1 i2 n1 n2 p,
              0 <= n1 -> is_uns n1 i1 ->
@@ -1842,7 +1842,7 @@ Definition mul (v w: aval) :=
 
 Lemma mul_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mul v w) (mul x y).
-Proof.
+Proof using.
   intros.
   assert (vmatch (Val.mul v w)
             (if vincl x (Uns Ptop 0) || vincl y (Uns Ptop 0)
@@ -1865,7 +1865,7 @@ Definition mulhs_base (v w: aval) :=
 
 Lemma mulhs_base_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mulhs v w) (mulhs_base x y).
-Proof.
+Proof using.
   intros. unfold Val.mulhs, mulhs_base; destruct v, w; auto with va.
   rename i0 into j.
   apply srange_sound in H. destruct H as [A1 B1]. apply range_is_sgn in B1; auto.
@@ -1893,7 +1893,7 @@ Definition mulhs (v w: aval) :=
 
 Lemma mulhs_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mulhs v w) (mulhs x y).
-Proof.
+Proof using.
   intros. unfold mulhs.
   destruct (vincl x (Uns Ptop 0) || vincl y (Uns Ptop 0)) eqn:?; auto with va.
   - rewrite orb_true_iff in Heqb;  destruct Heqb.
@@ -1909,7 +1909,7 @@ Definition mulhu_base (v w: aval) :=
 
 Lemma mulhu_base_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mulhu v w) (mulhu_base x y).
-Proof.
+Proof using.
   intros. unfold Val.mulhu, mulhu_base; destruct v, w; auto with va.
   apply urange_sound in H. destruct H as [A1 B1]. apply range_is_uns in B1; auto.
   apply urange_sound in H0. destruct H0 as [A2 B2]. apply range_is_uns in B2; auto.
@@ -1933,7 +1933,7 @@ Definition mulhu (v w: aval):=
 
 Lemma mulhu_sound:
   forall v x w y, vmatch v x -> vmatch w y -> vmatch (Val.mulhu v w) (mulhu x y).
-Proof.
+Proof using.
   intros. destruct (vincl x (Uns Ptop 1) || vincl y (Uns Ptop 1)) eqn:?; try eapply mulhu_base_sound; eauto; unfold mulhu; rewrite Heqb.
   - rewrite orb_true_iff in Heqb. destruct Heqb.
     exploit (vmatch_Uns_1 Ptop v). eapply vmatch_ge; eauto. eapply vincl_ge; eauto.
@@ -1963,7 +1963,7 @@ Definition divs (v w: aval) :=
 
 Lemma divs_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.divs v w = Some u -> vmatch u (divs x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   destruct orb eqn:E; inv H1.
   rename i0 into j.
@@ -1995,7 +1995,7 @@ Definition divu (v w: aval) :=
 
 Lemma divu_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.divu v w = Some u -> vmatch u (divu x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   rename i0 into j. destruct (Int.eq j Int.zero) eqn:E; inv H1.
   assert (Int.unsigned j <> 0).
@@ -2022,7 +2022,7 @@ Definition mods (v w: aval) :=
 
 Lemma mods_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.mods v w = Some u -> vmatch u (mods x y).
-Proof.
+Proof using.
   assert (SGN: forall i j, Int.eq j Int.zero = false -> is_sgn (ssize j) (Int.mods i j)).
   {
     intros. unfold Int.mods.
@@ -2051,7 +2051,7 @@ Definition modu (v w: aval) :=
 
 Lemma modu_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.modu v w = Some u -> vmatch u (modu x y).
-Proof.
+Proof using.
   assert (UNS: forall i j, j <> Int.zero -> is_uns (usize j) (Int.modu i j)).
   {
     intros. apply is_uns_mon with (usize (Int.modu i j)); auto with va.
@@ -2076,7 +2076,7 @@ Definition shrx (v w: aval) :=
 
 Lemma shrx_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.shrx v w = Some u -> vmatch u (shrx x y).
-Proof.
+Proof using.
   intros.
   destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int.ltu i0 (Int.repr 31)) eqn:LTU; inv H1.
@@ -2106,7 +2106,7 @@ Lemma shift_long_sound:
                                then Vlong (sem i j) else Vundef
           | _, _ => Vundef end)
          (shift_long sem x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT:
     vmatch (match v, w with
@@ -2177,7 +2177,7 @@ Lemma rotate_long_sound:
           | Vlong i, Vint j => Vlong (sem i (Int64.repr (Int.unsigned j)))
           | _, _ => Vundef end)
          (rotate_long sem x y).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT:
     vmatch (match v, w with
@@ -2219,7 +2219,7 @@ Definition addl (x y: aval) :=
 
 Lemma addl_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.addl v w) (addl x y).
-Proof.
+Proof using.
   intros. unfold Val.addl, addl. destruct Archi.ptr64.
 - inv H; inv H0; constructor;
   ((apply padd_sound; assumption) || (eapply poffset_sound; eassumption) || idtac).
@@ -2240,7 +2240,7 @@ Definition subl (v w: aval) :=
 
 Lemma subl_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.subl v w) (subl x y).
-Proof.
+Proof using.
   intros. unfold Val.subl, subl. destruct Archi.ptr64.
 - inv H; inv H0; try (destruct (eq_block b b0)); eauto using psub_sound, poffset_sound, pmatch_lub_l with va.
 - inv H; inv H0; eauto with va.
@@ -2276,7 +2276,7 @@ Definition divls (v w: aval) :=
 
 Lemma divls_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.divls v w = Some u -> vmatch u (divls x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int64.eq i0 Int64.zero
          || Int64.eq i (Int64.repr Int64.min_signed) && Int64.eq i0 Int64.mone) eqn:E; inv H1.
@@ -2294,7 +2294,7 @@ Definition divlu (v w: aval) :=
 
 Lemma divlu_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.divlu v w = Some u -> vmatch u (divlu x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int64.eq i0 Int64.zero) eqn:E; inv H1.
   inv H; inv H0; auto with va. simpl. rewrite E. constructor.
@@ -2312,7 +2312,7 @@ Definition modls (v w: aval) :=
 
 Lemma modls_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.modls v w = Some u -> vmatch u (modls x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int64.eq i0 Int64.zero
          || Int64.eq i (Int64.repr Int64.min_signed) && Int64.eq i0 Int64.mone) eqn:E; inv H1.
@@ -2330,7 +2330,7 @@ Definition modlu (v w: aval) :=
 
 Lemma modlu_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.modlu v w = Some u -> vmatch u (modlu x y).
-Proof.
+Proof using.
   intros. destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int64.eq i0 Int64.zero) eqn:E; inv H1.
   inv H; inv H0; auto with va. simpl. rewrite E. constructor.
@@ -2344,7 +2344,7 @@ Definition shrxl (v w: aval) :=
 
 Lemma shrxl_sound:
   forall v w u x y, vmatch v x -> vmatch w y -> Val.shrxl v w = Some u -> vmatch u (shrxl x y).
-Proof.
+Proof using.
   intros.
   destruct v; destruct w; try discriminate; simpl in H1.
   destruct (Int.ltu i0 (Int.repr 63)) eqn:LTU; inv H1.
@@ -2358,7 +2358,7 @@ Definition rolml (x: aval) (amount: int) (mask: int64) :=
 Lemma rolml_sound:
   forall v x amount mask,
   vmatch v x -> vmatch (Val.rolml v amount mask) (rolml x amount mask).
-Proof.
+Proof using.
   intros.
   replace (Val.rolml v amount mask) with (Val.andl (Val.roll v (Vint amount)) (Vlong mask)).
   apply andl_sound. apply roll_sound. auto. constructor. constructor.
@@ -2376,7 +2376,7 @@ Definition offset_ptr (v: aval) (n: ptrofs) :=
 
 Lemma offset_ptr_sound:
   forall v x n, vmatch v x -> vmatch (Val.offset_ptr v n) (offset_ptr x n).
-Proof.
+Proof using.
   intros. unfold Val.offset_ptr, offset_ptr.
   inv H; constructor; apply padd_sound; assumption.
 Qed.
@@ -2467,7 +2467,7 @@ Definition zero_ext (nbits: Z) (v: aval) :=
 
 Lemma zero_ext_sound:
   forall nbits v x, vmatch v x -> vmatch (Val.zero_ext nbits v) (zero_ext nbits x).
-Proof.
+Proof using.
   assert (DFL: forall nbits i, is_uns nbits (Int.zero_ext nbits i)).
   {
     intros; red; intros. rewrite Int.bits_zero_ext by lia. apply zlt_false; auto.
@@ -2490,7 +2490,7 @@ Definition sign_ext (nbits: Z) (v: aval) :=
 
 Lemma sign_ext_sound:
   forall nbits v x, vmatch v x -> vmatch (Val.sign_ext nbits v) (sign_ext nbits x).
-Proof.
+Proof using.
   assert (DFL: forall p nbits i, 0 < nbits -> vmatch (Vint (Int.sign_ext nbits i)) (sgn p nbits)).
   {
     intros. apply vmatch_sgn. apply is_sign_ext_sgn; auto with va.
@@ -2510,7 +2510,7 @@ Definition zero_ext_l (s: Z) := unop_long (Int64.zero_ext s).
 
 Lemma zero_ext_l_sound:
   forall s v x, vmatch v x -> vmatch (Val.zero_ext_l s v) (zero_ext_l s x).
-Proof.
+Proof using.
   intros s. exact (unop_long_sound (Int64.zero_ext s)).
 Qed.
 
@@ -2518,7 +2518,7 @@ Definition sign_ext_l (s: Z) := unop_long (Int64.sign_ext s).
 
 Lemma sign_ext_l_sound:
   forall s v x, vmatch v x -> vmatch (Val.sign_ext_l s v) (sign_ext_l s x).
-Proof.
+Proof using.
   intros s. exact (unop_long_sound (Int64.sign_ext s)).
 Qed.
 
@@ -2530,7 +2530,7 @@ Definition longofint (v: aval) :=
 
 Lemma longofint_sound:
   forall v x, vmatch v x -> vmatch (Val.longofint v) (longofint x).
-Proof.
+Proof using.
   unfold Val.longofint, longofint; intros; inv H; auto with va.
 Qed.
 
@@ -2542,7 +2542,7 @@ Definition longofintu (v: aval) :=
 
 Lemma longofintu_sound:
   forall v x, vmatch v x -> vmatch (Val.longofintu v) (longofintu x).
-Proof.
+Proof using.
   unfold Val.longofintu, longofintu; intros; inv H; auto with va.
 Qed.
 
@@ -2554,7 +2554,7 @@ Definition singleoffloat (v: aval) :=
 
 Lemma singleoffloat_sound:
   forall v x, vmatch v x -> vmatch (Val.singleoffloat v) (singleoffloat x).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: vmatch (Val.singleoffloat v) (ntop1 x)).
   { destruct v; constructor. }
@@ -2569,7 +2569,7 @@ Definition floatofsingle (v: aval) :=
 
 Lemma floatofsingle_sound:
   forall v x, vmatch v x -> vmatch (Val.floatofsingle v) (floatofsingle x).
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: vmatch (Val.floatofsingle v) (ntop1 x)).
   { destruct v; constructor. }
@@ -2588,7 +2588,7 @@ Definition intoffloat (x: aval) :=
 
 Lemma intoffloat_sound:
   forall v x w, vmatch v x -> Val.intoffloat v = Some w -> vmatch w (intoffloat x).
-Proof.
+Proof using.
   unfold Val.intoffloat; intros. destruct v; try discriminate.
   destruct (Float.to_int f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2606,7 +2606,7 @@ Definition intuoffloat (x: aval) :=
 
 Lemma intuoffloat_sound:
   forall v x w, vmatch v x -> Val.intuoffloat v = Some w -> vmatch w (intuoffloat x).
-Proof.
+Proof using.
   unfold Val.intuoffloat; intros. destruct v; try discriminate.
   destruct (Float.to_intu f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2620,7 +2620,7 @@ Definition floatofint (x: aval) :=
 
 Lemma floatofint_sound:
   forall v x w, vmatch v x -> Val.floatofint v = Some w -> vmatch w (floatofint x).
-Proof.
+Proof using.
   unfold Val.floatofint; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2633,7 +2633,7 @@ Definition floatofintu (x: aval) :=
 
 Lemma floatofintu_sound:
   forall v x w, vmatch v x -> Val.floatofintu v = Some w -> vmatch w (floatofintu x).
-Proof.
+Proof using.
   unfold Val.floatofintu; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2650,7 +2650,7 @@ Definition intofsingle (x: aval) :=
 
 Lemma intofsingle_sound:
   forall v x w, vmatch v x -> Val.intofsingle v = Some w -> vmatch w (intofsingle x).
-Proof.
+Proof using.
   unfold Val.intofsingle; intros. destruct v; try discriminate.
   destruct (Float32.to_int f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2668,7 +2668,7 @@ Definition intuofsingle (x: aval) :=
 
 Lemma intuofsingle_sound:
   forall v x w, vmatch v x -> Val.intuofsingle v = Some w -> vmatch w (intuofsingle x).
-Proof.
+Proof using.
   unfold Val.intuofsingle; intros. destruct v; try discriminate.
   destruct (Float32.to_intu f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2682,7 +2682,7 @@ Definition singleofint (x: aval) :=
 
 Lemma singleofint_sound:
   forall v x w, vmatch v x -> Val.singleofint v = Some w -> vmatch w (singleofint x).
-Proof.
+Proof using.
   unfold Val.singleofint; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2695,7 +2695,7 @@ Definition singleofintu (x: aval) :=
 
 Lemma singleofintu_sound:
   forall v x w, vmatch v x -> Val.singleofintu v = Some w -> vmatch w (singleofintu x).
-Proof.
+Proof using.
   unfold Val.singleofintu; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2712,7 +2712,7 @@ Definition longoffloat (x: aval) :=
 
 Lemma longoffloat_sound:
   forall v x w, vmatch v x -> Val.longoffloat v = Some w -> vmatch w (longoffloat x).
-Proof.
+Proof using.
   unfold Val.longoffloat; intros. destruct v; try discriminate.
   destruct (Float.to_long f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2730,7 +2730,7 @@ Definition longuoffloat (x: aval) :=
 
 Lemma longuoffloat_sound:
   forall v x w, vmatch v x -> Val.longuoffloat v = Some w -> vmatch w (longuoffloat x).
-Proof.
+Proof using.
   unfold Val.longuoffloat; intros. destruct v; try discriminate.
   destruct (Float.to_longu f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2744,7 +2744,7 @@ Definition floatoflong (x: aval) :=
 
 Lemma floatoflong_sound:
   forall v x w, vmatch v x -> Val.floatoflong v = Some w -> vmatch w (floatoflong x).
-Proof.
+Proof using.
   unfold Val.floatoflong; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2757,7 +2757,7 @@ Definition floatoflongu (x: aval) :=
 
 Lemma floatoflongu_sound:
   forall v x w, vmatch v x -> Val.floatoflongu v = Some w -> vmatch w (floatoflongu x).
-Proof.
+Proof using.
   unfold Val.floatoflongu; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2774,7 +2774,7 @@ Definition longofsingle (x: aval) :=
 
 Lemma longofsingle_sound:
   forall v x w, vmatch v x -> Val.longofsingle v = Some w -> vmatch w (longofsingle x).
-Proof.
+Proof using.
   unfold Val.longofsingle; intros. destruct v; try discriminate.
   destruct (Float32.to_long f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2792,7 +2792,7 @@ Definition longuofsingle (x: aval) :=
 
 Lemma longuofsingle_sound:
   forall v x w, vmatch v x -> Val.longuofsingle v = Some w -> vmatch w (longuofsingle x).
-Proof.
+Proof using.
   unfold Val.longuofsingle; intros. destruct v; try discriminate.
   destruct (Float32.to_longu f) as [i|] eqn:E; simpl in H0; inv H0.
   inv H; simpl; auto with va. rewrite E; constructor.
@@ -2806,7 +2806,7 @@ Definition singleoflong (x: aval) :=
 
 Lemma singleoflong_sound:
   forall v x w, vmatch v x -> Val.singleoflong v = Some w -> vmatch w (singleoflong x).
-Proof.
+Proof using.
   unfold Val.singleoflong; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2819,7 +2819,7 @@ Definition singleoflongu (x: aval) :=
 
 Lemma singleoflongu_sound:
   forall v x w, vmatch v x -> Val.singleoflongu v = Some w -> vmatch w (singleoflongu x).
-Proof.
+Proof using.
   unfold Val.singleoflongu; intros. destruct v; inv H0.
   inv H; simpl; auto with va.
 Qed.
@@ -2832,7 +2832,7 @@ Definition floatofwords (x y: aval) :=
 
 Lemma floatofwords_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.floatofwords v w) (floatofwords x y).
-Proof.
+Proof using.
   intros. unfold floatofwords; inv H; simpl; auto with va; inv H0; auto with va.
 Qed.
 
@@ -2844,7 +2844,7 @@ Definition longofwords (x y: aval) :=
 
 Lemma longofwords_sound:
   forall v w x y, vmatch v x -> vmatch w y -> vmatch (Val.longofwords v w) (longofwords x y).
-Proof.
+Proof using.
   intros. unfold longofwords; inv H0; inv H; simpl; auto with va.
 Qed.
 
@@ -2855,7 +2855,7 @@ Definition loword (x: aval) :=
   end.
 
 Lemma loword_sound: forall v x, vmatch v x -> vmatch (Val.loword v) (loword x).
-Proof.
+Proof using.
   destruct 1; simpl; auto with va.
 Qed.
 
@@ -2866,7 +2866,7 @@ Definition hiword (x: aval) :=
   end.
 
 Lemma hiword_sound: forall v x, vmatch v x -> vmatch (Val.hiword v) (hiword x).
-Proof.
+Proof using.
   destruct 1; simpl; auto with va.
 Qed.
 
@@ -2897,7 +2897,7 @@ Lemma zcmp_intv_sound:
   forall c i x n,
   fst i <= x <= snd i ->
   cmatch (Some (zcmp c x n)) (cmp_intv c i n).
-Proof.
+Proof using.
   intros c [lo hi] x n; simpl; intros R.
   destruct c; unfold zcmp, proj_sumbool.
 - (* eq *)
@@ -2926,7 +2926,7 @@ Qed.
 
 Lemma cmp_intv_None:
   forall c i n, cmatch None (cmp_intv c i n).
-Proof.
+Proof using.
   unfold cmp_intv; intros. destruct i as [lo hi].
   destruct c.
 - (* eq *)
@@ -2952,7 +2952,7 @@ Definition uintv (v: aval) : Z * Z :=
 
 Lemma uintv_sound:
   forall n v, vmatch (Vint n) v -> fst (uintv v) <= Int.unsigned n <= snd (uintv v).
-Proof.
+Proof using.
   intros. inv H; simpl; try (apply Int.unsigned_range_2).
 - lia.
 - destruct (zlt n0 Int.zwordsize); simpl.
@@ -2965,7 +2965,7 @@ Lemma cmpu_intv_sound:
   forall valid c n1 v1 n2,
   vmatch (Vint n1) v1 ->
   cmatch (Val.cmpu_bool valid c (Vint n1) (Vint n2)) (cmp_intv c (uintv v1) (Int.unsigned n2)).
-Proof.
+Proof using.
   intros. simpl. replace (Int.cmpu c n1 n2) with (zcmp c (Int.unsigned n1) (Int.unsigned n2)).
   apply zcmp_intv_sound; apply uintv_sound; auto.
   destruct c; simpl; auto.
@@ -2977,7 +2977,7 @@ Lemma cmpu_intv_sound_2:
   forall valid c n1 v1 n2,
   vmatch (Vint n1) v1 ->
   cmatch (Val.cmpu_bool valid c (Vint n2) (Vint n1)) (cmp_intv (swap_comparison c) (uintv v1) (Int.unsigned n2)).
-Proof.
+Proof using.
   intros. rewrite <- Val.swap_cmpu_bool. apply cmpu_intv_sound; auto.
 Qed.
 
@@ -2995,7 +2995,7 @@ Definition sintv (v: aval) : Z * Z :=
 
 Lemma sintv_sound:
   forall n v, vmatch (Vint n) v -> fst (sintv v) <= Int.signed n <= snd (sintv v).
-Proof.
+Proof using.
   intros. inv H; simpl; try (apply Int.signed_range).
 - lia.
 - destruct (zlt n0 Int.zwordsize); simpl.
@@ -3020,7 +3020,7 @@ Lemma cmp_intv_sound:
   forall c n1 v1 n2,
   vmatch (Vint n1) v1 ->
   cmatch (Val.cmp_bool c (Vint n1) (Vint n2)) (cmp_intv c (sintv v1) (Int.signed n2)).
-Proof.
+Proof using.
   intros. simpl. replace (Int.cmp c n1 n2) with (zcmp c (Int.signed n1) (Int.signed n2)).
   apply zcmp_intv_sound; apply sintv_sound; auto.
   destruct c; simpl; rewrite ? Int.eq_signed; auto.
@@ -3032,7 +3032,7 @@ Lemma cmp_intv_sound_2:
   forall c n1 v1 n2,
   vmatch (Vint n1) v1 ->
   cmatch (Val.cmp_bool c (Vint n2) (Vint n1)) (cmp_intv (swap_comparison c) (sintv v1) (Int.signed n2)).
-Proof.
+Proof using.
   intros. rewrite <- Val.swap_cmp_bool. apply cmp_intv_sound; auto.
 Qed.
 
@@ -3052,7 +3052,7 @@ Definition cmpu_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmpu_bool_sound:
   forall valid c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmpu_bool valid c v w) (cmpu_bool c x y).
-Proof.
+Proof using.
   intros.
   assert (IP: forall i b ofs,
     cmatch (Val.cmpu_bool valid c (Vint i) (Vptr b ofs)) (cmp_different_blocks c)).
@@ -3100,7 +3100,7 @@ Definition cmp_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmp_bool_sound:
   forall c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmp_bool c v w) (cmp_bool c x y).
-Proof.
+Proof using.
   intros.
   unfold cmp_bool; inversion H; subst; inversion H0; subst;
   auto using cmatch_top, cmp_intv_sound, cmp_intv_sound_2, cmp_intv_None;
@@ -3118,7 +3118,7 @@ Definition cmplu_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmplu_bool_sound:
   forall valid c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmplu_bool valid c v w) (cmplu_bool c x y).
-Proof.
+Proof using.
   intros.
   assert (IP: forall i b ofs,
     cmatch (Val.cmplu_bool valid c (Vlong i) (Vptr b ofs)) (cmp_different_blocks c)).
@@ -3154,7 +3154,7 @@ Definition cmpl_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmpl_bool_sound:
   forall c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmpl_bool c v w) (cmpl_bool c x y).
-Proof.
+Proof using.
   intros.
   unfold cmpl_bool; inversion H; subst; inversion H0; subst;
   auto using cmatch_top.
@@ -3169,7 +3169,7 @@ Definition cmpf_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmpf_bool_sound:
   forall c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmpf_bool c v w) (cmpf_bool c x y).
-Proof.
+Proof using.
   intros. inv H; try constructor; inv H0; constructor.
 Qed.
 
@@ -3181,7 +3181,7 @@ Definition cmpfs_bool (c: comparison) (v w: aval) : abool :=
 
 Lemma cmpfs_bool_sound:
   forall c v w x y, vmatch v x -> vmatch w y -> cmatch (Val.cmpfs_bool c v w) (cmpfs_bool c x y).
-Proof.
+Proof using.
   intros. inv H; try constructor; inv H0; constructor.
 Qed.
 
@@ -3197,7 +3197,7 @@ Lemma maskzero_sound:
   forall mask v x,
   vmatch v x ->
   cmatch (Val.maskzero_bool v mask) (maskzero x mask).
-Proof.
+Proof using.
   intros. inv H; simpl; auto with va.
   predSpec Int.eq Int.eq_spec (Int.zero_ext n mask) Int.zero; auto with va.
   replace (Int.and i mask) with Int.zero.
@@ -3217,7 +3217,7 @@ Definition of_optbool (ab: abool) : aval :=
 
 Lemma of_optbool_sound:
   forall ob ab, cmatch ob ab -> vmatch (Val.of_optbool ob) (of_optbool ab).
-Proof.
+Proof using.
   intros. inv H; simpl; auto with va.
 - destruct b; constructor.
 - destruct b; constructor.
@@ -3237,7 +3237,7 @@ Definition resolve_branch (ab: abool) : option bool :=
 Lemma resolve_branch_sound:
   forall b ab b',
   cmatch (Some b) ab -> resolve_branch ab = Some b' -> b' = b.
-Proof.
+Proof using.
   intros. inv H; simpl in H0; congruence.
 Qed.
 
@@ -3254,13 +3254,13 @@ Definition add_undef (x: aval) :=
 
 Lemma add_undef_sound:
   forall v x, vmatch v x -> vmatch v (add_undef x).
-Proof.
+Proof using.
   destruct 1; simpl; auto with va.
 Qed.
 
 Lemma add_undef_undef:
   forall x, vmatch Vundef (add_undef x).
-Proof.
+Proof using.
   destruct x; simpl; auto with va.
 Qed.
 
@@ -3280,7 +3280,7 @@ Definition vnormalize_type (ty: typ) (x: aval) : aval :=
 
 Lemma vnormalize_type_sound: forall v x ty,
   vmatch v x -> vmatch (Val.normalize v ty) (vnormalize_type ty x).
-Proof.
+Proof using.
   intros.
   assert (A: Val.has_type v ty /\ vnormalize_type ty x = x
           \/ vnormalize_type ty x = add_undef x).
@@ -3305,7 +3305,7 @@ Lemma select_sound:
   forall ob v w ab x y ty,
   cmatch ob ab -> vmatch v x -> vmatch w y ->
   vmatch (Val.select ob v w ty) (select ab x y ty).
-Proof.
+Proof using.
   unfold Val.select, select; intros. inv H.
 - auto with va.
 - apply vnormalize_type_sound; destruct b; auto.
@@ -3365,7 +3365,7 @@ Definition vnormalize (chunk: memory_chunk) (v: aval) :=
 
 Lemma vnormalize_sound:
   forall chunk v x, vmatch v x -> vmatch (Val.load_result chunk v) (vnormalize chunk x).
-Proof.
+Proof using.
   unfold Val.load_result, vnormalize; generalize Archi.ptr64; intros ptr64;
   induction 1; destruct chunk; eauto using is_zero_ext_uns, is_sign_ext_sgn with va;
   try (destruct ptr64; auto with va; fail).
@@ -3397,7 +3397,7 @@ Lemma vnormalize_cast:
   Mem.load chunk m b ofs = Some v ->
   vmatch v (Ifptr p) ->
   vmatch v (vnormalize chunk (Ifptr p)).
-Proof.
+Proof using.
   intros. exploit Mem.load_cast; eauto. exploit Mem.load_type; eauto.
   destruct chunk; simpl; intros.
 - (* bool *)
@@ -3425,32 +3425,32 @@ Proof.
 Qed.
 
 Remark poffset_ge: forall p, pge (poffset p) p.
-Proof.
+Proof using.
   destruct p; constructor.
 Qed.
 
 Remark poffset_monotone:
   forall p q, pge p q -> pge (poffset p) (poffset q).
-Proof.
+Proof using.
   destruct 1; simpl; auto with va.
 Qed.
 
 Remark provenance_monotone:
   forall x y, vge x y -> pge (provenance x) (provenance y).
-Proof.
+Proof using.
   induction 1; simpl; eauto using poffset_ge, poffset_monotone, pge_trans with va.
 Qed.
 
 Remark provenance_ifptr_ge:
   forall p q, pge p q -> pge (provenance (Ifptr p)) q.
-Proof.
+Proof using.
   intros. simpl. apply pge_trans with p; auto. apply poffset_ge.
 Qed.
 
 Lemma vnormalize_monotone:
   forall chunk x y,
   vge x y -> vge (vnormalize chunk x) (vnormalize chunk y).
-Proof with (auto using provenance_monotone, provenance_ifptr_ge with va).
+Proof using () with (auto using provenance_monotone, provenance_ifptr_ge with va).
 Local Opaque provenance.
   assert (BOOL1: forall p i,
           vge (Uns p 1) (if Int.eq i Int.zero || Int.eq i Int.one then IU i else Uns Pbot 1)).
@@ -3540,19 +3540,19 @@ Definition aval_of_val (v: val) : option aval :=
 
 Lemma val_of_aval_sound:
   forall v a, vmatch v a -> Val.lessdef (val_of_aval a) v.
-Proof.
+Proof using.
   destruct 1; simpl; auto.
 Qed.
 
 Corollary list_val_of_aval_sound:
   forall vl al, list_forall2 vmatch vl al -> Val.lessdef_list (map val_of_aval al) vl.
-Proof.
+Proof using.
   induction 1; simpl; constructor; auto using val_of_aval_sound.
 Qed.
 
 Lemma aval_of_val_sound:
   forall v a, aval_of_val v = Some a -> vmatch v a. 
-Proof.
+Proof using.
   intros v a E; destruct v; simpl in E; inv E; constructor.
 Qed.
 
@@ -3572,7 +3572,7 @@ Lemma of_xtype_arg_sound: forall v x p,
   Val.has_argtype v x ->
   vmatch v (Ifptr p) ->
   vmatch v (of_xtype x p).
-Proof.
+Proof using.
   intros. destruct x, v; simpl in *; try contradiction; auto with va.
 - constructor. lia. apply is_uns_zero_ext. destruct H; subst i; auto.
 - constructor. lia. apply is_sgn_sign_ext. lia. auto.
@@ -3587,7 +3587,7 @@ Inductive acontent : Type :=
  | ACval (chunk: memory_chunk) (av: aval).
 
 Definition eq_acontent : forall (c1 c2: acontent), {c1=c2} + {c1<>c2}.
-Proof.
+Proof using.
   intros. generalize chunk_eq eq_aval. decide equality.
 Defined.
 
@@ -3630,7 +3630,7 @@ Function inval_after (lo: Z) (hi: Z) (c: ZTree.t acontent) { wf (Zwf lo) hi } : 
   if zle lo hi
   then inval_after lo (hi - 1) (ZTree.remove hi c)
   else c.
-Proof.
+Proof using.
   intros; red; lia.
   apply Zwf_well_founded.
 Qed.
@@ -3645,7 +3645,7 @@ Function inval_before (hi: Z) (lo: Z) (c: ZTree.t acontent) { wf (Zwf_up hi) lo 
   if zlt lo hi
   then inval_before hi (lo + 1) (inval_if hi lo c)
   else c.
-Proof.
+Proof using.
   intros; red; lia.
   apply Zwf_up_well_founded.
 Qed.
@@ -3681,7 +3681,7 @@ Remark loadbytes_load_ext:
   forall b m m',
   (forall ofs n bytes, Mem.loadbytes m' b ofs n = Some bytes -> n >= 0 -> Mem.loadbytes m b ofs n = Some bytes) ->
   forall chunk ofs v, Mem.load chunk m' b ofs = Some v -> Mem.load chunk m b ofs = Some v.
-Proof.
+Proof using.
   intros. exploit Mem.load_loadbytes; eauto. intros [bytes [A B]].
   exploit Mem.load_valid_access; eauto. intros [C D].
   subst v. apply Mem.loadbytes_load; auto. apply H; auto. generalize (size_chunk_pos chunk); lia.
@@ -3692,7 +3692,7 @@ Lemma smatch_ext:
   smatch m b p ->
   (forall ofs n bytes, Mem.loadbytes m' b ofs n = Some bytes -> n >= 0 -> Mem.loadbytes m b ofs n = Some bytes) ->
   smatch m' b p.
-Proof.
+Proof using.
   intros. destruct H. split; intros.
   eapply H; eauto. eapply loadbytes_load_ext; eauto.
   eapply H1; eauto. apply H0; eauto. lia.
@@ -3703,14 +3703,14 @@ Lemma smatch_inv:
   smatch m b p ->
   (forall ofs n, n >= 0 -> Mem.loadbytes m' b ofs n = Mem.loadbytes m b ofs n) ->
   smatch m' b p.
-Proof.
+Proof using.
   intros. eapply smatch_ext; eauto.
   intros. rewrite <- H0; eauto.
 Qed.
 
 Lemma smatch_ge:
   forall m b p q, smatch m b p -> pge q p -> smatch m b q.
-Proof.
+Proof using.
   intros. destruct H as [A B]. split; intros.
   apply vmatch_ge with (Ifptr p); eauto with va.
   apply pmatch_ge with p; eauto with va.
@@ -3721,7 +3721,7 @@ Lemma In_loadbytes:
   Mem.loadbytes m b ofs n = Some bytes ->
   In byte bytes ->
   exists ofs', ofs <= ofs' < ofs + n /\ Mem.loadbytes m b ofs' 1 = Some(byte :: nil).
-Proof.
+Proof using.
   intros until n. pattern n.
   apply well_founded_ind with (R := Zwf 0).
 - apply Zwf_well_founded.
@@ -3751,7 +3751,7 @@ Lemma smatch_loadbytes:
   smatch m b p ->
   In (Fragment (Vptr b' ofs') q i) bytes ->
   pmatch b' ofs' p.
-Proof.
+Proof using.
   intros. exploit In_loadbytes; eauto. intros (ofs1 & A & B).
   eapply H0; eauto.
 Qed.
@@ -3762,7 +3762,7 @@ Lemma loadbytes_provenance:
   Mem.loadbytes m b ofs' 1 = Some (byte :: nil) ->
   ofs <= ofs' < ofs + n ->
   In byte bytes.
-Proof.
+Proof using.
   intros until n. pattern n.
   apply well_founded_ind with (R := Zwf 0).
 - apply Zwf_well_founded.
@@ -3783,7 +3783,7 @@ Lemma storebytes_provenance:
   Mem.loadbytes m' b' ofs' 1 = Some (Fragment (Vptr b'' ofs'') q i :: nil) ->
   In (Fragment (Vptr b'' ofs'') q i) bytes
   \/ Mem.loadbytes m b' ofs' 1 = Some (Fragment (Vptr b'' ofs'') q i :: nil).
-Proof.
+Proof using.
   intros.
   assert (EITHER:
             (b' <> b \/ ofs' + 1 <= ofs \/ ofs + Z.of_nat (length bytes) <= ofs')
@@ -3807,7 +3807,7 @@ Lemma store_provenance:
   Mem.loadbytes m' b' ofs' 1 = Some (Fragment (Vptr b'' ofs'') q i :: nil) ->
   v = Vptr b'' ofs'' /\ (chunk = Mint32 \/ chunk = Many32 \/ chunk = Mint64 \/ chunk = Many64)
   \/ Mem.loadbytes m b' ofs' 1 = Some (Fragment (Vptr b'' ofs'') q i :: nil).
-Proof.
+Proof using.
   intros. exploit storebytes_provenance; eauto. eapply Mem.store_storebytes; eauto.
   intros [A|A]; auto. left.
   generalize (encode_val_shape chunk v). intros ENC; inv ENC.
@@ -3828,7 +3828,7 @@ Lemma smatch_store:
   smatch m b' p ->
   vmatch v av ->
   smatch m' b' (vplub av p).
-Proof.
+Proof using.
   intros. destruct H0 as [A B]. split.
 - intros chunk' ofs' v' LOAD. destruct v'; auto with va.
   exploit Mem.load_pointer_store; eauto.
@@ -3852,7 +3852,7 @@ Lemma smatch_storebytes:
   smatch m b' p ->
   (forall b' ofs' q i, In (Fragment (Vptr b' ofs') q i) bytes -> pmatch b' ofs' p') ->
   smatch m' b' (plub p' p).
-Proof.
+Proof using.
   intros. destruct H0 as [A B]. split.
 - intros. apply vmatch_ifptr. intros bx ofsx EQ; subst v.
   exploit Mem.load_loadbytes; eauto. intros (bytes' & P & Q).
@@ -3882,7 +3882,7 @@ Lemma bmatch_ext:
   bmatch m b ab ->
   (forall ofs n bytes, Mem.loadbytes m' b ofs n = Some bytes -> n >= 0 -> Mem.loadbytes m b ofs n = Some bytes) ->
   bmatch m' b ab.
-Proof.
+Proof using.
   intros. destruct H as [A B]. split; intros.
   apply smatch_ext with m; auto.
   eapply B; eauto. eapply loadbytes_load_ext; eauto.
@@ -3893,7 +3893,7 @@ Lemma bmatch_inv:
   bmatch m b ab ->
   (forall ofs n, n >= 0 -> Mem.loadbytes m' b ofs n = Mem.loadbytes m b ofs n) ->
   bmatch m' b ab.
-Proof.
+Proof using.
   intros. eapply bmatch_ext; eauto.
   intros. rewrite <- H0; eauto.
 Qed.
@@ -3903,7 +3903,7 @@ Lemma ablock_load_sound:
   Mem.load chunk m b ofs = Some v ->
   bmatch m b ab ->
   vmatch v (ablock_load chunk ab ofs).
-Proof.
+Proof using.
   intros. destruct H0. eauto.
 Qed.
 
@@ -3912,14 +3912,14 @@ Lemma ablock_load_anywhere_sound:
   Mem.load chunk m b ofs = Some v ->
   bmatch m b ab ->
   vmatch v (ablock_load_anywhere chunk ab).
-Proof.
+Proof using.
   intros. destruct H0. destruct H0. unfold ablock_load_anywhere.
   eapply vnormalize_cast; eauto.
 Qed.
 
 Lemma ablock_init_sound:
   forall m b p, smatch m b p -> bmatch m b (ablock_init p).
-Proof.
+Proof using.
   intros; split; auto; intros.
   unfold ablock_load, ablock_init; simpl.
   eapply vnormalize_cast; eauto. eapply H; eauto.
@@ -3931,14 +3931,14 @@ Lemma ablock_store_anywhere_sound:
   bmatch m b' ab ->
   vmatch v av ->
   bmatch m' b' (ablock_store_anywhere chunk ab av).
-Proof.
+Proof using.
   intros. destruct H0 as [A B]. unfold ablock_store_anywhere.
   apply ablock_init_sound. eapply smatch_store; eauto.
 Qed.
 
 Remark inval_after_outside:
   forall i lo hi c, i < lo \/ i > hi -> (inval_after lo hi c)##i = c##i.
-Proof.
+Proof using.
   intros until c. functional induction (inval_after lo hi c); intros.
   rewrite IHt by lia. apply ZTree.gro. unfold ZTree.elt, ZIndexed.t; lia.
   auto.
@@ -3948,7 +3948,7 @@ Remark inval_after_contents:
   forall chunk av i lo hi c,
   (inval_after lo hi c)##i = Some (ACval chunk av) ->
   c##i = Some (ACval chunk av) /\ (i < lo \/ i > hi).
-Proof.
+Proof using.
   intros until c. functional induction (inval_after lo hi c); intros.
   destruct (zeq i hi).
   subst i. rewrite inval_after_outside in H by lia. rewrite ZTree.grs in H. discriminate.
@@ -3958,7 +3958,7 @@ Qed.
 
 Remark inval_before_outside:
   forall i hi lo c, i < lo \/ i >= hi -> (inval_before hi lo c)##i = c##i.
-Proof.
+Proof using.
   intros until c. functional induction (inval_before hi lo c); intros.
   rewrite IHt by lia. unfold inval_if. destruct (c##lo) as [[chunk av]|]; auto.
   destruct (zle (lo + size_chunk chunk) hi); auto.
@@ -3970,7 +3970,7 @@ Remark inval_before_contents_1:
   forall i chunk av lo hi c,
   lo <= i < hi -> (inval_before hi lo c)##i = Some(ACval chunk av) ->
   c##i = Some(ACval chunk av) /\ i + size_chunk chunk <= hi.
-Proof.
+Proof using.
   intros until c. functional induction (inval_before hi lo c); intros.
 - destruct (zeq lo i).
 + subst i. rewrite inval_before_outside in H0 by lia.
@@ -3986,7 +3986,7 @@ Proof.
 Qed.
 
 Lemma max_size_chunk: forall chunk, size_chunk chunk <= 8.
-Proof.
+Proof using.
   destruct chunk; simpl; lia.
 Qed.
 
@@ -3994,7 +3994,7 @@ Remark inval_before_contents:
   forall i c chunk' av' j,
   (inval_before i (i - 7) c)##j = Some (ACval chunk' av') ->
   c##j = Some (ACval chunk' av') /\ (j + size_chunk chunk' <= i \/ i <= j).
-Proof.
+Proof using.
   intros. destruct (zlt j (i - 7)).
   rewrite inval_before_outside in H by lia.
   split. auto. left. generalize (max_size_chunk chunk'); lia.
@@ -4010,7 +4010,7 @@ Lemma ablock_store_contents:
      (i = j /\ chunk' = chunk /\ av' = av)
   \/ (ab.(ab_contents)##j = Some(ACval chunk' av')
       /\ (j + size_chunk chunk' <= i \/ i + size_chunk chunk <= j)).
-Proof.
+Proof using.
   unfold ablock_store; simpl; intros.
   destruct (zeq i j).
   subst j. rewrite ZTree.gss in H. inv H; auto.
@@ -4024,7 +4024,7 @@ Lemma chunk_compat_true:
   forall c c',
   chunk_compat c c' = true ->
   size_chunk c = size_chunk c' /\ align_chunk c <= align_chunk c' /\ type_of_chunk c = type_of_chunk c'.
-Proof.
+Proof using.
   destruct c, c'; intros; try discriminate; simpl; auto with va.
 Qed.
 
@@ -4034,7 +4034,7 @@ Lemma ablock_store_sound:
   bmatch m b ab ->
   vmatch v av ->
   bmatch m' b (ablock_store chunk ab ofs av).
-Proof.
+Proof using.
   intros until av; intros STORE BIN VIN. destruct BIN as [BIN1 BIN2]. split.
   eapply smatch_store; eauto.
   intros chunk' ofs' v' LOAD.
@@ -4063,7 +4063,7 @@ Lemma ablock_loadbytes_sound:
   bmatch m b ab ->
   In (Fragment (Vptr b' ofs') q i) bytes ->
   pmatch b' ofs' (ablock_loadbytes ab).
-Proof.
+Proof using.
   intros. destruct H0. eapply smatch_loadbytes; eauto.
 Qed.
 
@@ -4073,7 +4073,7 @@ Lemma ablock_storebytes_anywhere_sound:
   (forall b' ofs' q i, In (Fragment (Vptr b' ofs') q i) bytes -> pmatch b' ofs' p) ->
   bmatch m b' ab ->
   bmatch m' b' (ablock_storebytes_anywhere ab p).
-Proof.
+Proof using.
   intros. destruct H1 as [A B]. apply ablock_init_sound.
   eapply smatch_storebytes; eauto.
 Qed.
@@ -4083,7 +4083,7 @@ Lemma ablock_storebytes_contents:
   (ablock_storebytes ab p i sz).(ab_contents)##j = Some(ACval chunk' av') ->
   ab.(ab_contents)##j = Some (ACval chunk' av')
   /\ (j + size_chunk chunk' <= i \/ i + Z.max sz 0 <= j).
-Proof.
+Proof using.
   unfold ablock_storebytes; simpl; intros.
   exploit inval_before_contents; eauto. clear H. intros [A B].
   exploit inval_after_contents; eauto. clear A. intros [C D].
@@ -4097,7 +4097,7 @@ Lemma ablock_storebytes_sound:
   (forall b' ofs' q i, In (Fragment (Vptr b' ofs') q i) bytes -> pmatch b' ofs' p) ->
   bmatch m b ab ->
   bmatch m' b (ablock_storebytes ab p ofs sz).
-Proof.
+Proof using.
   intros until sz; intros STORE LENGTH CONTENTS BM. destruct BM as [BM1 BM2]. split.
   eapply smatch_storebytes; eauto.
   intros chunk' ofs' v' LOAD'.
@@ -4125,7 +4125,7 @@ Lemma bbeq_load:
   bbeq ab1 ab2 = true ->
   ab1.(ab_summary) = ab2.(ab_summary)
   /\ (forall chunk i, ablock_load chunk ab1 i = ablock_load chunk ab2 i).
-Proof.
+Proof using.
   unfold bbeq; intros. InvBooleans. split.
 - unfold ablock_load_anywhere; intros; congruence.
 - assert (A: forall i, ZTree.get i (ab_contents ab1) = ZTree.get i (ab_contents ab2)).
@@ -4142,7 +4142,7 @@ Lemma bbeq_sound:
   forall ab1 ab2,
   bbeq ab1 ab2 = true ->
   forall m b, bmatch m b ab1 <-> bmatch m b ab2.
-Proof.
+Proof using.
   intros. exploit bbeq_load; eauto. intros [A B].
   unfold bmatch. rewrite A. intuition. rewrite <- B; eauto. rewrite B; eauto.
 Qed.
@@ -4163,7 +4163,7 @@ Definition blub (ab1 ab2: ablock) : ablock :=
 
 Lemma smatch_lub_l:
   forall m b p q, smatch m b p -> smatch m b (plub p q).
-Proof.
+Proof using.
   intros. destruct H as [A B]. split; intros.
   change (vmatch v (vlub (Ifptr p) (Ifptr q))). apply vmatch_lub_l. eapply A; eauto.
   apply pmatch_lub_l. eapply B; eauto.
@@ -4171,7 +4171,7 @@ Qed.
 
 Lemma smatch_lub_r:
   forall m b p q, smatch m b q -> smatch m b (plub p q).
-Proof.
+Proof using.
   intros. destruct H as [A B]. split; intros.
   change (vmatch v (vlub (Ifptr p) (Ifptr q))). apply vmatch_lub_r. eapply A; eauto.
   apply pmatch_lub_r. eapply B; eauto.
@@ -4179,7 +4179,7 @@ Qed.
 
 Lemma bmatch_lub_l:
   forall m b x y, bmatch m b x -> bmatch m b (blub x y).
-Proof.
+Proof using.
   intros. destruct H as [BM1 BM2]. split; unfold blub; simpl.
 - apply smatch_lub_l; auto.
 - intros.
@@ -4198,7 +4198,7 @@ Qed.
 
 Lemma bmatch_lub_r:
   forall m b x y, bmatch m b y -> bmatch m b (blub x y).
-Proof.
+Proof using.
   intros. destruct H as [BM1 BM2]. split; unfold blub; simpl.
 - apply smatch_lub_r; auto.
 - intros.
@@ -4232,7 +4232,7 @@ Lemma romatch_store:
   Mem.store chunk m b ofs v = Some m' ->
   romatch m rm ->
   romatch m' rm.
-Proof.
+Proof using.
   intros; red; intros. exploit H0; eauto. intros (A & B & C). split; auto. split.
 - exploit Mem.store_valid_access_3; eauto. intros [P _].
   apply bmatch_inv with m; auto.
@@ -4247,7 +4247,7 @@ Lemma romatch_storebytes:
   Mem.storebytes m b ofs bytes = Some m' ->
   romatch m rm ->
   romatch m' rm.
-Proof.
+Proof using.
   intros; red; intros. exploit H0; eauto. intros (A & B & C). split; auto. split.
 - apply bmatch_inv with m; auto.
   intros. eapply Mem.loadbytes_storebytes_disjoint; eauto.
@@ -4262,7 +4262,7 @@ Lemma romatch_ext:
   (forall b id ofs n bytes, bc b = BCglob id -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
   (forall b id ofs p, bc b = BCglob id -> Mem.perm m' b ofs Max p -> Mem.perm m b ofs Max p) ->
   romatch m' rm.
-Proof.
+Proof using.
   intros; red; intros. exploit H; eauto. intros (A & B & C).
   split. auto.
   split. apply bmatch_ext with m; auto. intros. eapply H0; eauto.
@@ -4274,7 +4274,7 @@ Lemma romatch_free:
   Mem.free m b lo hi = Some m' ->
   romatch m rm ->
   romatch m' rm.
-Proof.
+Proof using.
   intros. apply romatch_ext with m; auto.
   intros. eapply Mem.loadbytes_free_2; eauto.
   intros. eauto with mem.
@@ -4286,7 +4286,7 @@ Lemma romatch_alloc:
   bc_below bc (Mem.nextblock m) ->
   romatch m rm ->
   romatch m' rm.
-Proof.
+Proof using.
   intros. apply romatch_ext with m; auto.
   intros. rewrite <- H3; symmetry. eapply Mem.loadbytes_alloc_unchanged; eauto.
   apply H0. congruence.
@@ -4439,7 +4439,7 @@ Theorem load_sound:
   mmatch m am ->
   pmatch b ofs p ->
   vmatch v (load chunk rm am p).
-Proof.
+Proof using.
   intros. unfold load. inv H2.
 - (* Gl id ofs *)
   destruct (rm!id) as [ab|] eqn:RM.
@@ -4472,7 +4472,7 @@ Theorem loadv_sound:
   mmatch m am ->
   vmatch addr aaddr ->
   vmatch v (loadv chunk rm am aaddr).
-Proof.
+Proof using.
   intros. destruct addr; simpl in H; try discriminate.
   eapply load_sound; eauto. apply match_aptr_of_aval; auto.
 Qed.
@@ -4484,7 +4484,7 @@ Theorem store_sound:
   pmatch b ofs p ->
   vmatch v av ->
   mmatch m' (store chunk am p av).
-Proof.
+Proof using.
   intros until av; intros STORE MM PM VM.
   unfold store; constructor; simpl; intros.
 - (* Stack *)
@@ -4550,7 +4550,7 @@ Theorem storev_sound:
   vmatch addr aaddr ->
   vmatch v av ->
   mmatch m' (storev chunk am aaddr av).
-Proof.
+Proof using.
   intros. destruct addr; simpl in H; try discriminate.
   eapply store_sound; eauto. apply match_aptr_of_aval; auto.
 Qed.
@@ -4562,7 +4562,7 @@ Theorem loadbytes_sound:
   mmatch m am ->
   pmatch b ofs p ->
   forall  b' ofs' q i, In (Fragment (Vptr b' ofs') q i) bytes -> pmatch b' ofs' (loadbytes am rm p).
-Proof.
+Proof using.
   intros. unfold loadbytes; inv H2.
 - (* Gl id ofs *)
   destruct (rm!id) as [ab|] eqn:RM.
@@ -4596,7 +4596,7 @@ Theorem storebytes_sound:
   length bytes = Z.to_nat sz ->
   (forall b' ofs' qt i, In (Fragment (Vptr b' ofs') qt i) bytes -> pmatch b' ofs' q) ->
   mmatch m' (storebytes am p sz q).
-Proof.
+Proof using.
   intros until q; intros STORE MM PM LENGTH BYTES.
   unfold storebytes; constructor; simpl; intros.
 - (* Stack *)
@@ -4661,7 +4661,7 @@ Lemma mmatch_ext:
   (forall b ofs n bytes, bc b <> BCinvalid -> n >= 0 -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
   Ple (Mem.nextblock m) (Mem.nextblock m') ->
   mmatch m' am.
-Proof.
+Proof using.
   intros. inv H. constructor; intros.
 - apply bmatch_ext with m; auto with va.
 - apply bmatch_ext with m; eauto with va.
@@ -4675,7 +4675,7 @@ Lemma mmatch_free:
   Mem.free m b lo hi = Some m' ->
   mmatch m am ->
   mmatch m' am.
-Proof.
+Proof using.
   intros. apply mmatch_ext with m; auto.
   intros. eapply Mem.loadbytes_free_2; eauto.
   erewrite <- Mem.nextblock_free by eauto. extlia.
@@ -4683,7 +4683,7 @@ Qed.
 
 Lemma mmatch_top':
   forall m am, mmatch m am -> mmatch m mtop.
-Proof.
+Proof using.
   intros. constructor; simpl; intros.
 - apply ablock_init_sound. apply smatch_ge with (ab_summary (am_stack am)).
   eapply mmatch_stack; eauto. constructor.
@@ -4703,7 +4703,7 @@ Definition mbeq (m1 m2: amem) : bool :=
 
 Lemma mbeq_sound:
   forall m1 m2, mbeq m1 m2 = true -> forall m, mmatch m m1 <-> mmatch m m2.
-Proof.
+Proof using.
   unfold mbeq; intros. InvBooleans. rewrite PTree.beq_correct in H1.
   split; intros M; inv M; constructor; intros.
 - erewrite <- bbeq_sound; eauto.
@@ -4736,7 +4736,7 @@ Definition mlub (m1 m2: amem) : amem :=
 
 Lemma mmatch_lub_l:
   forall m x y, mmatch m x -> mmatch m (mlub x y).
-Proof.
+Proof using.
   intros. inv H. constructor; simpl; intros.
 - apply bmatch_lub_l; auto.
 - rewrite PTree.gcombine in H0 by auto. unfold combine_ablock in H0.
@@ -4751,7 +4751,7 @@ Qed.
 
 Lemma mmatch_lub_r:
   forall m x y, mmatch m y -> mmatch m (mlub x y).
-Proof.
+Proof using.
   intros. inv H. constructor; simpl; intros.
 - apply bmatch_lub_r; auto.
 - rewrite PTree.gcombine in H0 by auto. unfold combine_ablock in H0.
@@ -4797,7 +4797,7 @@ Lemma pdisjoint_sound:
   pdisjoint p1 sz1 p2 sz2 = true ->
   pmatch bc b1 ofs1 p1 -> pmatch bc b2 ofs2 p2 ->
   b1 <> b2 \/ Ptrofs.unsigned ofs1 + sz1 <= Ptrofs.unsigned ofs2 \/ Ptrofs.unsigned ofs2 + sz2 <= Ptrofs.unsigned ofs1.
-Proof.
+Proof using.
   intros. inv H0; inv H1; simpl in H; try discriminate; try (left; congruence).
 - destruct (peq id id0). subst id0. destruct (orb_true_elim _ _ H); InvBooleans; auto.
   left; congruence.
@@ -4818,7 +4818,7 @@ Lemma pdisjoint_sound_strong:
   genv_match bc1 ge -> bc1 sp = BCstack ->
   genv_match bc2 ge -> bc2 sp = BCstack ->
   b1 <> b2 \/ Ptrofs.unsigned ofs1 + sz1 <= Ptrofs.unsigned ofs2 \/ Ptrofs.unsigned ofs2 + sz2 <= Ptrofs.unsigned ofs1.
-Proof.
+Proof using.
   assert (GLOB_GLOB: forall (bc1 bc2: block_classification) ge b1 b2 id1 id2,
            genv_match bc1 ge -> genv_match bc2 ge ->
            bc1 b1 = BCglob id1 -> bc2 b2 = BCglob id2 ->
@@ -4862,7 +4862,7 @@ Lemma genv_match_exten:
   (forall b id, bc1 b = BCglob id <-> bc2 b = BCglob id) ->
   (forall b, bc1 b = BCother -> bc2 b = BCother) ->
   genv_match bc2 ge.
-Proof.
+Proof using.
   intros. destruct H as [A B]. split; intros.
 - rewrite <- H0. eauto.
 - exploit B; eauto. destruct (bc1 b) eqn:BC1.
@@ -4877,7 +4877,7 @@ Lemma romatch_exten:
   romatch bc1 m rm ->
   (forall b id, bc2 b = BCglob id <-> bc1 b = BCglob id) ->
   romatch bc2 m rm.
-Proof.
+Proof using.
   intros; red; intros. rewrite H0 in H1. exploit H; eauto. intros (A & B & C).
   split; auto. split; auto.
   assert (PM: forall b ofs p, pmatch bc1 b ofs p -> pmatch bc1 b ofs (ab_summary ab) -> pmatch bc2 b ofs p).
@@ -4907,26 +4907,26 @@ Variables bc1 bc2: block_classification.
 Hypothesis INCR: bc_incr bc1 bc2.
 
 Lemma pmatch_incr: forall b ofs p, pmatch bc1 b ofs p -> pmatch bc2 b ofs p.
-Proof.
+Proof using INCR.
   induction 1;
   assert (bc2 b = bc1 b) by (apply INCR; congruence);
   econstructor; eauto with va. rewrite H0; eauto.
 Qed.
 
 Lemma vmatch_incr: forall v x, vmatch bc1 v x -> vmatch bc2 v x.
-Proof.
+Proof using INCR.
   induction 1; constructor; auto; apply pmatch_incr; auto.
 Qed.
 
 Lemma smatch_incr: forall m b p, smatch bc1 m b p -> smatch bc2 m b p.
-Proof.
+Proof using INCR.
   intros. destruct H as [A B]. split; intros.
   apply vmatch_incr; eauto.
   apply pmatch_incr; eauto.
 Qed.
 
 Lemma bmatch_incr: forall m b ab, bmatch bc1 m b ab -> bmatch bc2 m b ab.
-Proof.
+Proof using INCR.
   intros. destruct H as [B1 B2]. split.
   apply smatch_incr; auto.
   intros. apply vmatch_incr; eauto.
@@ -4941,26 +4941,26 @@ Definition inj_of_bc (bc: block_classification) : meminj :=
 
 Lemma inj_of_bc_valid:
   forall (bc: block_classification) b, bc b <> BCinvalid -> inj_of_bc bc b = Some(b, 0).
-Proof.
+Proof using.
   intros. unfold inj_of_bc. destruct (bc b); congruence.
 Qed.
 
 Lemma inj_of_bc_inv:
   forall (bc: block_classification) b b' delta,
   inj_of_bc bc b = Some(b', delta) -> bc b <> BCinvalid /\ b' = b /\ delta = 0.
-Proof.
+Proof using.
   unfold inj_of_bc; intros. destruct (bc b); intuition congruence.
 Qed.
 
 Lemma pmatch_inj:
   forall bc b ofs p, pmatch bc b ofs p -> inj_of_bc bc b = Some(b, 0).
-Proof.
+Proof using.
   intros. apply inj_of_bc_valid. inv H; congruence.
 Qed.
 
 Lemma vmatch_inj:
   forall bc v x, vmatch bc v x -> Val.inject (inj_of_bc bc) v v.
-Proof.
+Proof using.
   induction 1; econstructor.
   eapply pmatch_inj; eauto. rewrite Ptrofs.add_zero; auto.
   eapply pmatch_inj; eauto. rewrite Ptrofs.add_zero; auto.
@@ -4968,13 +4968,13 @@ Qed.
 
 Lemma vmatch_list_inj:
   forall bc vl xl, list_forall2 (vmatch bc) vl xl -> Val.inject_list (inj_of_bc bc) vl vl.
-Proof.
+Proof using.
   induction 1; constructor. eapply vmatch_inj; eauto. auto.
 Qed.
 
 Lemma mmatch_inj:
   forall bc m am, mmatch bc m am -> bc_below bc (Mem.nextblock m) -> Mem.inject (inj_of_bc bc) m m.
-Proof.
+Proof using.
   intros. constructor. constructor.
 - (* perms *)
   intros. exploit inj_of_bc_inv; eauto. intros (A & B & C); subst.
@@ -5019,7 +5019,7 @@ Qed.
 
 Lemma inj_of_bc_preserves_globals:
   forall bc ge, genv_match bc ge -> meminj_preserves_globals ge (inj_of_bc bc).
-Proof.
+Proof using.
   intros. destruct H as [A B].
   split. intros. apply inj_of_bc_valid. rewrite A in H. congruence.
   split. intros. apply inj_of_bc_valid. apply B.
@@ -5029,19 +5029,19 @@ Qed.
 
 Lemma pmatch_inj_top:
   forall bc b b' delta ofs, inj_of_bc bc b = Some(b', delta) -> pmatch bc b ofs Ptop.
-Proof.
+Proof using.
   intros. exploit inj_of_bc_inv; eauto. intros (A & B & C). constructor; auto.
 Qed.
 
 Lemma vmatch_inj_top:
   forall bc v v', Val.inject (inj_of_bc bc) v v' -> vmatch bc v Vtop.
-Proof.
+Proof using.
   intros. inv H; constructor. eapply pmatch_inj_top; eauto.
 Qed.
 
 Lemma mmatch_inj_top:
   forall bc m m', Mem.inject (inj_of_bc bc) m m' -> mmatch bc m mtop.
-Proof.
+Proof using.
   intros.
   assert (SM: forall b, bc b <> BCinvalid -> smatch bc m b Ptop).
   {
@@ -5070,18 +5070,18 @@ Module AVal <: SEMILATTICE_WITH_TOP.
   Definition eq_trans: forall x y z, eq x y -> eq y z -> eq x z := (@eq_trans t).
   Definition beq (x y: t) : bool := proj_sumbool (eq_aval x y).
   Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-  Proof. unfold beq; intros. InvBooleans. auto. Qed.
+  Proof using. unfold beq; intros. InvBooleans. auto. Qed.
   Definition ge := vge.
   Lemma ge_refl: forall x y, eq x y -> ge x y.
-  Proof. unfold eq, ge; intros. subst y. apply vge_refl. Qed.
+  Proof using. unfold eq, ge; intros. subst y. apply vge_refl. Qed.
   Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-  Proof. unfold ge; intros. eapply vge_trans; eauto. Qed.
+  Proof using. unfold ge; intros. eapply vge_trans; eauto. Qed.
   Definition bot : t := Vbot.
   Lemma ge_bot: forall x, ge x bot.
-  Proof. intros. constructor. Qed.
+  Proof using. intros. constructor. Qed.
   Definition top : t := Vtop.
   Lemma ge_top: forall x, ge top x.
-  Proof. intros. apply vge_top. Qed.
+  Proof using. intros. apply vge_top. Qed.
   Definition lub := vlub.
   Lemma ge_lub_left: forall x y, ge (lub x y) x.
   Proof vge_lub_l.
@@ -5103,14 +5103,14 @@ Definition ematch (e: regset) (ae: aenv) : Prop :=
 Lemma ematch_ge:
   forall e ae1 ae2,
   ematch e ae1 -> AE.ge ae2 ae1 -> ematch e ae2.
-Proof.
+Proof using.
   intros; red; intros. apply vmatch_ge with (AE.get r ae1); auto. apply H0.
 Qed.
 
 Lemma ematch_update:
   forall e ae v av r,
   ematch e ae -> vmatch bc v av -> ematch (e#r <- v) (AE.set r av ae).
-Proof.
+Proof using.
   intros; red; intros. rewrite AE.gsspec. rewrite PMap.gsspec.
   destruct (peq r0 r); auto.
   red; intros. specialize (H xH). subst ae. simpl in H. inv H.
@@ -5134,7 +5134,7 @@ Lemma ematch_init:
   Val.has_argtype_list vl tl ->
   (forall v, In v vl -> vmatch bc v (Ifptr Nonstack)) ->
   ematch (init_regs vl rl) (einit_regs rl tl).
-Proof.
+Proof using.
 Local Opaque Conventions1.parameter_needs_normalization.
   assert (A: forall rs ae, ematch rs ae -> ae <> AE.Bot).
   { intros; red; intros EQ. rewrite EQ in H. specialize (H 1%positive). simpl in H. inv H. }
@@ -5168,7 +5168,7 @@ Fixpoint eforget (rl: list reg) (ae: aenv) {struct rl} : aenv :=
 
 Lemma eforget_ge:
   forall rl ae, AE.ge (eforget rl ae) ae.
-Proof.
+Proof using.
   unfold AE.ge; intros. revert rl ae; induction rl; intros; simpl.
   apply AVal.ge_refl. apply AVal.eq_refl.
   destruct ae. unfold AE.get at 2. apply AVal.ge_bot.
@@ -5180,7 +5180,7 @@ Qed.
 
 Lemma ematch_forget:
   forall e rl ae, ematch e ae -> ematch e (eforget rl ae).
-Proof.
+Proof using.
   intros. eapply ematch_ge; eauto. apply eforget_ge.
 Qed.
 
@@ -5188,7 +5188,7 @@ End MATCHENV.
 
 Lemma ematch_incr:
   forall bc bc' e ae, ematch bc e ae -> bc_incr bc bc' -> ematch bc' e ae.
-Proof.
+Proof using.
   intros; red; intros. apply vmatch_incr with bc; auto.
 Qed.
 
@@ -5208,16 +5208,16 @@ Module VA <: SEMILATTICE.
     end.
 
   Lemma eq_refl: forall x, eq x x.
-  Proof.
+  Proof using.
     destruct x; simpl. auto. split. apply AE.eq_refl. tauto.
   Qed.
   Lemma eq_sym: forall x y, eq x y -> eq y x.
-  Proof.
+  Proof using.
     destruct x, y; simpl; auto. intros [A B].
     split. apply AE.eq_sym; auto. intros. rewrite B. tauto.
   Qed.
   Lemma eq_trans: forall x y z, eq x y -> eq y z -> eq x z.
-  Proof.
+  Proof using.
     destruct x, y, z; simpl; try tauto. intros [A B] [C D]; split.
     eapply AE.eq_trans; eauto.
     intros. rewrite B; auto.
@@ -5231,7 +5231,7 @@ Module VA <: SEMILATTICE.
     end.
 
   Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-  Proof.
+  Proof using.
     destruct x, y; simpl; intros.
     auto.
     congruence.
@@ -5249,13 +5249,13 @@ Module VA <: SEMILATTICE.
     end.
 
   Lemma ge_refl: forall x y, eq x y -> ge x y.
-  Proof.
+  Proof using.
     destruct x, y; simpl; try tauto. intros [A B]; split.
     apply AE.ge_refl; auto.
     intros. rewrite B; auto.
   Qed.
   Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-  Proof.
+  Proof using.
     destruct x, y, z; simpl; try tauto. intros [A B] [C D]; split.
     eapply AE.ge_trans; eauto.
     eauto.
@@ -5263,7 +5263,7 @@ Module VA <: SEMILATTICE.
 
   Definition bot : t := Bot.
   Lemma ge_bot: forall x, ge x bot.
-  Proof.
+  Proof using.
     destruct x; simpl; auto.
   Qed.
 
@@ -5275,7 +5275,7 @@ Module VA <: SEMILATTICE.
     end.
 
   Lemma ge_lub_left: forall x y, ge (lub x y) x.
-  Proof.
+  Proof using.
     destruct x, y.
     apply ge_refl; apply eq_refl.
     simpl. auto.
@@ -5283,7 +5283,7 @@ Module VA <: SEMILATTICE.
     simpl. split. apply AE.ge_lub_left. intros; apply mmatch_lub_l; auto.
   Qed.
   Lemma ge_lub_right: forall x y, ge (lub x y) y.
-  Proof.
+  Proof using.
     destruct x, y.
     apply ge_refl; apply eq_refl.
     apply ge_refl; apply eq_refl.

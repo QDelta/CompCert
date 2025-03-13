@@ -42,7 +42,7 @@ Definition FLT_exp e := Z.max (e - prec) emin.
 
 (** Properties of the FLT format *)
 Global Instance FLT_exp_valid : Valid_exp FLT_exp.
-Proof.
+Proof using prec_gt_0_.
 intros k.
 unfold FLT_exp.
 generalize (prec_gt_0 prec).
@@ -52,7 +52,7 @@ Qed.
 
 Theorem generic_format_FLT :
   forall x, FLT_format x -> generic_format beta FLT_exp x.
-Proof.
+Proof using.
 clear prec_gt_0_.
 intros x [[mx ex] H1 H2 H3].
 simpl in H2, H3.
@@ -69,7 +69,7 @@ Qed.
 
 Theorem FLT_format_generic :
   forall x, generic_format beta FLT_exp x -> FLT_format x.
-Proof.
+Proof using prec_gt_0_.
 intros x.
 unfold generic_format.
 set (ex := cexp beta FLT_exp x).
@@ -102,7 +102,7 @@ Qed.
 
 Theorem generic_format_FLT_bpow :
   forall e, (emin <= e)%Z -> generic_format beta FLT_exp (bpow e).
-Proof.
+Proof using prec_gt_0_.
 intros e He.
 apply generic_format_bpow; unfold FLT_exp.
 apply Z.max_case; try assumption.
@@ -111,7 +111,7 @@ Qed.
 
 Theorem FLT_format_bpow :
   forall e, (emin <= e)%Z -> FLT_format (bpow e).
-Proof.
+Proof using prec_gt_0_.
 intros e He.
 apply FLT_format_generic.
 now apply generic_format_FLT_bpow.
@@ -119,7 +119,7 @@ Qed.
 
 Theorem FLT_format_satisfies_any :
   satisfies_any FLT_format.
-Proof.
+Proof using prec_gt_0_.
 refine (satisfies_any_eq _ _ _ (generic_format_satisfies_any beta FLT_exp)).
 intros x.
 split.
@@ -131,7 +131,7 @@ Theorem cexp_FLT_FLX :
   forall x,
   (bpow (emin + prec - 1) <= Rabs x)%R ->
   cexp beta FLT_exp x = cexp beta (FLX_exp prec) x.
-Proof.
+Proof using.
 intros x Hx.
 assert (Hx0: x <> 0%R).
 intros H1; rewrite H1, Rabs_R0 in Hx.
@@ -149,7 +149,7 @@ Qed.
 
 (** FLT is a nice format: it has a monotone exponent... *)
 Global Instance FLT_exp_monotone : Monotone_exp FLT_exp.
-Proof.
+Proof using.
 intros ex ey.
 unfold FLT_exp.
 zify ; lia.
@@ -159,7 +159,7 @@ Qed.
 Global Instance exists_NE_FLT :
   (Z.even beta = false \/ (1 < prec)%Z) ->
   Exists_NE beta FLT_exp.
-Proof.
+Proof using.
 intros [H|H].
 now left.
 right.
@@ -181,7 +181,7 @@ Theorem generic_format_FLT_FLX :
   (bpow (emin + prec - 1) <= Rabs x)%R ->
   generic_format beta (FLX_exp prec) x ->
   generic_format beta FLT_exp x.
-Proof.
+Proof using.
 intros x Hx H.
 destruct (Req_dec x 0) as [Hx0|Hx0].
 rewrite Hx0.
@@ -193,7 +193,7 @@ Qed.
 Theorem generic_format_FLX_FLT :
   forall x : R,
   generic_format beta FLT_exp x -> generic_format beta (FLX_exp prec) x.
-Proof.
+Proof using.
 clear prec_gt_0_.
 intros x Hx.
 unfold generic_format in Hx; rewrite Hx.
@@ -207,7 +207,7 @@ Qed.
 Theorem round_FLT_FLX : forall rnd x,
   (bpow (emin + prec - 1) <= Rabs x)%R ->
   round beta FLT_exp rnd x = round beta (FLX_exp prec) rnd x.
-Proof.
+Proof using.
 intros rnd x Hx.
 unfold round, scaled_mantissa.
 rewrite cexp_FLT_FLX ; trivial.
@@ -218,7 +218,7 @@ Theorem cexp_FLT_FIX :
   forall x, x <> 0%R ->
   (Rabs x < bpow (emin + prec))%R ->
   cexp beta FLT_exp x = cexp beta (FIX_exp emin) x.
-Proof.
+Proof using.
 intros x Hx0 Hx.
 unfold cexp.
 apply Zmax_right.
@@ -235,7 +235,7 @@ Theorem generic_format_FIX_FLT :
   forall x : R,
   generic_format beta FLT_exp x ->
   generic_format beta (FIX_exp emin) x.
-Proof.
+Proof using.
 clear prec_gt_0_.
 intros x Hx.
 rewrite Hx.
@@ -250,7 +250,7 @@ Theorem generic_format_FLT_FIX :
   (Rabs x <= bpow (emin + prec))%R ->
   generic_format beta (FIX_exp emin) x ->
   generic_format beta FLT_exp x.
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 apply generic_inclusion_le...
 intros e He.
 unfold FIX_exp.
@@ -261,7 +261,7 @@ Qed.
 
 Lemma negligible_exp_FLT :
   exists n, negligible_exp FLT_exp = Some n /\ (n <= emin)%Z.
-Proof.
+Proof using prec_gt_0_.
 case (negligible_exp_spec FLT_exp).
 { intro H; exfalso; specialize (H emin); revert H.
   apply Zle_not_lt, Z.le_max_r. }
@@ -274,14 +274,14 @@ Qed.
 Theorem generic_format_FLT_1 :
   (emin <= 0)%Z ->
   generic_format beta FLT_exp 1.
-Proof.
+Proof using prec_gt_0_.
 intros Hemin.
 now apply (generic_format_FLT_bpow 0).
 Qed.
 
 Theorem ulp_FLT_0 :
   ulp beta FLT_exp 0 = bpow emin.
-Proof.
+Proof using prec_gt_0_.
 unfold ulp.
 rewrite Req_bool_true by easy.
 case negligible_exp_spec.
@@ -305,7 +305,7 @@ Qed.
 Theorem ulp_FLT_small :
   forall x, (Rabs x < bpow (emin + prec))%R ->
   ulp beta FLT_exp x = bpow emin.
-Proof.
+Proof using prec_gt_0_.
 intros x Hx.
 destruct (Req_dec x 0%R) as [Zx|Zx].
 { rewrite Zx.
@@ -324,7 +324,7 @@ Qed.
 Theorem ulp_FLT_le :
   forall x, (bpow (emin + prec - 1) <= Rabs x)%R ->
   (ulp beta FLT_exp x <= Rabs x * bpow (1 - prec))%R.
-Proof.
+Proof using.
 intros x Hx.
 assert (Zx : (x <> 0)%R).
   intros Z; contradict Hx; apply Rgt_not_le, Rlt_gt.
@@ -348,7 +348,7 @@ Qed.
 
 Theorem ulp_FLT_gt :
   forall x, (Rabs x * bpow (-prec) < ulp beta FLT_exp x)%R.
-Proof.
+Proof using prec_gt_0_.
 intros x; case (Req_dec x 0); intros Hx.
 rewrite Hx, ulp_FLT_small, Rabs_R0, Rmult_0_l; try apply bpow_gt_0.
 rewrite Rabs_R0; apply bpow_gt_0.
@@ -369,7 +369,7 @@ Lemma ulp_FLT_exact_shift :
   (emin + prec <= mag beta x)%Z ->
   (emin + prec - mag beta x <= e)%Z ->
   (ulp beta FLT_exp (x * bpow e) = ulp beta FLT_exp x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Nzx Hmx He.
 unfold ulp; rewrite Req_bool_false;
   [|now intro H; apply Nzx, (Rmult_eq_reg_r (bpow e));
@@ -384,7 +384,7 @@ Lemma succ_FLT_exact_shift_pos :
   (emin + prec <= mag beta x)%Z ->
   (emin + prec - mag beta x <= e)%Z ->
   (succ beta FLT_exp (x * bpow e) = succ beta FLT_exp x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Px Hmx He.
 rewrite succ_eq_pos; [|now apply Rlt_le, Rmult_lt_0_compat, bpow_gt_0].
 rewrite (succ_eq_pos _ _ _ (Rlt_le _ _ Px)).
@@ -397,7 +397,7 @@ Lemma succ_FLT_exact_shift :
   (emin + prec + 1 <= mag beta x)%Z ->
   (emin + prec - mag beta x + 1 <= e)%Z ->
   (succ beta FLT_exp (x * bpow e) = succ beta FLT_exp x * bpow e)%R.
-Proof.
+Proof using.
 intros x e Nzx Hmx He.
 destruct (Rle_or_lt 0 x) as [Px|Nx].
 { now apply succ_FLT_exact_shift_pos; [lra|lia|lia]. }
@@ -422,7 +422,7 @@ Theorem ulp_FLT_pred_pos :
   (0 <= x)%R ->
   ulp beta FLT_exp (pred beta FLT_exp x) = ulp beta FLT_exp x \/
   (x = bpow (mag beta x - 1) /\ ulp beta FLT_exp (pred beta FLT_exp x) = (ulp beta FLT_exp x / IZR beta)%R).
-Proof.
+Proof using prec_gt_0_.
 intros x Fx [Hx|Hx] ; cycle 1.
 { rewrite <- Hx.
   rewrite pred_0.

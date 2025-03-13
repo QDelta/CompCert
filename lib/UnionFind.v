@@ -156,7 +156,7 @@ Record unionfind : Type := mk { m: M.t elt; mwf: well_founded (order m) }.
 Definition t := unionfind.
 
 Definition getlink (m: M.t elt) (a: elt) : {a' | M.get a m = Some a'} + {M.get a m = None}.
-Proof.
+Proof using.
   destruct (M.get a m). left. exists e; auto. right; auto.
 Defined.
 
@@ -176,7 +176,7 @@ Definition repr (a: elt) : elt := Fix uf.(mwf) (fun _ => elt) F_repr a.
 
 Lemma repr_unroll:
   forall a, repr a = match M.get a uf.(m) with Some a' => repr a' | None => a end.
-Proof.
+Proof using.
   intros. unfold repr at 1. rewrite Fix_eq.
   unfold F_repr. destruct (getlink uf.(m) a) as [[a' P] | Q].
   rewrite P; auto.
@@ -188,7 +188,7 @@ Lemma repr_none:
   forall a,
   M.get a uf.(m) = None ->
   repr a = a.
-Proof.
+Proof using.
   intros. rewrite repr_unroll. rewrite H; auto.
 Qed.
 
@@ -196,26 +196,26 @@ Lemma repr_some:
   forall a a',
   M.get a uf.(m) = Some a' ->
   repr a = repr a'.
-Proof.
+Proof using.
   intros. rewrite repr_unroll. rewrite H; auto.
 Qed.
 
 Lemma repr_res_none:
   forall (a: elt), M.get (repr a) uf.(m) = None.
-Proof.
+Proof using.
   apply (well_founded_ind (mwf uf)). intros.
   rewrite repr_unroll. destruct (M.get x (m uf)) as [y|] eqn:X; auto.
 Qed.
 
 Lemma repr_canonical:
   forall (a: elt), repr (repr a) = repr a.
-Proof.
+Proof using.
   intros. apply repr_none. apply repr_res_none.
 Qed.
 
 Lemma repr_some_diff:
   forall a a', M.get a uf.(m) = Some a' -> a <> repr a'.
-Proof.
+Proof using.
   intros; red; intros.
   assert (repr a = a). rewrite (repr_some a a'); auto.
   assert (M.get a uf.(m) = None). rewrite <- H1. apply repr_res_none.
@@ -229,26 +229,26 @@ Definition sameclass (uf: t) (a b: elt) : Prop :=
 
 Lemma sameclass_refl:
   forall uf a, sameclass uf a a.
-Proof.
+Proof using.
   intros. red. auto.
 Qed.
 
 Lemma sameclass_sym:
   forall uf a b, sameclass uf a b -> sameclass uf b a.
-Proof.
+Proof using.
   intros. red. symmetry. exact H.
 Qed.
 
 Lemma sameclass_trans:
   forall uf a b c,
   sameclass uf a b -> sameclass uf b c -> sameclass uf a c.
-Proof.
+Proof using.
   intros. red. transitivity (repr uf b). exact H. exact H0.
 Qed.
 
 Lemma sameclass_repr:
   forall uf a, sameclass uf a (repr uf a).
-Proof.
+Proof using.
   intros. red. symmetry. rewrite repr_canonical. auto.
 Qed.
 
@@ -256,7 +256,7 @@ Qed.
 
 Lemma wf_empty:
   well_founded (order (M.empty elt)).
-Proof.
+Proof using.
   red. intros. apply Acc_intro. intros b RO. red in RO.
   rewrite M.gempty in RO. discriminate.
 Qed.
@@ -265,13 +265,13 @@ Definition empty : t := mk (M.empty elt) wf_empty.
 
 Lemma repr_empty:
   forall a, repr empty a = a.
-Proof.
+Proof using.
   intros. apply repr_none. simpl. apply M.gempty.
 Qed.
 
 Lemma sameclass_empty:
   forall a b, sameclass empty a b -> a = b.
-Proof.
+Proof using.
   intros. red in H. repeat rewrite repr_empty in H. auto.
 Qed.
 
@@ -288,7 +288,7 @@ Lemma identify_order:
   forall x y,
   order (M.set a b uf.(m)) y x <->
   order uf.(m) y x \/ (x = a /\ y = b).
-Proof.
+Proof using a_canon.
   intros until y. unfold order. rewrite M.gsspec.
   destruct (M.elt_eq x a). intuition congruence. intuition congruence.
 Qed.
@@ -296,7 +296,7 @@ Qed.
 Remark identify_Acc_b:
   forall x,
   Acc (order uf.(m)) x -> repr uf x <> a -> Acc (order (M.set a b uf.(m))) x.
-Proof.
+Proof using a_canon.
   induction 1; intros. constructor; intros.
   rewrite identify_order in H2. destruct H2 as [A | [A B]].
   apply H0; auto. rewrite <- (repr_some uf _ _ A). auto.
@@ -306,7 +306,7 @@ Qed.
 Remark identify_Acc:
   forall x,
   Acc (order uf.(m)) x -> Acc (order (M.set a b uf.(m))) x.
-Proof.
+Proof using not_same_class a_canon.
   induction 1. constructor; intros.
   rewrite identify_order in H1. destruct H1 as [A | [A B]].
   auto.
@@ -315,7 +315,7 @@ Qed.
 
 Lemma identify_wf:
   well_founded (order (M.set a b uf.(m))).
-Proof.
+Proof using not_same_class a_canon.
   red; intros. apply identify_Acc. apply uf.(mwf).
 Qed.
 
@@ -323,7 +323,7 @@ Definition identify := mk (M.set a b uf.(m)) identify_wf.
 
 Lemma repr_identify_1:
   forall x, repr uf x <> a -> repr identify x = repr uf x.
-Proof.
+Proof using.
   intros x0; pattern x0. apply (well_founded_ind (mwf uf)); intros.
   rewrite (repr_unroll uf) in *.
   destruct (M.get x (m uf)) as [a'|] eqn:X.
@@ -334,7 +334,7 @@ Qed.
 
 Lemma repr_identify_2:
   forall x, repr uf x = a -> repr identify x = repr uf b.
-Proof.
+Proof using.
   intros x0; pattern x0. apply (well_founded_ind (mwf uf)); intros.
   rewrite (repr_unroll uf) in H0. destruct (M.get x (m uf)) as [a'|] eqn:X.
   rewrite <- (H a'); auto.
@@ -349,7 +349,7 @@ End IDENTIFY.
 
 Remark union_not_same_class:
   forall uf a b, repr uf a <> repr uf b -> repr uf (repr uf b) <> repr uf a.
-Proof.
+Proof using.
   intros. rewrite repr_canonical. auto.
 Qed.
 
@@ -363,7 +363,7 @@ Definition union (uf: t) (a b: elt) : t :=
 
 Lemma repr_union_1:
   forall uf a b x, repr uf x <> repr uf a -> repr (union uf a b) x = repr uf x.
-Proof.
+Proof using.
   intros. unfold union. destruct (M.elt_eq (repr uf a) (repr uf b)).
   auto.
   apply repr_identify_1. auto.
@@ -371,7 +371,7 @@ Qed.
 
 Lemma repr_union_2:
   forall uf a b x, repr uf x = repr uf a -> repr (union uf a b) x = repr uf b.
-Proof.
+Proof using.
   intros. unfold union. destruct (M.elt_eq (repr uf a) (repr uf b)).
   congruence.
   rewrite <- (repr_canonical uf b). apply repr_identify_2. auto.
@@ -379,20 +379,20 @@ Qed.
 
 Lemma repr_union_3:
   forall uf a b, repr (union uf a b) b = repr uf b.
-Proof.
+Proof using.
   intros. unfold union. destruct (M.elt_eq (repr uf a) (repr uf b)).
   auto. apply repr_identify_1. auto.
 Qed.
 
 Lemma sameclass_union_1:
   forall uf a b, sameclass (union uf a b) a b.
-Proof.
+Proof using.
   intros; red. rewrite repr_union_2; auto. rewrite repr_union_3. auto.
 Qed.
 
 Lemma sameclass_union_2:
   forall uf a b x y, sameclass uf x y -> sameclass (union uf a b) x y.
-Proof.
+Proof using.
   unfold sameclass; intros.
   destruct (M.elt_eq (repr uf x) (repr uf a));
   destruct (M.elt_eq (repr uf y) (repr uf a)).
@@ -407,7 +407,7 @@ Lemma sameclass_union_3:
      sameclass uf x y
   \/ sameclass uf x a /\ sameclass uf y b
   \/ sameclass uf x b /\ sameclass uf y a.
-Proof.
+Proof using.
   intros until y. unfold sameclass.
   destruct (M.elt_eq (repr uf x) (repr uf a));
   destruct (M.elt_eq (repr uf y) (repr uf a)).
@@ -429,7 +429,7 @@ Definition merge (uf: t) (a b: elt) : t :=
 
 Lemma repr_merge:
   forall uf a b x, repr (merge uf a b) x = repr (union uf a b) x.
-Proof.
+Proof using.
   intros. unfold merge, union. destruct (M.elt_eq (repr uf a) (repr uf b)).
   auto.
   destruct (M.elt_eq (repr uf x) (repr uf a)).
@@ -439,7 +439,7 @@ Qed.
 
 Lemma sameclass_merge:
   forall uf a b x y, sameclass (merge uf a b) x y <-> sameclass (union uf a b) x y.
-Proof.
+Proof using.
   unfold sameclass; intros. repeat rewrite repr_merge. tauto.
 Qed.
 
@@ -449,13 +449,13 @@ Definition path_ord (uf: t) : elt -> elt -> Prop := order uf.(m).
 
 Lemma path_ord_wellfounded:
   forall uf, well_founded (path_ord uf).
-Proof.
+Proof using.
   intros. apply mwf.
 Qed.
 
 Lemma path_ord_canonical:
   forall uf x y, repr uf x = x -> ~path_ord uf y x.
-Proof.
+Proof using.
   intros; red; intros. hnf in H0.
   assert (M.get x (m uf) = None). rewrite <- H. apply repr_res_none.
   congruence.
@@ -464,7 +464,7 @@ Qed.
 Lemma path_ord_merge_1:
   forall uf a b x y,
   path_ord uf x y -> path_ord (merge uf a b) x y.
-Proof.
+Proof using.
   intros. unfold merge.
   destruct (M.elt_eq (repr uf a) (repr uf b)).
   auto.
@@ -475,7 +475,7 @@ Qed.
 Lemma path_ord_merge_2:
   forall uf a b,
   repr uf a <> repr uf b -> path_ord (merge uf a b) b (repr uf a).
-Proof.
+Proof using.
   intros. unfold merge.
   destruct (M.elt_eq (repr uf a) (repr uf b)).
   congruence.
@@ -498,7 +498,7 @@ Definition pathlen (a: elt) : nat := Fix uf.(mwf) (fun _ => nat) F_pathlen a.
 
 Lemma pathlen_unroll:
   forall a, pathlen a = match M.get a uf.(m) with Some a' => S(pathlen a') | None => O end.
-Proof.
+Proof using.
   intros. unfold pathlen at 1. rewrite Fix_eq.
   unfold F_pathlen. destruct (getlink uf.(m) a) as [[a' P] | Q].
   rewrite P; auto.
@@ -510,7 +510,7 @@ Lemma pathlen_none:
   forall a,
   M.get a uf.(m) = None ->
   pathlen a = 0.
-Proof.
+Proof using.
   intros. rewrite pathlen_unroll. rewrite H; auto.
 Qed.
 
@@ -518,13 +518,13 @@ Lemma pathlen_some:
   forall a a',
   M.get a uf.(m) = Some a' ->
   pathlen a = S (pathlen a').
-Proof.
+Proof using.
   intros. rewrite pathlen_unroll. rewrite H; auto.
 Qed.
 
 Lemma pathlen_zero:
   forall a, repr uf a = a <-> pathlen a = O.
-Proof.
+Proof using.
   intros; split; intros.
   apply pathlen_none. rewrite <- H. apply repr_res_none.
   apply repr_none. rewrite pathlen_unroll in H.
@@ -544,7 +544,7 @@ Lemma pathlen_merge:
       pathlen uf x + pathlen uf b + 1
     else
       pathlen uf x.
-Proof.
+Proof using.
   intros. unfold merge.
   destruct (M.elt_eq (repr uf a) (repr uf b)).
   auto.
@@ -568,7 +568,7 @@ Lemma pathlen_gt_merge:
   repr uf x = repr uf y ->
   pathlen uf x > pathlen uf y ->
   pathlen (merge uf a b) x > pathlen (merge uf a b) y.
-Proof.
+Proof using.
   intros. repeat rewrite pathlen_merge.
   destruct (M.elt_eq (repr uf a) (repr uf b)). auto.
   rewrite H. destruct (M.elt_eq (repr uf y) (repr uf a)).
@@ -588,7 +588,7 @@ Lemma compress_order:
   forall x y,
   order (M.set a b uf.(m)) y x ->
   order uf.(m) y x \/ (x = a /\ y = b).
-Proof.
+Proof using.
   intros until y. unfold order. rewrite M.gsspec.
   destruct (M.elt_eq x a).
   intuition congruence.
@@ -598,7 +598,7 @@ Qed.
 Remark compress_Acc:
   forall x,
   Acc (order uf.(m)) x -> Acc (order (M.set a b uf.(m))) x.
-Proof.
+Proof using a_repr_b a_diff_b.
   induction 1. constructor; intros.
   destruct (compress_order _ _ H1) as [A | [A B]].
   auto.
@@ -610,7 +610,7 @@ Qed.
 
 Lemma compress_wf:
   well_founded (order (M.set a b uf.(m))).
-Proof.
+Proof using a_repr_b a_diff_b.
   red; intros. apply compress_Acc. apply uf.(mwf).
 Qed.
 
@@ -618,7 +618,7 @@ Definition compress := mk (M.set a b uf.(m)) compress_wf.
 
 Lemma repr_compress:
   forall x, repr compress x = repr uf x.
-Proof.
+Proof using.
   apply (well_founded_ind (mwf compress)); intros.
   rewrite (repr_unroll compress).
   destruct (M.get x (m compress)) as [y|] eqn:G.
@@ -681,31 +681,31 @@ Definition find (a: elt) : elt * t := proj1_sig (find_x a).
 
 Lemma find_repr:
   forall a, fst (find a) = repr uf a.
-Proof.
+Proof using.
   unfold find; intros. destruct (find_x a) as [[b uf'] [A B]]. simpl. auto.
 Qed.
 
 Lemma find_unchanged:
   forall a x, repr (snd (find a)) x = repr uf x.
-Proof.
+Proof using.
   unfold find; intros. destruct (find_x a) as [[b uf'] [A B]]. simpl. auto.
 Qed.
 
 Lemma sameclass_find_1:
   forall a x y, sameclass (snd (find a)) x y <-> sameclass uf x y.
-Proof.
+Proof using.
   unfold sameclass; intros. repeat rewrite find_unchanged. tauto.
 Qed.
 
 Lemma sameclass_find_2:
   forall a, sameclass uf a (fst (find a)).
-Proof.
+Proof using.
   intros. rewrite find_repr. apply sameclass_repr.
 Qed.
 
 Lemma sameclass_find_3:
   forall a, sameclass (snd (find a)) a (fst (find a)).
-Proof.
+Proof using.
   intros. rewrite sameclass_find_1. apply sameclass_find_2.
 Qed.
 

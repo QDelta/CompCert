@@ -222,7 +222,7 @@ Definition weight_bounds (ob: option bounds) : nat :=
 
 Lemma weight_bounds_1:
   forall lo hi s, weight_bounds (Some (B lo hi s)) < weight_bounds None.
-Proof.
+Proof using.
   intros; simpl. generalize (T.weight_range hi); lia.
 Qed.
 
@@ -230,7 +230,7 @@ Lemma weight_bounds_2:
   forall lo1 hi1 s1 lo2 hi2 s2,
   T.sub lo2 lo1 -> T.sub hi1 hi2 -> lo1 <> lo2 \/ hi1 <> hi2 ->
   weight_bounds (Some (B lo1 hi1 s1)) < weight_bounds (Some (B lo2 hi2 s2)).
-Proof.
+Proof using.
   intros; simpl.
   generalize (T.weight_sub _ _ s1) (T.weight_sub _ _ s2) (T.weight_sub _ _ H) (T.weight_sub _ _ H0); intros.
   destruct H1.
@@ -248,7 +248,7 @@ Lemma weight_type_move:
   /\ (changed = true ->
         weight_bounds e'.(te_typ)!r1 + weight_bounds e'.(te_typ)!r2
         < weight_bounds e.(te_typ)!r1 + weight_bounds e.(te_typ)!r2).
-Proof.
+Proof using.
   unfold type_move; intros.
   destruct (peq r1 r2).
   inv H. split; auto. split; intros. lia. discriminate.
@@ -312,7 +312,7 @@ Definition weight_constraints (b: PTree.t bounds) (cstr: list constraint) : nat 
 Remark weight_constraints_tighter:
   forall b1 b2, (forall r, weight_bounds b1!r <= weight_bounds b2!r) ->
   forall q, weight_constraints b1 q <= weight_constraints b2 q.
-Proof.
+Proof using.
   induction q; simpl. lia. generalize (H (fst a)) (H (snd a)); lia.
 Qed.
 
@@ -322,7 +322,7 @@ Lemma weight_solve_rec:
   (forall r, weight_bounds e'.(te_typ)!r <= weight_bounds e.(te_typ)!r) /\
   weight_constraints e'.(te_typ) e'.(te_sub) + (if changed' && negb changed then 1 else 0)
      <= weight_constraints e.(te_typ) e.(te_sub) + weight_constraints e.(te_typ) q.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. split. intros; lia. replace (changed' && negb changed') with false.
   lia. destruct changed'; auto.
@@ -363,7 +363,7 @@ Function solve_constraints (e: typenv) {measure weight_typenv e}: res typenv :=
   | OK(e', true)  => solve_constraints e'   (**r one more iteration *)
   | Error msg => Error msg
   end.
-Proof.
+Proof using.
   intros. exploit weight_solve_rec; eauto. simpl. intros [A B].
   unfold weight_typenv. lia.
 Qed.
@@ -383,7 +383,7 @@ Definition satisf (te: typassign) (e: typenv) : Prop :=
 /\ (forall x y, In (x, y) e.(te_sub) -> T.sub (te x) (te y)).
 
 Lemma satisf_initial: forall te, satisf te initial.
-Proof.
+Proof using.
   unfold initial; intros; split; simpl; intros.
   rewrite PTree.gempty in H; discriminate.
   contradiction.
@@ -393,7 +393,7 @@ Qed.
 
 Lemma type_def_incr:
   forall te x ty e e', type_def e x ty = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   unfold type_def; intros. destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec ty hi); try discriminate.
   destruct (T.eq lo (T.lub lo ty)); monadInv H.
@@ -412,7 +412,7 @@ Hint Resolve type_def_incr: ty.
 
 Lemma type_def_sound:
   forall te x ty e e', type_def e x ty = OK e' -> satisf te e' -> T.sub ty (te x).
-Proof.
+Proof using.
   unfold type_def; intros. destruct H0 as [P Q].
   destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec ty hi); try discriminate.
@@ -427,7 +427,7 @@ Qed.
 
 Lemma type_defs_incr:
   forall te xl tyl e e', type_defs e xl tyl = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H; eauto with ty.
 Qed.
 
@@ -435,7 +435,7 @@ Hint Resolve type_defs_incr: ty.
 
 Lemma type_defs_sound:
   forall te xl tyl e e', type_defs e xl tyl = OK e' -> satisf te e' -> list_forall2 T.sub tyl (map te xl).
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H.
   constructor.
   constructor; eauto. eapply type_def_sound; eauto with ty.
@@ -443,7 +443,7 @@ Qed.
 
 Lemma type_use_incr:
   forall te x ty e e', type_use e x ty = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   unfold type_use; intros. destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec lo ty); try discriminate.
   destruct (T.eq hi (T.glb hi ty)); monadInv H.
@@ -462,7 +462,7 @@ Hint Resolve type_use_incr: ty.
 
 Lemma type_use_sound:
   forall te x ty e e', type_use e x ty = OK e' -> satisf te e' -> T.sub (te x) ty.
-Proof.
+Proof using.
   unfold type_use; intros. destruct H0 as [P Q].
   destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec lo ty); try discriminate.
@@ -477,7 +477,7 @@ Qed.
 
 Lemma type_uses_incr:
   forall te xl tyl e e', type_uses e xl tyl = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H; eauto with ty.
 Qed.
 
@@ -485,7 +485,7 @@ Hint Resolve type_uses_incr: ty.
 
 Lemma type_uses_sound:
   forall te xl tyl e e', type_uses e xl tyl = OK e' -> satisf te e' -> list_forall2 T.sub (map te xl) tyl.
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H.
   constructor.
   constructor; eauto. eapply type_use_sound; eauto with ty.
@@ -494,7 +494,7 @@ Qed.
 Lemma type_move_incr:
   forall te e r1 r2 e' changed,
   type_move e r1 r2 = OK(changed, e') -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   unfold type_move; intros. destruct H0 as [P Q].
   destruct (peq r1 r2). inv H; split; auto.
   destruct (te_typ e)!r1 as [[lo1 hi1 s1]|] eqn:E1;
@@ -540,7 +540,7 @@ Hint Resolve type_move_incr: ty.
 Lemma type_move_sound:
   forall te e r1 r2 e' changed,
   type_move e r1 r2 = OK(changed, e') -> satisf te e' -> T.sub (te r1) (te r2).
-Proof.
+Proof using.
   unfold type_move; intros. destruct H0 as [P Q].
   destruct (peq r1 r2). subst r2. apply T.sub_refl.
   destruct (te_typ e)!r1 as [[lo1 hi1 s1]|] eqn:E1;
@@ -568,7 +568,7 @@ Qed.
 Lemma solve_rec_incr:
   forall te q e changed e' changed',
   solve_rec e changed q = OK(e', changed') -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. auto.
 - destruct a as [r1 r2]; monadInv H. eauto with ty.
@@ -578,7 +578,7 @@ Lemma solve_rec_sound:
   forall te r1 r2 q e changed e' changed',
   solve_rec e changed q = OK(e', changed') -> In (r1, r2) q -> satisf te e' ->
   T.sub (te r1) (te r2).
-Proof.
+Proof using.
   induction q; simpl; intros.
 - contradiction.
 - destruct a as [r3 r4]; monadInv H. destruct H0.
@@ -590,7 +590,7 @@ Lemma type_move_false:
   forall e r1 r2 e',
   type_move e r1 r2 = OK(false, e') ->
   te_typ e' = te_typ e /\ T.sub (makeassign e r1) (makeassign e r2).
-Proof.
+Proof using.
   unfold type_move; intros.
   destruct (peq r1 r2). inv H. split; auto. apply T.sub_refl.
   unfold makeassign;
@@ -612,7 +612,7 @@ Lemma solve_rec_false:
   solve_rec e changed q = OK(e', false) ->
   changed = false /\
   (In (r1, r2) q -> T.sub (makeassign e r1) (makeassign e r2)).
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. tauto.
 - destruct a as [r3 r4]; monadInv H.
@@ -625,7 +625,7 @@ Qed.
 
 Lemma solve_constraints_incr:
   forall te e e', solve_constraints e = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   intros te e; functional induction (solve_constraints e); intros.
 - inv H. auto.
 - exploit solve_rec_incr; eauto. intros [A B].
@@ -635,7 +635,7 @@ Qed.
 
 Lemma solve_constraints_sound:
   forall e e', solve_constraints e = OK e' -> satisf (makeassign e') e'.
-Proof.
+Proof using.
   intros e0; functional induction (solve_constraints e0); intros.
 - inv H. split; intros.
   unfold makeassign; rewrite H. split; auto with ty.
@@ -646,7 +646,7 @@ Qed.
 
 Theorem solve_sound:
   forall e te, solve e = OK te -> satisf te e.
-Proof.
+Proof using.
   unfold solve; intros. monadInv H.
   eapply solve_constraints_incr. eauto. eapply solve_constraints_sound; eauto.
 Qed.
@@ -656,7 +656,7 @@ Qed.
 Lemma type_def_complete:
   forall te e x ty,
   satisf te e -> T.sub ty (te x) -> exists e', type_def e x ty = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   unfold type_def; intros. destruct H as [P Q].
   destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec ty hi).
@@ -677,7 +677,7 @@ Lemma type_defs_complete:
   forall te xl tyl e,
   satisf te e -> list_forall2 T.sub tyl (map te xl) ->
   exists e', type_defs e xl tyl = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   induction xl; intros; inv H0; simpl.
   econstructor; eauto.
   exploit (type_def_complete te e a a1); auto. intros (e1 & P & Q).
@@ -688,7 +688,7 @@ Qed.
 Lemma type_use_complete:
   forall te e x ty,
   satisf te e -> T.sub (te x) ty -> exists e', type_use e x ty = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   unfold type_use; intros. destruct H as [P Q].
   destruct (te_typ e)!x as [[lo hi s1]|] eqn:E.
 - destruct (T.sub_dec lo ty).
@@ -709,7 +709,7 @@ Lemma type_uses_complete:
   forall te xl tyl e,
   satisf te e -> list_forall2 T.sub (map te xl) tyl ->
   exists e', type_uses e xl tyl = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   induction xl; intros; inv H0; simpl.
   econstructor; eauto.
   exploit (type_use_complete te e a b1); auto. intros (e1 & P & Q).
@@ -721,7 +721,7 @@ Lemma type_move_complete:
   forall te e r1 r2,
   satisf te e -> T.sub (te r1) (te r2) ->
   exists changed e', type_move e r1 r2 = OK(changed, e') /\ satisf te e'.
-Proof.
+Proof using.
   unfold type_move; intros. elim H; intros P Q.
   assert (Q': forall x y, In (x, y) ((r1, r2) :: te_sub e) -> T.sub (te x) (te y)).
   { intros. destruct H1; auto. congruence. }
@@ -771,7 +771,7 @@ Lemma solve_rec_complete:
   satisf te e ->
   (forall r1 r2, In (r1, r2) q -> T.sub (te r1) (te r2)) ->
   exists e' changed', solve_rec e changed q = OK(e', changed') /\ satisf te e'.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - econstructor; econstructor; eauto.
 - destruct a as [r1 r2].
@@ -782,7 +782,7 @@ Qed.
 
 Lemma solve_constraints_complete:
   forall te e, satisf te e -> exists e', solve_constraints e = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   intros te e. functional induction (solve_constraints e); intros.
 - exists e; auto.
 - exploit (solve_rec_complete te (te_sub e) {| te_typ := te_typ e; te_sub := nil |} false).
@@ -799,7 +799,7 @@ Qed.
 
 Lemma solve_complete:
   forall te e, satisf te e -> exists te', solve e = OK te'.
-Proof.
+Proof using.
   intros. unfold solve.
   destruct (solve_constraints_complete te e H) as (e' & P & Q).
   econstructor. rewrite P. simpl. eauto.

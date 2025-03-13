@@ -77,14 +77,14 @@ Definition regs_lessdef (rs1 rs2: Regmap.t val) : Prop :=
 Lemma regs_lessdef_regs:
   forall rs1 rs2, regs_lessdef rs1 rs2 ->
   forall rl, Val.lessdef_list rs1##rl rs2##rl.
-Proof.
+Proof using.
   induction rl; constructor; auto.
 Qed.
 
 Lemma set_reg_lessdef:
   forall r v1 v2 rs1 rs2,
   Val.lessdef v1 v2 -> regs_lessdef rs1 rs2 -> regs_lessdef (rs1#r <- v1) (rs2#r <- v2).
-Proof.
+Proof using.
   intros; red; intros. repeat rewrite Regmap.gsspec.
   destruct (peq r0 r); auto.
 Qed.
@@ -93,7 +93,7 @@ Lemma set_res_lessdef:
   forall res v1 v2 rs1 rs2,
   Val.lessdef v1 v2 -> regs_lessdef rs1 rs2 ->
   regs_lessdef (regmap_setres res v1 rs1) (regmap_setres res v2 rs2).
-Proof.
+Proof using.
   intros. destruct res; simpl; auto. apply set_reg_lessdef; auto.
 Qed.
 

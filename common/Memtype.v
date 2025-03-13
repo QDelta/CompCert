@@ -65,7 +65,7 @@ Global Hint Constructors perm_order: mem.
 
 Lemma perm_order_trans:
   forall p1 p2 p3, perm_order p1 p2 -> perm_order p2 p3 -> perm_order p1 p3.
-Proof.
+Proof using.
   intros. inv H; inv H0; constructor.
 Qed.
 

@@ -53,7 +53,7 @@ Definition FF2R beta x :=
 Lemma SF2R_FF2SF :
   forall beta x,
   SF2R beta (FF2SF x) = FF2R beta x.
-Proof.
+Proof using.
 now intros beta [s|s|s m|s m e].
 Qed.
 
@@ -68,14 +68,14 @@ Definition SF2FF x :=
 Lemma FF2SF_SF2FF :
   forall x,
   FF2SF (SF2FF x) = x.
-Proof.
+Proof using.
 now intros [s|s| |s m e].
 Qed.
 
 Lemma FF2R_SF2FF :
   forall beta x,
   FF2R beta (SF2FF x) = SF2R beta x.
-Proof.
+Proof using.
 now intros beta [s|s| |s m e].
 Qed.
 
@@ -88,14 +88,14 @@ Definition is_nan_FF f :=
 Lemma is_nan_SF2FF :
   forall x,
   is_nan_FF (SF2FF x) = is_nan_SF x.
-Proof.
+Proof using.
 now intros [s|s| |s m e].
 Qed.
 
 Lemma is_nan_FF2SF :
   forall x,
   is_nan_SF (FF2SF x) = is_nan_FF x.
-Proof.
+Proof using.
 now intros [s|s|s m|s m e].
 Qed.
 
@@ -103,7 +103,7 @@ Lemma SF2FF_FF2SF :
   forall x,
   is_nan_FF x = false ->
   SF2FF (FF2SF x) = x.
-Proof.
+Proof using.
 now intros [s|s|s m|s m e] H.
 Qed.
 
@@ -125,14 +125,14 @@ Definition is_finite_FF f :=
 Lemma is_finite_SF2FF :
   forall x,
   is_finite_FF (SF2FF x) = is_finite_SF x.
-Proof.
+Proof using.
 now intros [| | |].
 Qed.
 
 Lemma sign_SF2FF :
   forall x,
   sign_FF (SF2FF x) = sign_SF x.
-Proof.
+Proof using.
 now intros [| | |].
 Qed.
 
@@ -174,7 +174,7 @@ Lemma valid_binary_SF2FF :
   forall x,
   is_nan_SF x = false ->
   valid_binary (SF2FF x) = valid_binary_SF x.
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex] H.
 Qed.
 
@@ -230,20 +230,20 @@ Definition B2SF (x : binary_float) :=
 Lemma B2SF_B2BSN :
   forall x,
   BinarySingleNaN.B2SF (B2BSN x) = B2SF x.
-Proof.
+Proof using.
 now intros [sx|sx|sx px Px|sx mx ex Bx].
 Qed.
 
 Lemma B2SF_FF2B :
   forall x Bx,
   B2SF (FF2B x Bx) = FF2SF x.
-Proof.
+Proof using.
 now intros [sx|sx|sx px|sx mx ex] Bx.
 Qed.
 
 Lemma B2R_B2BSN :
   forall x, BinarySingleNaN.B2R (B2BSN x) = B2R x.
-Proof.
+Proof using.
 intros x.
 now destruct x.
 Qed.
@@ -251,35 +251,35 @@ Qed.
 Lemma FF2SF_B2FF :
   forall x,
   FF2SF (B2FF x) = B2SF x.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx|sx mx ex].
 Qed.
 
 Theorem FF2R_B2FF :
   forall x,
   FF2R radix2 (B2FF x) = B2R x.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx Hplx|sx mx ex Hx].
 Qed.
 
 Theorem B2FF_FF2B :
   forall x Hx,
   B2FF (FF2B x Hx) = x.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx|sx mx ex] Hx.
 Qed.
 
 Theorem valid_binary_B2FF :
   forall x,
   valid_binary (B2FF x) = true.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx Hplx|sx mx ex Hx].
 Qed.
 
 Theorem FF2B_B2FF :
   forall x H,
   FF2B (B2FF x) H = x.
-Proof.
+Proof using.
 intros [sx|sx|sx plx Hplx|sx mx ex Hx] H ; try easy.
 apply f_equal, eqbool_irrelevance.
 apply f_equal, eqbool_irrelevance.
@@ -288,7 +288,7 @@ Qed.
 Theorem FF2B_B2FF_valid :
   forall x,
   FF2B (B2FF x) (valid_binary_B2FF x) = x.
-Proof.
+Proof using.
 intros x.
 apply FF2B_B2FF.
 Qed.
@@ -296,7 +296,7 @@ Qed.
 Theorem B2R_FF2B :
   forall x Hx,
   B2R (FF2B x Hx) = FF2R radix2 x.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx|sx mx ex] Hx.
 Qed.
 
@@ -314,7 +314,7 @@ Theorem match_FF2B :
   | F754_nan b p => fn b p
   | F754_finite sx mx ex => ff sx mx ex
   end.
-Proof.
+Proof using.
 now intros T fz fi fn ff [sx|sx|sx plx|sx mx ex] Hx.
 Qed.
 
@@ -322,7 +322,7 @@ Theorem canonical_canonical_mantissa :
   forall (sx : bool) mx ex,
   canonical_mantissa mx ex = true ->
   canonical radix2 fexp (Float radix2 (cond_Zopp sx (Zpos mx)) ex).
-Proof.
+Proof using.
 intros sx mx ex H.
 now apply canonical_canonical_mantissa.
 Qed.
@@ -330,7 +330,7 @@ Qed.
 Theorem generic_format_B2R :
   forall x,
   generic_format radix2 fexp (B2R x).
-Proof.
+Proof using.
 intros [sx|sx|sx plx Hx |sx mx ex Hx] ; try apply generic_format_0.
 simpl.
 apply generic_format_canonical.
@@ -340,7 +340,7 @@ Qed.
 Theorem FLT_format_B2R :
   forall x,
   FLT_format radix2 emin prec (B2R x).
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 intros x.
 apply FLT_format_generic...
 apply generic_format_B2R.
@@ -350,7 +350,7 @@ Theorem B2FF_inj :
   forall x y : binary_float,
   B2FF x = B2FF y ->
   x = y.
-Proof.
+Proof using.
 intros [sx|sx|sx plx Hplx|sx mx ex Hx] [sy|sy|sy ply Hply|sy my ey Hy] ; try easy.
 (* *)
 intros H.
@@ -384,7 +384,7 @@ Definition is_finite_strict f :=
 
 Lemma is_finite_strict_B2BSN :
   forall x, BinarySingleNaN.is_finite_strict (B2BSN x) = is_finite_strict x.
-Proof.
+Proof using.
 intros x.
 now destruct x.
 Qed.
@@ -395,7 +395,7 @@ Theorem B2R_inj:
   is_finite_strict y = true ->
   B2R x = B2R y ->
   x = y.
-Proof.
+Proof using.
 intros [sx|sx| |sx mx ex Hx] [sy|sy| |sy my ey Hy] ; try easy.
 simpl.
 intros _ _ Heq.
@@ -438,7 +438,7 @@ Definition Bsign x :=
 Theorem Bsign_FF2B :
   forall x H,
   Bsign (FF2B x H) = sign_FF x.
-Proof.
+Proof using.
 now intros [sx|sx|sx plx|sx mx ex] H.
 Qed.
 
@@ -451,7 +451,7 @@ Definition is_finite f :=
 
 Lemma is_finite_B2BSN :
   forall x, BinarySingleNaN.is_finite (B2BSN x) = is_finite x.
-Proof.
+Proof using.
 intros x.
 now destruct x.
 Qed.
@@ -459,14 +459,14 @@ Qed.
 Theorem is_finite_FF2B :
   forall x Hx,
   is_finite (FF2B x Hx) = is_finite_FF x.
-Proof.
+Proof using.
 now intros [| | |].
 Qed.
 
 Theorem is_finite_B2FF :
   forall x,
   is_finite_FF (B2FF x) = is_finite x.
-Proof.
+Proof using.
 now intros [| | |].
 Qed.
 
@@ -477,7 +477,7 @@ Theorem B2R_Bsign_inj:
     B2R x = B2R y ->
     Bsign x = Bsign y ->
     x = y.
-Proof.
+Proof using.
 intros. destruct x, y; try (apply B2R_inj; now eauto).
 - simpl in H2. congruence.
 - symmetry in H1. apply Rmult_integral in H1.
@@ -499,21 +499,21 @@ Definition is_nan f :=
 Lemma is_nan_B2BSN :
   forall x,
   BinarySingleNaN.is_nan (B2BSN x) =  is_nan x.
-Proof.
+Proof using.
 now intros [s|s|s p H|s m e H].
 Qed.
 
 Theorem is_nan_FF2B :
   forall x Hx,
   is_nan (FF2B x Hx) = is_nan_FF x.
-Proof.
+Proof using.
 now intros [| | |].
 Qed.
 
 Theorem is_nan_B2FF :
   forall x,
   is_nan_FF (B2FF x) = is_nan x.
-Proof.
+Proof using.
 now intros [| |? []|].
 Qed.
 
@@ -521,7 +521,7 @@ Definition get_nan_pl (x : binary_float) : positive :=
   match x with B754_nan _ pl _ => pl | _ => xH end.
 
 Definition build_nan (x : { x | is_nan x = true }) : binary_float.
-Proof.
+Proof using.
 apply (B754_nan (Bsign (proj1_sig x)) (get_nan_pl (proj1_sig x))).
 destruct x as [x H].
 assert (K: false = true -> nan_pl 1 = true) by (intros K ; now elim Bool.diff_false_true).
@@ -535,26 +535,26 @@ Defined.
 Theorem build_nan_correct :
   forall x : { x | is_nan x = true },
   build_nan x = proj1_sig x.
-Proof.
+Proof using.
 intros [x H].
 now destruct x.
 Qed.
 
 Theorem B2R_build_nan :
   forall x, B2R (build_nan x) = 0%R.
-Proof.
+Proof using.
 easy.
 Qed.
 
 Theorem is_finite_build_nan :
   forall x, is_finite (build_nan x) = false.
-Proof.
+Proof using.
 easy.
 Qed.
 
 Theorem is_nan_build_nan :
   forall x, is_nan (build_nan x) = true.
-Proof.
+Proof using.
 easy.
 Qed.
 
@@ -569,43 +569,43 @@ Definition BSN2B (nan : {x : binary_float | is_nan x = true }) (x : BinarySingle
 Lemma B2BSN_BSN2B :
   forall nan x,
   B2BSN (BSN2B nan x) = x.
-Proof.
+Proof using.
 now intros nan [s|s| |s m e H].
 Qed.
 
 Lemma B2R_BSN2B :
   forall nan x, B2R (BSN2B nan x) = BinarySingleNaN.B2R x.
-Proof.
+Proof using.
 now intros nan [s|s| |s m e H].
 Qed.
 
 Lemma is_finite_BSN2B :
   forall nan x, is_finite (BSN2B nan x) = BinarySingleNaN.is_finite x.
-Proof.
+Proof using.
 now intros nan [s|s| |s m e H].
 Qed.
 
 Lemma is_nan_BSN2B :
   forall nan x, is_nan (BSN2B nan x) = BinarySingleNaN.is_nan x.
-Proof.
+Proof using.
 now intros nan [s|s| |s m e H].
 Qed.
 
 Lemma Bsign_B2BSN :
   forall x, is_nan x = false -> BinarySingleNaN.Bsign (B2BSN x) = Bsign x.
-Proof.
+Proof using.
 now intros [s|s| |s m e H].
 Qed.
 
 Lemma Bsign_BSN2B :
   forall nan x, BinarySingleNaN.is_nan x = false ->
   Bsign (BSN2B nan x) = BinarySingleNaN.Bsign x.
-Proof.
+Proof using.
 now intros nan [s|s| |s m e H].
 Qed.
 
 Definition BSN2B' (x : BinarySingleNaN.binary_float prec emax) : BinarySingleNaN.is_nan x = false -> binary_float.
-Proof.
+Proof using.
 destruct x as [sx|sx| |sx mx ex Bx] ; intros H.
 exact (B754_zero sx).
 exact (B754_infinity sx).
@@ -616,47 +616,47 @@ Defined.
 Lemma B2BSN_BSN2B' :
   forall x Nx,
   B2BSN (BSN2B' x Nx) = x.
-Proof.
+Proof using.
 now intros [s|s| |s m e H] Nx.
 Qed.
 
 Lemma B2R_BSN2B' :
   forall x Nx,
   B2R (BSN2B' x Nx) = BinarySingleNaN.B2R x.
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex Bx] Nx.
 Qed.
 
 Lemma B2FF_BSN2B' :
   forall x Nx,
   B2FF (BSN2B' x Nx) = SF2FF (BinarySingleNaN.B2SF x).
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex Bx] Nx.
 Qed.
 
 Lemma Bsign_BSN2B' :
   forall x Nx,
   Bsign (BSN2B' x Nx) = BinarySingleNaN.Bsign x.
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex Bx] Nx.
 Qed.
 
 Lemma is_finite_BSN2B' :
   forall x Nx,
   is_finite (BSN2B' x Nx) = BinarySingleNaN.is_finite x.
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex Bx] Nx.
 Qed.
 
 Lemma is_nan_BSN2B' :
   forall x Nx,
   is_nan (BSN2B' x Nx) = false.
-Proof.
+Proof using.
 now intros [sx|sx| |sx mx ex Bx] Nx.
 Qed.
 
 Definition erase (x : binary_float) : binary_float.
-Proof.
+Proof using.
 destruct x as [s|s|s pl H|s m e H].
 - exact (B754_zero s).
 - exact (B754_infinity s).
@@ -672,7 +672,7 @@ Defined.
 
 Theorem erase_correct :
   forall x, erase x = x.
-Proof.
+Proof using.
 destruct x as [s|s|s pl H|s m e H] ; try easy ; simpl.
 - apply f_equal, eqbool_irrelevance.
 - apply f_equal, eqbool_irrelevance.
@@ -692,14 +692,14 @@ Theorem Bopp_involutive :
   forall opp_nan x,
   is_nan x = false ->
   Bopp opp_nan (Bopp opp_nan x) = x.
-Proof.
+Proof using.
 now intros opp_nan [sx|sx|sx plx|sx mx ex Hx] ; simpl ; try rewrite Bool.negb_involutive.
 Qed.
 
 Theorem B2R_Bopp :
   forall opp_nan x,
   B2R (Bopp opp_nan x) = (- B2R x)%R.
-Proof.
+Proof using.
 intros opp_nan [sx|sx|sx plx Hplx|sx mx ex Hx]; apply sym_eq ; try apply Ropp_0.
 simpl.
 rewrite <- F2R_opp.
@@ -709,13 +709,13 @@ Qed.
 Theorem is_finite_Bopp :
   forall opp_nan x,
   is_finite (Bopp opp_nan x) = is_finite x.
-Proof.
+Proof using.
 now intros opp_nan [| | |].
 Qed.
 
 Lemma Bsign_Bopp :
   forall opp_nan x, is_nan x = false -> Bsign (Bopp opp_nan x) = negb (Bsign x).
-Proof. now intros opp_nan [s|s|s pl H|s m e H]. Qed.
+Proof using. now intros opp_nan [s|s|s pl H|s m e H]. Qed.
 
 (** Absolute value *)
 
@@ -730,7 +730,7 @@ Definition Babs abs_nan (x : binary_float) : binary_float :=
 Theorem B2R_Babs :
   forall abs_nan x,
   B2R (Babs abs_nan x) = Rabs (B2R x).
-Proof.
+Proof using.
   intros abs_nan [sx|sx|sx plx Hx|sx mx ex Hx]; apply sym_eq ; try apply Rabs_R0.
   simpl. rewrite <- F2R_abs. now destruct sx.
 Qed.
@@ -738,7 +738,7 @@ Qed.
 Theorem is_finite_Babs :
   forall abs_nan x,
   is_finite (Babs abs_nan x) = is_finite x.
-Proof.
+Proof using.
   now intros abs_nan [| | |].
 Qed.
 
@@ -746,7 +746,7 @@ Theorem Bsign_Babs :
   forall abs_nan x,
   is_nan x = false ->
   Bsign (Babs abs_nan x) = false.
-Proof.
+Proof using.
   now intros abs_nan [| | |].
 Qed.
 
@@ -754,7 +754,7 @@ Theorem Babs_idempotent :
   forall abs_nan (x: binary_float),
   is_nan x = false ->
   Babs abs_nan (Babs abs_nan x) = Babs abs_nan x.
-Proof.
+Proof using.
   now intros abs_nan [sx|sx|sx plx|sx mx ex Hx].
 Qed.
 
@@ -762,7 +762,7 @@ Theorem Babs_Bopp :
   forall abs_nan opp_nan x,
   is_nan x = false ->
   Babs abs_nan (Bopp opp_nan x) = Babs abs_nan x.
-Proof.
+Proof using.
   now intros abs_nan opp_nan [| | |].
 Qed.
 
@@ -777,7 +777,7 @@ Theorem Bcompare_correct :
   forall f1 f2,
   is_finite f1 = true -> is_finite f2 = true ->
   Bcompare f1 f2 = Some (Rcompare (B2R f1) (B2R f2)).
-Proof.
+Proof using.
   intros f1 f2 H1 H2.
   unfold Bcompare.
   rewrite BinarySingleNaN.Bcompare_correct.
@@ -789,7 +789,7 @@ Qed.
 Theorem Bcompare_swap :
   forall x y,
   Bcompare y x = match Bcompare x y with Some c => Some (CompOpp c) | None => None end.
-Proof.
+Proof using.
   intros.
   apply BinarySingleNaN.Bcompare_swap.
 Qed.
@@ -799,7 +799,7 @@ Theorem bounded_le_emax_minus_prec :
   bounded mx ex = true ->
   (F2R (Float radix2 (Zpos mx) ex)
    <= bpow radix2 emax - bpow radix2 (emax - prec))%R.
-Proof.
+Proof using prec_gt_0_.
 now apply BinarySingleNaN.bounded_le_emax_minus_prec.
 Qed.
 
@@ -807,7 +807,7 @@ Theorem bounded_lt_emax :
   forall mx ex,
   bounded mx ex = true ->
   (F2R (Float radix2 (Zpos mx) ex) < bpow radix2 emax)%R.
-Proof.
+Proof using.
 now apply bounded_lt_emax.
 Qed.
 
@@ -815,14 +815,14 @@ Theorem bounded_ge_emin :
   forall mx ex,
   bounded mx ex = true ->
   (bpow radix2 emin <= F2R (Float radix2 (Zpos mx) ex))%R.
-Proof.
+Proof using.
 now apply bounded_ge_emin.
 Qed.
 
 Theorem abs_B2R_le_emax_minus_prec :
   forall x,
   (Rabs (B2R x) <= bpow radix2 emax - bpow radix2 (emax - prec))%R.
-Proof.
+Proof using prec_gt_0_.
 intros x.
 rewrite <- B2R_B2BSN.
 now apply abs_B2R_le_emax_minus_prec.
@@ -831,7 +831,7 @@ Qed.
 Theorem abs_B2R_lt_emax :
   forall x,
   (Rabs (B2R x) < bpow radix2 emax)%R.
-Proof.
+Proof using.
 intros x.
 rewrite <- B2R_B2BSN.
 now apply abs_B2R_lt_emax.
@@ -841,7 +841,7 @@ Theorem abs_B2R_ge_emin :
   forall x,
   is_finite_strict x = true ->
   (bpow radix2 emin <= Rabs (B2R x))%R.
-Proof.
+Proof using.
 intros x.
 rewrite <- is_finite_strict_B2BSN.
 rewrite <- B2R_B2BSN.
@@ -853,7 +853,7 @@ Theorem bounded_canonical_lt_emax :
   canonical radix2 fexp (Float radix2 (Zpos mx) ex) ->
   (F2R (Float radix2 (Zpos mx) ex) < bpow radix2 emax)%R ->
   bounded mx ex = true.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 intros mx ex.
 now apply bounded_canonical_lt_emax.
 Qed.
@@ -867,7 +867,7 @@ Theorem shr_fexp_truncate :
   (0 <= m)%Z ->
   shr_fexp m e l =
   let '(m', e', l') := truncate radix2 fexp (m, e, l) in (shr_record_of_loc m' l', e').
-Proof.
+Proof using prec_gt_0_.
 intros m e l.
 now apply shr_fexp_truncate.
 Qed.
@@ -881,7 +881,7 @@ Lemma eq_binary_overflow_FF2SF :
   forall x m s,
   FF2SF x = BinarySingleNaN.binary_overflow prec emax m s ->
   x = binary_overflow m s.
-Proof.
+Proof using.
 intros x m s H.
 unfold binary_overflow.
 rewrite <- H.
@@ -905,7 +905,7 @@ Theorem binary_round_aux_correct' :
     is_finite_FF z = true /\ sign_FF z = Rlt_bool x 0
   else
     z = binary_overflow mode (Rlt_bool x 0).
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 intros mode x mx ex lx Px Bx Ex.
 generalize (binary_round_aux_correct' prec emax _ _ mode x mx ex lx Px Bx Ex).
 unfold binary_round_aux.
@@ -929,7 +929,7 @@ Theorem binary_round_aux_correct :
     is_finite_FF z = true /\ sign_FF z = Rlt_bool x 0
   else
     z = binary_overflow mode (Rlt_bool x 0).
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 intros mode x mx ex lx Bx Ex.
 generalize (binary_round_aux_correct prec emax _ _ mode x mx ex lx Bx Ex).
 unfold binary_round_aux.
@@ -956,7 +956,7 @@ Theorem Bmult_correct :
       Bsign (Bmult mult_nan m x y) = xorb (Bsign x) (Bsign y))
   else
     B2FF (Bmult mult_nan m x y) = binary_overflow m (xorb (Bsign x) (Bsign y)).
-Proof.
+Proof using.
 intros mult_nan mode x y.
 generalize (Bmult_correct prec emax _ _ mode (B2BSN x) (B2BSN y)).
 replace (BinarySingleNaN.Bmult _ _ _) with (B2BSN (Bmult mult_nan mode x y)) by apply B2BSN_BSN2B.
@@ -983,7 +983,7 @@ Lemma shl_align_fexp_correct :
   let (mx', ex') := shl_align_fexp mx ex in
   F2R (Float radix2 (Zpos mx) ex) = F2R (Float radix2 (Zpos mx') ex') /\
   (ex' <= fexp (Zdigits radix2 (Zpos mx') + ex'))%Z.
-Proof.
+Proof using.
 intros mx ex.
 apply shl_align_fexp_correct.
 Qed.
@@ -1002,7 +1002,7 @@ Theorem binary_round_correct :
     sign_FF z = sx
   else
     z = binary_overflow m sx.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 intros mode sx mx ex.
 generalize (binary_round_correct prec emax _ _ mode sx mx ex).
 simpl.
@@ -1032,7 +1032,7 @@ Theorem binary_normalize_correct :
       end
   else
     B2FF (binary_normalize m mx ex szero) = binary_overflow m (Rlt_bool (F2R (Float radix2 mx ex)) 0).
-Proof.
+Proof using.
 intros mode mx ex szero.
 generalize (binary_normalize_correct prec emax _ _ mode mx ex szero).
 replace (BinarySingleNaN.binary_normalize _ _ _ _ _ _ _ _) with (B2BSN (binary_normalize mode mx ex szero)) by apply B2BSN_BSN2B'.
@@ -1065,7 +1065,7 @@ Theorem Bplus_correct :
       end
   else
     (B2FF (Bplus plus_nan m x y) = binary_overflow m (Bsign x) /\ Bsign x = Bsign y).
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros plus_nan mode x y Fx Fy.
 rewrite <- is_finite_B2BSN in Fx, Fy.
 generalize (Bplus_correct prec emax _ _ mode _ _ Fx Fy).
@@ -1102,7 +1102,7 @@ Theorem Bminus_correct :
       end
   else
     (B2FF (Bminus minus_nan m x y) = binary_overflow m (Bsign x) /\ Bsign x = negb (Bsign y)).
-Proof with auto with typeclass_instances.
+Proof using () with auto with typeclass_instances.
 intros minus_nan mode x y Fx Fy.
 rewrite <- is_finite_B2BSN in Fx, Fy.
 generalize (Bminus_correct prec emax _ _ mode _ _ Fx Fy).
@@ -1143,7 +1143,7 @@ Theorem Bfma_correct:
       end
   else
     B2FF (Bfma fma_nan m x y z) = binary_overflow m (Rlt_bool res 0).
-Proof.
+Proof using.
 intros fma_nan mode x y z Fx Fy Fz.
 rewrite <- is_finite_B2BSN in Fx, Fy, Fz.
 generalize (Bfma_correct prec emax _ _ mode _ _ _ Fx Fy Fz).
@@ -1172,7 +1172,7 @@ Theorem Bdiv_correct :
       Bsign (Bdiv div_nan m x y) = xorb (Bsign x) (Bsign y))
   else
     B2FF (Bdiv div_nan m x y) = binary_overflow m (xorb (Bsign x) (Bsign y)).
-Proof.
+Proof using.
 intros div_nan mode x y Zy.
 rewrite <- B2R_B2BSN in Zy.
 generalize (Bdiv_correct prec emax _ _ mode (B2BSN x) _ Zy).
@@ -1198,7 +1198,7 @@ Theorem Bsqrt_correct :
   B2R (Bsqrt sqrt_nan m x) = round radix2 fexp (round_mode m) (sqrt (B2R x)) /\
   is_finite (Bsqrt sqrt_nan m x) = match x with B754_zero _ => true | B754_finite false _ _ _ => true | _ => false end /\
   (is_nan (Bsqrt sqrt_nan m x) = false -> Bsign (Bsqrt sqrt_nan m x) = Bsign x).
-Proof.
+Proof using.
 intros sqrt_nan mode x.
 generalize (Bsqrt_correct prec emax _ _ mode (B2BSN x)).
 replace (BinarySingleNaN.Bsqrt _ _) with (B2BSN (Bsqrt sqrt_nan mode x)) by apply B2BSN_BSN2B.
@@ -1217,7 +1217,7 @@ Theorem Bnearbyint_correct :
   B2R (Bnearbyint nearbyint_nan md x) = round radix2 (FIX_exp 0) (round_mode md) (B2R x) /\
   is_finite (Bnearbyint nearbyint_nan md x) = is_finite x /\
   (is_nan (Bnearbyint nearbyint_nan md x) = false -> Bsign (Bnearbyint nearbyint_nan md x) = Bsign x).
-Proof.
+Proof using.
 intros nearbyint_nan mode x.
 generalize (Bnearbyint_correct prec emax _ mode (B2BSN x)).
 replace (BinarySingleNaN.Bnearbyint _ _) with (B2BSN (Bnearbyint nearbyint_nan mode x)) by apply B2BSN_BSN2B.
@@ -1231,7 +1231,7 @@ Definition Btrunc x := Btrunc (B2BSN x).
 Theorem Btrunc_correct :
   forall x,
   IZR (Btrunc x) = round radix2 (FIX_exp 0) Ztrunc (B2R x).
-Proof.
+Proof using prec_lt_emax_.
   intros x.
   rewrite <-B2R_B2BSN.
   now apply Btrunc_correct.
@@ -1243,21 +1243,21 @@ Definition Bone :=
   BSN2B' _ (@is_nan_Bone prec emax _ _).
 
 Theorem Bone_correct : B2R Bone = 1%R.
-Proof.
+Proof using.
 unfold Bone.
 rewrite B2R_BSN2B'.
 apply Bone_correct.
 Qed.
 
 Lemma is_finite_Bone : is_finite Bone = true.
-Proof.
+Proof using.
 unfold Bone.
 rewrite is_finite_BSN2B'.
 apply is_finite_Bone.
 Qed.
 
 Lemma Bsign_Bone : Bsign Bone = false.
-Proof.
+Proof using.
 unfold Bone.
 rewrite Bsign_BSN2B'.
 apply Bsign_Bone.
@@ -1272,7 +1272,7 @@ Definition Bnormfr_mantissa x :=
   Bnormfr_mantissa (B2BSN x).
 
 Definition lift x y (Ny : @BinarySingleNaN.is_nan prec emax y = is_nan x) : binary_float.
-Proof.
+Proof using.
 destruct (is_nan x).
 exact x.
 now apply (BSN2B' y).
@@ -1281,7 +1281,7 @@ Defined.
 Lemma B2BSN_lift :
   forall x y Ny,
   B2BSN (lift x y Ny) = y.
-Proof.
+Proof using.
 intros x y Ny.
 unfold lift.
 destruct x as [sx|sx|sx px Px|sx mx ex Bx] ; simpl ; try apply B2BSN_BSN2B'.
@@ -1289,7 +1289,7 @@ now destruct y.
 Qed.
 
 Definition Bldexp (mode : mode) (x : binary_float) (e : Z) : binary_float.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 apply (lift x (Bldexp mode (B2BSN x) e)).
 rewrite <- is_nan_B2BSN.
 apply is_nan_Bldexp.
@@ -1306,7 +1306,7 @@ Theorem Bldexp_correct :
     Bsign (Bldexp m f e) = Bsign f
   else
     B2FF (Bldexp m f e) = binary_overflow m (Bsign f).
-Proof.
+Proof using.
 intros mode x e.
 generalize (Bldexp_correct prec emax _ _ mode (B2BSN x) e).
 replace (BinarySingleNaN.Bldexp _ _ _) with (B2BSN (Bldexp mode x e)) by apply B2BSN_lift.
@@ -1332,7 +1332,7 @@ Section Bfrexp.
 Hypothesis Hemax : (2 < emax)%Z.
 
 Definition Bfrexp (x : binary_float) : binary_float * Z.
-Proof.
+Proof using prec_gt_0_.
 set (y := Bfrexp (B2BSN x)).
 refine (pair _ (snd y)).
 apply (lift x (fst y)).
@@ -1349,7 +1349,7 @@ Theorem Bfrexp_correct :
   (/2 <= Rabs (B2R z) < 1)%R /\
   (x = B2R z * bpow radix2 e)%R /\
   e = mag radix2 x.
-Proof.
+Proof using Hemax.
 intros x Fx.
 rewrite <- is_finite_strict_B2BSN in Fx.
 generalize (Bfrexp_correct prec emax _ (B2BSN x) Fx).
@@ -1366,7 +1366,7 @@ End Bfrexp.
 (** Ulp *)
 
 Definition Bulp (x : binary_float) : binary_float.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 apply (lift x (Bulp (B2BSN x))).
 rewrite <- is_nan_B2BSN.
 apply is_nan_Bulp.
@@ -1378,7 +1378,7 @@ Theorem Bulp_correct :
   B2R (Bulp x) = ulp radix2 fexp (B2R x) /\
   is_finite (Bulp x) = true /\
   Bsign (Bulp x) = false.
-Proof.
+Proof using.
 intros x Fx.
 rewrite <- is_finite_B2BSN in Fx.
 generalize (Bulp_correct prec emax _ _ _ Fx).
@@ -1390,7 +1390,7 @@ Qed.
 (** Successor (and predecessor) *)
 
 Definition Bsucc (x : binary_float) : binary_float.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 apply (lift x (Bsucc (B2BSN x))).
 rewrite <- is_nan_B2BSN.
 apply is_nan_Bsucc.
@@ -1405,7 +1405,7 @@ Lemma Bsucc_correct :
     (Bsign (Bsucc x) = Bsign x && is_finite_strict x)%bool
   else
     B2FF (Bsucc x) = F754_infinity false.
-Proof.
+Proof using.
 intros x Fx.
 rewrite <- is_finite_B2BSN in Fx.
 generalize (Bsucc_correct prec emax _ _ _ Fx).
@@ -1419,7 +1419,7 @@ destruct Rlt_bool.
 Qed.
 
 Definition Bpred (x : binary_float) : binary_float.
-Proof.
+Proof using prec_lt_emax_ prec_gt_0_.
 apply (lift x (Bpred (B2BSN x))).
 rewrite <- is_nan_B2BSN.
 apply is_nan_Bpred.
@@ -1434,7 +1434,7 @@ Lemma Bpred_correct :
     (Bsign (Bpred x) = Bsign x || negb (is_finite_strict x))%bool
   else
     B2FF (Bpred x) = F754_infinity true.
-Proof.
+Proof using.
 intros x Fx.
 rewrite <- is_finite_B2BSN in Fx.
 generalize (Bpred_correct prec emax _ _ _ Fx).

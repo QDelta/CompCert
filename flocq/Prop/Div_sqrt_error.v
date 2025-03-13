@@ -36,7 +36,7 @@ Lemma generic_format_plus_prec :
   (x = F2R fx)%R -> (y = F2R fy)%R -> (Rabs (x+y) < bpow (prec+Fexp fx))%R ->
   (Rabs (x+y) < bpow (prec+Fexp fy))%R ->
   generic_format beta fexp (x+y)%R.
-Proof.
+Proof using.
 intros fexp Hfexp x y fx fy Hx Hy H1 H2.
 case (Req_dec (x+y) 0); intros H.
 rewrite H; apply generic_format_0.
@@ -68,7 +68,7 @@ Theorem div_error_FLX :
   forall rnd { Zrnd : Valid_rnd rnd } x y,
   format x -> format y ->
   format (x - round beta (FLX_exp prec) rnd (x/y) * y)%R.
-Proof with auto with typeclass_instances.
+Proof using prec_gt_0_ with auto with typeclass_instances.
 intros rnd Zrnd x y Hx Hy.
 destruct (Req_dec y 0) as [Zy|Zy].
 now rewrite Zy, Rmult_0_r, Rminus_0_r.
@@ -147,7 +147,7 @@ Variable Hp1 : Z.lt 1 prec.
 Theorem sqrt_error_FLX_N :
   forall x, format x ->
   format (x - Rsqr (round beta (FLX_exp prec) (Znearest choice) (sqrt x)))%R.
-Proof with auto with typeclass_instances.
+Proof using (prec_gt_0_ Hp1) with auto with typeclass_instances.
 intros x Hx.
 destruct (total_order_T x 0) as [[Hxz|Hxz]|Hxz].
 unfold sqrt.
@@ -290,7 +290,7 @@ Qed.
 Lemma sqrt_error_N_FLX_aux1 x (Fx : format x) (Px : (0 < x)%R) :
   exists (mu : R) (e : Z), (format mu /\ x = mu * bpow (2 * e) :> R
                             /\ 1 <= mu < bpow 2)%R.
-Proof.
+Proof using.
 set (e := ((mag beta x - 1) / 2)%Z).
 set (mu := (x * bpow (-2 * e)%Z)%R).
 assert (Hbe : (bpow (-2 * e) * bpow (2 * e) = 1)%R).
@@ -326,7 +326,7 @@ Notation u_ro := (u_ro beta prec).
 Lemma sqrt_error_N_FLX_aux2 x (Fx : format x) :
   (1 <= x)%R ->
   (x = 1 :> R \/ x = 1 + 2 * u_ro :> R \/ 1 + 4 * u_ro <= x)%R.
-Proof.
+Proof using prec_gt_0_ Hp1.
 intro HxGe1.
 assert (Pu_ro : (0 <= u_ro)%R); [apply Rmult_le_pos; [lra|apply bpow_ge_0]|].
 destruct (Rle_or_lt x 1) as [HxLe1|HxGt1]; [now left; apply Rle_antisym|right].
@@ -359,7 +359,7 @@ Qed.
 
 Lemma sqrt_error_N_FLX_aux3 :
   (u_ro / sqrt (1 + 4 * u_ro) <= 1 - 1 / sqrt (1 + 2 * u_ro))%R.
-Proof.
+Proof using prec_gt_0_ Hp1.
 assert (Pu_ro : (0 <= u_ro)%R); [apply Rmult_le_pos; [lra|apply bpow_ge_0]|].
 unfold Rdiv; apply (Rplus_le_reg_r (/ sqrt (1 + 2 * u_ro))); ring_simplify.
 apply (Rmult_le_reg_r (sqrt (1 + 4 * u_ro) * sqrt (1 + 2 * u_ro))).
@@ -394,7 +394,7 @@ now assert (H' : (0 <= u_ro ^ 2)%R); [apply pow2_ge_0|lra].
 Qed.
 
 Lemma om1ds1p2u_ro_pos : (0 <= 1 - 1 / sqrt (1 + 2 * u_ro))%R.
-Proof.
+Proof using.
 unfold Rdiv; rewrite Rmult_1_l, <-Rinv_1 at 1.
 apply Rle_0_minus, Rinv_le; [lra|].
 rewrite <- sqrt_1 at 1; apply sqrt_le_1_alt.
@@ -403,7 +403,7 @@ Qed.
 
 Lemma om1ds1p2u_ro_le_u_rod1pu_ro :
   (1 - 1 / sqrt (1 + 2 * u_ro) <= u_ro / (1 + u_ro))%R.
-Proof.
+Proof using.
 assert (Pu_ro := u_ro_pos beta prec).
 apply (Rmult_le_reg_r (sqrt (1 + 2 * u_ro) * (1 + u_ro))).
 { apply Rmult_lt_0_compat; [apply sqrt_lt_R0|]; lra. }
@@ -424,7 +424,7 @@ Qed.
 Theorem sqrt_error_N_FLX x (Fx : format x) :
   (Rabs (round beta (FLX_exp prec) (Znearest choice) (sqrt x) - sqrt x)
    <= (1 - 1 / sqrt (1 + 2 * u_ro)) * Rabs (sqrt x))%R.
-Proof.
+Proof using prec_gt_0_ Hp1.
 assert (Peps := u_ro_pos beta prec).
 assert (Peps' : (0 < u_ro)%R).
 { unfold u_ro; apply Rmult_lt_0_compat; [lra|apply bpow_gt_0]. }
@@ -530,7 +530,7 @@ Theorem sqrt_error_N_FLX_ex x (Fx : format x) :
   (Rabs eps <= 1 - 1 / sqrt (1 + 2 * u_ro))%R /\
   round beta (FLX_exp prec) (Znearest choice) (sqrt x)
   = (sqrt x * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_ Hp1.
 now apply relative_error_le_conversion;
   [apply valid_rnd_N|apply om1ds1p2u_ro_pos|apply sqrt_error_N_FLX].
 Qed.
@@ -541,7 +541,7 @@ Lemma sqrt_error_N_round_ex_derive :
    (Rabs eps <= 1 - 1 / sqrt (1 + 2 * u_ro))%R /\ rx = (x * (1 + eps))%R) ->
   exists eps,
   (Rabs eps <= sqrt (1 + 2 * u_ro) - 1)%R /\ x = (rx * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_.
 intros x rx (d, (Bd, Hd)).
 assert (H := Rabs_le_inv _ _ Bd).
 assert (H' := om1ds1p2u_ro_le_u_rod1pu_ro).
@@ -575,7 +575,7 @@ Theorem sqrt_error_N_FLX_round_ex :
   exists eps,
   (Rabs eps <= sqrt (1 + 2 * u_ro) - 1)%R /\
   sqrt x = (round beta (FLX_exp prec) (Znearest choice) (sqrt x) * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_ Hp1.
 now intros x Fx; apply sqrt_error_N_round_ex_derive, sqrt_error_N_FLX_ex.
 Qed.
 
@@ -589,7 +589,7 @@ Theorem sqrt_error_N_FLT_ex :
   (Rabs eps <= 1 - 1 / sqrt (1 + 2 * u_ro))%R /\
   round beta (FLT_exp emin prec) (Znearest choice) (sqrt x)
   = (sqrt x * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_ Hp1 Hemin.
 intros x Fx.
 assert (Heps := u_ro_pos).
 assert (Pb := om1ds1p2u_ro_pos).
@@ -615,7 +615,7 @@ Theorem sqrt_error_N_FLT_round_ex :
   (Rabs eps <= sqrt (1 + 2 * u_ro) - 1)%R /\
   sqrt x
   = (round beta (FLT_exp emin prec) (Znearest choice) (sqrt x) * (1 + eps))%R.
-Proof.
+Proof using prec_gt_0_ Hp1 Hemin.
 now intros x Fx; apply sqrt_error_N_round_ex_derive, sqrt_error_N_FLT_ex.
 Qed.
 
@@ -640,7 +640,7 @@ Lemma format_REM_aux:
   format x -> format y -> (0 <= x)%R -> (0 < y)%R ->
   ((0 < x/y < /2)%R -> rnd (x/y) = 0%Z) ->
   format (x - IZR (rnd (x/y))*y).
-Proof with auto with typeclass_instances.
+Proof using (valid_rnd valid_exp monotone_exp) with auto with typeclass_instances.
 intros x y Fx Fy Hx Hy rnd_small.
 pose (n:=rnd (x / y)).
 assert (Hn:(IZR n = round beta (FIX_exp 0) rnd (x/y))%R).
@@ -775,7 +775,7 @@ Theorem format_REM :
   ((Rabs (x/y) < /2)%R -> rnd (x/y)%R = 0%Z) ->
   format x -> format y ->
   format (x - IZR (rnd (x/y)%R) * y).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp monotone_exp) with auto with typeclass_instances.
 (* assume 0 < y *)
 assert (H: forall rnd : R -> Z, Valid_rnd rnd ->
   forall x y : R,
@@ -838,7 +838,7 @@ Theorem format_REM_ZR:
   forall x y : R,
   format x -> format y ->
   format (x - IZR (Ztrunc (x/y)) * y).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp monotone_exp) with auto with typeclass_instances.
 intros x y Fx Fy.
 apply format_REM; try easy...
 intros K.
@@ -860,7 +860,7 @@ Theorem format_REM_N :
   forall x y : R,
   format x -> format y ->
   format (x - IZR (Znearest choice (x/y)) * y).
-Proof with auto with typeclass_instances.
+Proof using (valid_exp monotone_exp) with auto with typeclass_instances.
 intros choice x y Fx Fy.
 apply format_REM; try easy...
 intros K.

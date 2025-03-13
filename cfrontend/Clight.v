@@ -737,7 +737,7 @@ Definition semantics2 (p: program) :=
 
 Lemma semantics_receptive:
   forall (p: program), receptive (semantics1 p).
-Proof.
+Proof using.
   intros. unfold semantics1.
   set (ge := globalenv p). constructor; simpl; intros.
 (* receptiveness *)

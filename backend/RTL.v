@@ -295,7 +295,7 @@ Lemma exec_Iop':
   rs' = (rs#res <- v) ->
   step (State s f sp pc rs m)
     E0 (State s f sp pc' rs' m).
-Proof.
+Proof using.
   intros. subst rs'. eapply exec_Iop; eauto.
 Qed.
 
@@ -307,7 +307,7 @@ Lemma exec_Iload':
   rs' = (rs#dst <- v) ->
   step (State s f sp pc rs m)
     E0 (State s f sp pc' rs' m).
-Proof.
+Proof using.
   intros. subst rs'. eapply exec_Iload; eauto.
 Qed.
 
@@ -342,7 +342,7 @@ Definition semantics (p: program) :=
 
 Lemma semantics_receptive:
   forall (p: program), receptive (semantics p).
-Proof.
+Proof using.
   intros. constructor; simpl; intros.
 (* receptiveness *)
   assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
@@ -442,7 +442,7 @@ Definition max_pc_function (f: function) :=
 
 Lemma max_pc_function_sound:
   forall f pc i, f.(fn_code)!pc = Some i -> Ple pc (max_pc_function f).
-Proof.
+Proof using.
   intros until i. unfold max_pc_function.
   apply PTree_Properties.fold_rec with (P := fun c m => c!pc = Some i -> Ple pc m).
   (* extensionality *)
@@ -485,7 +485,7 @@ Definition max_reg_function (f: function) :=
 
 Remark max_reg_instr_ge:
   forall m pc i, Ple m (max_reg_instr m pc i).
-Proof.
+Proof using.
   intros.
   assert (X: forall l n, Ple m n -> Ple m (fold_left Pos.max l n)).
   { induction l; simpl; intros.
@@ -497,7 +497,7 @@ Qed.
 
 Remark max_reg_instr_def:
   forall m pc i r, instr_defs i = Some r -> Ple r (max_reg_instr m pc i).
-Proof.
+Proof using.
   intros.
   assert (X: forall l n, Ple r n -> Ple r (fold_left Pos.max l n)).
   { induction l; simpl; intros. extlia. apply IHl. extlia. }
@@ -510,7 +510,7 @@ Qed.
 
 Remark max_reg_instr_uses:
   forall m pc i r, In r (instr_uses i) -> Ple r (max_reg_instr m pc i).
-Proof.
+Proof using.
   intros.
   assert (X: forall l n, In r l \/ Ple r n -> Ple r (fold_left Pos.max l n)).
   { induction l; simpl; intros.
@@ -528,7 +528,7 @@ Qed.
 Lemma max_reg_function_def:
   forall f pc i r,
   f.(fn_code)!pc = Some i -> instr_defs i = Some r -> Ple r (max_reg_function f).
-Proof.
+Proof using.
   intros.
   assert (Ple r (PTree.fold max_reg_instr f.(fn_code) 1%positive)).
   {  revert H.
@@ -546,7 +546,7 @@ Qed.
 Lemma max_reg_function_use:
   forall f pc i r,
   f.(fn_code)!pc = Some i -> In r (instr_uses i) -> Ple r (max_reg_function f).
-Proof.
+Proof using.
   intros.
   assert (Ple r (PTree.fold max_reg_instr f.(fn_code) 1%positive)).
   {  revert H.
@@ -563,7 +563,7 @@ Qed.
 
 Lemma max_reg_function_params:
   forall f r, In r f.(fn_params) -> Ple r (max_reg_function f).
-Proof.
+Proof using.
   intros.
   assert (X: forall l n, In r l \/ Ple r n -> Ple r (fold_left Pos.max l n)).
   { induction l; simpl; intros.

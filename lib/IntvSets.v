@@ -53,7 +53,7 @@ Fixpoint mem (x: Z) (s: t) : bool :=
 
 Lemma mem_In:
   forall x s, ok s -> (mem x s = true <-> In x s).
-Proof.
+Proof using.
   induction 1; simpl.
 - intuition congruence.
 - destruct (zlt x h).
@@ -73,7 +73,7 @@ Fixpoint contains (L H: Z) (s: t) : bool :=
 Lemma contains_In:
   forall l0 h0, l0 < h0 -> forall s, ok s ->
   (contains l0 h0 s = true <-> (forall x, l0 <= x < h0 -> In x s)).
-Proof.
+Proof using.
   induction 2; simpl.
 - intuition auto with zarith bool. elim (H0 l0); lia.
 - destruct (zle h0 h); simpl.
@@ -96,7 +96,7 @@ Fixpoint add (L H: Z) (s: t) {struct s} : t :=
 
 Lemma In_add:
   forall x s, ok s -> forall l0 h0, (In x (add l0 h0 s) <-> l0 <= x < h0 \/ In x s).
-Proof.
+Proof using.
   induction 1; simpl; intros.
   tauto.
   destruct (zlt h l0).
@@ -111,7 +111,7 @@ Qed.
 
 Lemma add_ok:
   forall s, ok s -> forall l0 h0, l0 < h0 -> ok (add l0 h0 s).
-Proof.
+Proof using.
   induction 1; simpl; intros.
   constructor. auto. intros. inv H0. constructor.
   destruct (zlt h l0).
@@ -138,7 +138,7 @@ Fixpoint remove (L H: Z) (s: t) {struct s} : t :=
 Lemma In_remove:
   forall x l0 h0 s, ok s ->
   (In x (remove l0 h0 s) <-> ~(l0 <= x < h0) /\ In x s).
-Proof.
+Proof using.
   induction 1; simpl.
   tauto.
   destruct (zlt h l0).
@@ -162,7 +162,7 @@ Qed.
 
 Lemma remove_ok:
   forall l0 h0, l0 < h0 -> forall s, ok s -> ok (remove l0 h0 s).
-Proof.
+Proof using.
   induction 2; simpl.
   constructor.
   destruct (zlt h l0).
@@ -197,7 +197,7 @@ Fixpoint inter (s1 s2: t) {struct s1} : t :=
 Lemma In_inter:
   forall x s1, ok s1 -> forall s2, ok s2 ->
   (In x (inter s1 s2) <-> In x s1 /\ In x s2).
-Proof.
+Proof using.
   induction 1.
   simpl. induction 1; simpl. tauto. tauto.
   assert (ok (Cons l h s)) by (constructor; auto).
@@ -222,7 +222,7 @@ Qed.
 
 Lemma inter_ok:
   forall s1, ok s1 -> forall s2, ok s2 -> ok (inter s1 s2).
-Proof.
+Proof using.
   induction 1.
   intros; simpl. destruct s2; constructor.
   assert (ok (Cons l h s)). constructor; auto.
@@ -259,7 +259,7 @@ Fixpoint union (s1 s2: t) : t :=
 Lemma In_ok_union:
   forall s1, ok s1 -> forall s2, ok s2 ->
   ok (union s1 s2) /\ (forall x, In x s1 \/ In x s2 <-> In x (union s1 s2)).
-Proof.
+Proof using.
   induction 1; destruct 1; simpl.
   split. constructor. tauto.
   split. constructor; auto. tauto.
@@ -279,7 +279,7 @@ Fixpoint beq (s1 s2: t) : bool :=
 Lemma beq_spec:
   forall s1, ok s1 -> forall s2, ok s2 ->
   (beq s1 s2 = true <-> (forall x, In x s1 <-> In x s2)).
-Proof.
+Proof using.
   induction 1; destruct 1; simpl.
 - tauto.
 - split; intros. discriminate. exfalso. apply (H0 l). left; lia.
@@ -310,7 +310,7 @@ Program Definition empty : t := R.Nil.
 Next Obligation. constructor. Qed.
 
 Theorem In_empty: forall x, ~(In x empty).
-Proof.
+Proof using.
   unfold In; intros; simpl. tauto.
 Qed.
 
@@ -324,7 +324,7 @@ Next Obligation.
 Qed.
 
 Theorem In_interval: forall x l h, In x (interval l h) <-> l <= x < h.
-Proof.
+Proof using.
   intros. unfold In, interval; destruct (zlt l h); simpl; intuition auto with zarith.
 Qed.
 
@@ -335,7 +335,7 @@ Next Obligation.
 Qed.
 
 Theorem In_add: forall x l h s, In x (add l h s) <-> l <= x < h \/ In x s.
-Proof.
+Proof using.
   unfold add, In; intros.
   destruct (zlt l h).
   simpl. apply R.In_add. apply proj2_sig.
@@ -349,7 +349,7 @@ Next Obligation.
 Qed.
 
 Theorem In_remove: forall x l h s, In x (remove l h s) <-> ~(l <= x < h) /\ In x s.
-Proof.
+Proof using.
   unfold remove, In; intros.
   destruct (zlt l h).
   simpl. apply R.In_remove. apply proj2_sig.
@@ -360,7 +360,7 @@ Program Definition inter (s1 s2: t) : t := R.inter s1 s2.
 Next Obligation. apply R.inter_ok; apply proj2_sig. Qed.
 
 Theorem In_inter: forall x s1 s2, In x (inter s1 s2) <-> In x s1 /\ In x s2.
-Proof.
+Proof using.
   unfold inter, In; intros; simpl. apply R.In_inter; apply proj2_sig.
 Qed.
 
@@ -370,7 +370,7 @@ Next Obligation.
 Qed.
 
 Theorem In_union: forall x s1 s2, In x (union s1 s2) <-> In x s1 \/ In x s2.
-Proof.
+Proof using.
   unfold union, In; intros; simpl.
   destruct (R.In_ok_union _ (proj2_sig s1) _ (proj2_sig s2)).
   generalize (H0 x); tauto.
@@ -379,7 +379,7 @@ Qed.
 Program Definition mem (x: Z) (s: t) := R.mem x s.
 
 Theorem mem_spec: forall x s, mem x s = true <-> In x s.
-Proof.
+Proof using.
   unfold mem, In; intros. apply R.mem_In. apply proj2_sig.
 Qed.
 
@@ -388,7 +388,7 @@ Program Definition contains (l h: Z) (s: t) :=
 
 Theorem contains_spec:
   forall l h s, contains l h s = true <-> (forall x, l <= x < h -> In x s).
-Proof.
+Proof using.
   unfold contains, In; intros. destruct (zlt l h).
   apply R.contains_In. auto. apply proj2_sig.
   split; intros. extlia. auto.
@@ -398,7 +398,7 @@ Program Definition beq (s1 s2: t) : bool := R.beq s1 s2.
 
 Theorem beq_spec:
   forall s1 s2, beq s1 s2 = true <-> (forall x, In x s1 <-> In x s2).
-Proof.
+Proof using.
   unfold mem, In; intros. apply R.beq_spec; apply proj2_sig.
 Qed.
 

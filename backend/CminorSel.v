@@ -522,7 +522,7 @@ Lemma insert_lenv_lookup1:
   forall n v,
   nth_error le n = Some v -> (p > n)%nat ->
   nth_error le' n = Some v.
-Proof.
+Proof using.
   induction 1; intros.
   extlia.
   destruct n; simpl; simpl in H0. auto.
@@ -535,7 +535,7 @@ Lemma insert_lenv_lookup2:
   forall n v,
   nth_error le n = Some v -> (p <= n)%nat ->
   nth_error le' (S n) = Some v.
-Proof.
+Proof using.
   induction 1; intros.
   simpl. assumption.
   simpl. destruct n. extlia.
@@ -547,7 +547,7 @@ Lemma eval_lift_expr:
   eval_expr ge sp e m le a v ->
   forall p le', insert_lenv le p w le' ->
   eval_expr ge sp e m le' (lift_expr p a) v.
-Proof.
+Proof using.
   intros until w.
   apply (eval_expr_ind3 ge sp e m
     (fun le a v =>
@@ -577,7 +577,7 @@ Lemma eval_lift:
   forall ge sp e m le a v w,
   eval_expr ge sp e m le a v ->
   eval_expr ge sp e m (w::le) (lift a) v.
-Proof.
+Proof using.
   intros. unfold lift. eapply eval_lift_expr.
   eexact H. apply insert_lenv_0.
 Qed.

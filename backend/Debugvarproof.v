@@ -25,7 +25,7 @@ Definition match_prog (p tp: program) :=
 
 Lemma transf_program_match:
   forall p tp, transf_program p = OK tp -> match_prog p tp.
-Proof.
+Proof using.
   intros. eapply match_transform_partial_program; eauto.
 Qed.
 
@@ -38,7 +38,7 @@ Inductive match_code: code -> code -> Prop :=
 
 Remark diff_same:
   forall s, diff s s = nil.
-Proof.
+Proof using.
   induction s as [ | [v i] s]; simpl.
   auto.
   rewrite Pos.compare_refl. rewrite dec_eq_true. auto.
@@ -46,13 +46,13 @@ Qed.
 
 Remark delta_state_same:
   forall s, delta_state s s = (nil, nil).
-Proof.
+Proof using.
   destruct s; simpl. rewrite ! diff_same; auto. auto.
 Qed.
 
 Lemma transf_code_match:
   forall lm c before, match_code c (transf_code lm before c).
-Proof.
+Proof using.
   intros lm. fix REC 1. destruct c; intros before; simpl.
 - constructor.
 - assert (DEFAULT: forall before after,
@@ -74,7 +74,7 @@ Inductive match_function: function -> function -> Prop :=
 
 Lemma transf_function_match:
   forall f tf, transf_function f = OK tf -> match_function f tf.
-Proof.
+Proof using.
   unfold transf_function; intros.
   destruct (ana_function f) as [lm|]; inv H.
   constructor. apply transf_code_match.
@@ -82,7 +82,7 @@ Qed.
 
 Remark find_label_add_delta_ranges:
   forall lbl c before after, find_label lbl (add_delta_ranges before after c) = find_label lbl c.
-Proof.
+Proof using.
   intros. unfold add_delta_ranges.
   destruct (delta_state before after) as [killed born].
   induction killed as [ | [v i] l]; simpl; auto.
@@ -94,7 +94,7 @@ Lemma find_label_match_rec:
   match_code c tc ->
   find_label lbl c = Some c' ->
   exists before after tc', find_label lbl tc = Some (add_delta_ranges before after tc') /\ match_code c' tc'.
-Proof.
+Proof using.
   induction 1; simpl; intros.
 - discriminate.
 - destruct (is_label lbl i).
@@ -107,7 +107,7 @@ Lemma find_label_match:
   match_function f tf ->
   find_label lbl f.(fn_code) = Some c ->
   exists before after tc, find_label lbl tf.(fn_code) = Some (add_delta_ranges before after tc) /\ match_code c tc.
-Proof.
+Proof using.
   intros. inv H. eapply find_label_match_rec; eauto.
 Qed.
 
@@ -129,7 +129,7 @@ Inductive wf_avail: avail -> Prop :=
 
 Lemma set_state_1:
   forall v i s, In (v, i) (set_state v i s).
-Proof.
+Proof using.
   induction s as [ | [v' i'] s]; simpl.
 - auto.
 - destruct (Pos.compare v v'); simpl; auto.
@@ -138,7 +138,7 @@ Qed.
 Lemma set_state_2:
   forall v i v' i' s,
   v' <> v -> In (v', i') s -> In (v', i') (set_state v i s).
-Proof.
+Proof using.
   induction s as [ | [v1 i1] s]; simpl; intros.
 - contradiction.
 - destruct (Pos.compare_spec v v1); simpl.
@@ -152,7 +152,7 @@ Lemma set_state_3:
   wf_avail s ->
   In (v', i') (set_state v i s) ->
   (v' = v /\ i' = i) \/ (v' <> v /\ In (v', i') s).
-Proof.
+Proof using.
   induction 1; simpl; intros.
 - intuition congruence.
 - destruct (Pos.compare_spec v v0); simpl in H1.
@@ -168,7 +168,7 @@ Qed.
 
 Lemma wf_set_state:
   forall v i s, wf_avail s -> wf_avail (set_state v i s).
-Proof.
+Proof using.
   induction 1; simpl.
 - constructor. red; simpl; tauto. constructor.
 - destruct (Pos.compare_spec v v0).
@@ -184,7 +184,7 @@ Qed.
 
 Lemma remove_state_1:
   forall v i s, wf_avail s -> ~ In (v, i) (remove_state v s).
-Proof.
+Proof using.
   induction 1; simpl; red; intros.
 - auto.
 - destruct (Pos.compare_spec v v0); simpl in *.
@@ -196,7 +196,7 @@ Qed.
 
 Lemma remove_state_2:
   forall v v' i' s, v' <> v -> In (v', i') s -> In (v', i') (remove_state v s).
-Proof.
+Proof using.
   induction s as [ | [v1 i1] s]; simpl; intros.
 - auto.
 - destruct (Pos.compare_spec v v1); simpl.
@@ -207,7 +207,7 @@ Qed.
 
 Lemma remove_state_3:
   forall v v' i' s, wf_avail s -> In (v', i') (remove_state v s) -> v' <> v /\ In (v', i') s.
-Proof.
+Proof using.
   induction 1; simpl; intros.
 - contradiction.
 - destruct (Pos.compare_spec v v0); simpl in H1.
@@ -220,7 +220,7 @@ Qed.
 
 Lemma wf_remove_state:
   forall v s, wf_avail s -> wf_avail (remove_state v s).
-Proof.
+Proof using.
   induction 1; simpl.
 - constructor.
 - destruct (Pos.compare_spec v v0).
@@ -232,7 +232,7 @@ Qed.
 
 Lemma wf_filter:
   forall pred s, wf_avail s -> wf_avail (List.filter pred s).
-Proof.
+Proof using.
   induction 1; simpl.
 - constructor.
 - destruct (pred (v, i)) eqn:P; auto.
@@ -243,7 +243,7 @@ Qed.
 Lemma join_1:
   forall v i s1, wf_avail s1 -> forall s2, wf_avail s2 ->
   In (v, i) s1 -> In (v, i) s2 -> In (v, i) (join s1 s2).
-Proof.
+Proof using.
   induction 1; simpl; try tauto; induction 1; simpl; intros I1 I2; auto.
   destruct I1, I2.
 - inv H3; inv H4. rewrite Pos.compare_refl. rewrite dec_eq_true; auto with coqlib.
@@ -260,7 +260,7 @@ Qed.
 Lemma join_2:
   forall v i s1, wf_avail s1 -> forall s2, wf_avail s2 ->
   In (v, i) (join s1 s2) -> In (v, i) s1 /\ In (v, i) s2.
-Proof.
+Proof using.
   induction 1; simpl; try tauto; induction 1; simpl; intros I; try tauto.
   destruct (Pos.compare_spec v0 v1).
 - subst v1. destruct (eq_debuginfo i0 i1).
@@ -273,7 +273,7 @@ Qed.
 
 Lemma wf_join:
   forall s1, wf_avail s1 -> forall s2, wf_avail s2 -> wf_avail (join s1 s2).
-Proof.
+Proof using.
   induction 1; simpl; induction 1; simpl; try constructor.
   destruct (Pos.compare_spec v v0).
 - subst v0. destruct (eq_debuginfo i i0); auto. constructor; auto.
@@ -320,7 +320,7 @@ Lemma sig_preserved:
   forall f tf,
   transf_fundef f = OK tf ->
   funsig tf = funsig f.
-Proof.
+Proof using.
   unfold transf_fundef, transf_partial_fundef; intros.
   destruct f. monadInv H.
   exploit transf_function_match; eauto. intros M; inv M; auto.
@@ -332,7 +332,7 @@ Lemma find_function_translated:
   find_function ge ros ls = Some f ->
   exists tf,
   find_function tge ros ls = Some tf /\ transf_fundef f = OK tf.
-Proof.
+Proof using TRANSF.
   unfold find_function; intros; destruct ros; simpl.
   apply functions_translated; auto.
   rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
@@ -345,7 +345,7 @@ Qed.
 Lemma can_eval_safe_arg:
   forall (rs: locset) sp m (a: builtin_arg loc),
   safe_builtin_arg a -> exists v, eval_builtin_arg tge rs sp m a v.
-Proof.
+Proof using.
   induction a; simpl; intros; try contradiction;
   try (econstructor; now eauto with barg).
   destruct H as [S1 S2].
@@ -357,7 +357,7 @@ Lemma eval_add_delta_ranges:
   forall s f sp c rs m before after,
   star step tge (State s f sp (add_delta_ranges before after c) rs m)
              E0 (State s f sp c rs m).
-Proof.
+Proof using.
   intros. unfold add_delta_ranges.
   destruct (delta_state before after) as [killed born].
   induction killed as [ | [v i] l]; simpl.
@@ -414,7 +414,7 @@ Lemma parent_locset_match:
   forall s ts,
   list_forall2 match_stackframes s ts ->
   parent_locset ts = parent_locset s.
-Proof.
+Proof using.
   induction 1; simpl. auto. inv H; auto.
 Qed.
 
@@ -424,7 +424,7 @@ Theorem transf_step_correct:
   forall s1 t s2, step ge s1 t s2 ->
   forall ts1 (MS: match_states s1 ts1),
   exists ts2, plus step tge ts1 t ts2 /\ match_states s2 ts2.
-Proof.
+Proof using TRANSF.
   induction 1; intros ts1 MS; inv MS; try (inv TRC).
 - (* getstack *)
   econstructor; split.
@@ -530,7 +530,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
-Proof.
+Proof using TRANSF.
   intros. inversion H.
   exploit function_ptr_translated; eauto. intros [tf [A B]].
   exists (Callstate nil tf (Locmap.init Vundef) m0); split.
@@ -543,13 +543,13 @@ Qed.
 Lemma transf_final_states:
   forall st1 st2 r,
   match_states st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv H5. econstructor; eauto.
 Qed.
 
 Theorem transf_program_correct:
   forward_simulation (semantics prog) (semantics tprog).
-Proof.
+Proof using TRANSF.
   eapply forward_simulation_plus.
   apply senv_preserved.
   eexact transf_initial_states.

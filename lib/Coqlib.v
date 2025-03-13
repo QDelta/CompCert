@@ -48,7 +48,7 @@ Ltac decEq :=
 Ltac byContradiction := exfalso.
 
 Lemma modusponens: forall (P Q: Prop), P -> (P -> Q) -> Q.
-Proof. auto. Qed.
+Proof using. auto. Qed.
 
 Ltac exploit x :=
     refine (modusponens _ _ (x _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) _)
@@ -94,7 +94,7 @@ Global Opaque peq.
 
 Lemma peq_true:
   forall (A: Type) (x: positive) (a b: A), (if peq x x then a else b) = a.
-Proof.
+Proof using.
   intros. case (peq x x); intros.
   auto.
   elim n; auto.
@@ -102,7 +102,7 @@ Qed.
 
 Lemma peq_false:
   forall (A: Type) (x y: positive) (a b: A), x <> y -> (if peq x y then a else b) = b.
-Proof.
+Proof using.
   intros. case (peq x y); intros.
   elim H; auto.
   auto.
@@ -112,7 +112,7 @@ Definition Plt: positive -> positive -> Prop := Pos.lt.
 
 Lemma Plt_ne:
   forall (x y: positive), Plt x y -> x <> y.
-Proof.
+Proof using.
   unfold Plt; intros. red; intro. subst y. eelim Pos.lt_irrefl; eauto.
 Qed.
 Global Hint Resolve Plt_ne: coqlib.
@@ -123,27 +123,27 @@ Proof (Pos.lt_trans).
 
 Lemma Plt_succ:
   forall (x: positive), Plt x (Pos.succ x).
-Proof.
+Proof using.
   unfold Plt; intros. apply Pos.lt_succ_r. apply Pos.le_refl.
 Qed.
 Global Hint Resolve Plt_succ: coqlib.
 
 Lemma Plt_trans_succ:
   forall (x y: positive), Plt x y -> Plt x (Pos.succ y).
-Proof.
+Proof using.
   intros. apply Plt_trans with y. assumption. apply Plt_succ.
 Qed.
 Global Hint Resolve Plt_succ: coqlib.
 
 Lemma Plt_succ_inv:
   forall (x y: positive), Plt x (Pos.succ y) -> Plt x y \/ x = y.
-Proof.
+Proof using.
   unfold Plt; intros. rewrite Pos.lt_succ_r in H.
   apply Pos.le_lteq; auto.
 Qed.
 
 Definition plt (x y: positive) : {Plt x y} + {~ Plt x y}.
-Proof.
+Proof using.
   unfold Plt, Pos.lt; intros. destruct (Pos.compare x y).
   - right; congruence.
   - left; auto.
@@ -163,7 +163,7 @@ Lemma Plt_Ple: forall (p q: positive), Plt p q -> Ple p q.
 Proof (Pos.lt_le_incl).
 
 Lemma Ple_succ: forall (p: positive), Ple p (Pos.succ p).
-Proof.
+Proof using.
   intros. apply Plt_Ple. apply Plt_succ.
 Qed.
 
@@ -183,7 +183,7 @@ Ltac extlia := unfold Plt, Ple in *; lia.
 Section POSITIVE_ITERATION.
 
 Lemma Plt_wf: well_founded Plt.
-Proof.
+Proof using.
   apply well_founded_lt_compat with Pos.to_nat.
   intros. apply nat_of_P_lt_Lt_compare_morphism. exact H.
 Qed.
@@ -194,7 +194,7 @@ Variable f: positive -> A -> A.
 
 Lemma Ppred_Plt:
   forall x, x <> xH -> Plt (Pos.pred x) x.
-Proof.
+Proof using.
   intros. elim (Pos.succ_pred_or x); intro. contradiction.
   set (y := Pos.pred x) in *. rewrite <- H0. apply Plt_succ.
 Qed.
@@ -211,21 +211,21 @@ Definition positive_rec : positive -> A :=
 Lemma unroll_positive_rec:
   forall x,
   positive_rec x = iter x (fun y _ => positive_rec y).
-Proof.
+Proof using.
   unfold positive_rec. apply (Fix_eq Plt_wf (fun _ => A) iter).
   intros. unfold iter. case (peq x 1); intro. auto. decEq. apply H.
 Qed.
 
 Lemma positive_rec_base:
   positive_rec 1%positive = v1.
-Proof.
+Proof using.
   rewrite unroll_positive_rec. unfold iter. case (peq 1 1); intro.
   auto. elim n; auto.
 Qed.
 
 Lemma positive_rec_succ:
   forall x, positive_rec (Pos.succ x) = f x (positive_rec x).
-Proof.
+Proof using.
   intro. rewrite unroll_positive_rec. unfold iter.
   case (peq (Pos.succ x) 1); intro.
   destruct x; simpl in e; discriminate.
@@ -237,7 +237,7 @@ Lemma positive_Peano_ind:
   P xH ->
   (forall x, P x -> P (Pos.succ x)) ->
   forall x, P x.
-Proof.
+Proof using.
   intros.
   apply (well_founded_ind Plt_wf P).
   intros.
@@ -255,7 +255,7 @@ Definition zeq: forall (x y: Z), {x = y} + {x <> y} := Z.eq_dec.
 
 Lemma zeq_true:
   forall (A: Type) (x: Z) (a b: A), (if zeq x x then a else b) = a.
-Proof.
+Proof using.
   intros. case (zeq x x); intros.
   auto.
   elim n; auto.
@@ -263,7 +263,7 @@ Qed.
 
 Lemma zeq_false:
   forall (A: Type) (x y: Z) (a b: A), x <> y -> (if zeq x y then a else b) = b.
-Proof.
+Proof using.
   intros. case (zeq x y); intros.
   elim H; auto.
   auto.
@@ -276,7 +276,7 @@ Definition zlt: forall (x y: Z), {x < y} + {x >= y} := Z_lt_dec.
 Lemma zlt_true:
   forall (A: Type) (x y: Z) (a b: A),
   x < y -> (if zlt x y then a else b) = a.
-Proof.
+Proof using.
   intros. case (zlt x y); intros.
   auto.
   extlia.
@@ -285,7 +285,7 @@ Qed.
 Lemma zlt_false:
   forall (A: Type) (x y: Z) (a b: A),
   x >= y -> (if zlt x y then a else b) = b.
-Proof.
+Proof using.
   intros. case (zlt x y); intros.
   extlia.
   auto.
@@ -296,7 +296,7 @@ Definition zle: forall (x y: Z), {x <= y} + {x > y} := Z_le_gt_dec.
 Lemma zle_true:
   forall (A: Type) (x y: Z) (a b: A),
   x <= y -> (if zle x y then a else b) = a.
-Proof.
+Proof using.
   intros. case (zle x y); intros.
   auto.
   extlia.
@@ -305,7 +305,7 @@ Qed.
 Lemma zle_false:
   forall (A: Type) (x y: Z) (a b: A),
   x > y -> (if zle x y then a else b) = b.
-Proof.
+Proof using.
   intros. case (zle x y); intros.
   extlia.
   auto.
@@ -314,24 +314,24 @@ Qed.
 (** Properties of powers of two. *)
 
 Lemma two_power_nat_O : two_power_nat O = 1.
-Proof. reflexivity. Qed.
+Proof using. reflexivity. Qed.
 
 Lemma two_power_nat_pos : forall n : nat, two_power_nat n > 0.
-Proof.
+Proof using.
   induction n. rewrite two_power_nat_O. lia.
   rewrite two_power_nat_S. lia.
 Qed.
 
 Lemma two_power_nat_two_p:
   forall x, two_power_nat x = two_p (Z.of_nat x).
-Proof.
+Proof using.
   induction x. auto.
   rewrite two_power_nat_S. rewrite Nat2Z.inj_succ. rewrite two_p_S. lia. lia.
 Qed.
 
 Lemma two_p_monotone:
   forall x y, 0 <= x <= y -> two_p x <= two_p y.
-Proof.
+Proof using.
   intros.
   replace (two_p x) with (two_p x * 1) by lia.
   replace y with (x + (y - x)) by lia.
@@ -343,7 +343,7 @@ Qed.
 
 Lemma two_p_monotone_strict:
   forall x y, 0 <= x < y -> two_p x < two_p y.
-Proof.
+Proof using.
   intros. assert (two_p x <= two_p (y - 1)). apply two_p_monotone; lia.
   assert (two_p (y - 1) > 0). apply two_p_gt_ZERO. lia.
   replace y with (Z.succ (y - 1)) by lia. rewrite two_p_S. lia. lia.
@@ -351,7 +351,7 @@ Qed.
 
 Lemma two_p_strict:
   forall x, x >= 0 -> x < two_p x.
-Proof.
+Proof using.
   intros x0 GT. pattern x0. apply natlike_ind.
   simpl. lia.
   intros. rewrite two_p_S; auto. generalize (two_p_gt_ZERO x H). lia.
@@ -360,7 +360,7 @@ Qed.
 
 Lemma two_p_strict_2:
   forall x, x >= 0 -> 2 * x - 1 < two_p x.
-Proof.
+Proof using.
   intros. assert (x = 0 \/ x - 1 >= 0) by lia. destruct H0.
   subst. vm_compute. auto.
   replace (two_p x) with (2 * two_p (x - 1)).
@@ -370,7 +370,7 @@ Qed.
 
 Lemma two_p_is_exp_2:
   forall x y, 0 <= x <= y -> two_p (y - x) = two_p y / two_p x.
-Proof.
+Proof using.
   intros. replace y with (y - x + x) by lia.
   rewrite two_p_is_exp by lia.
   rewrite Z_div_mult_full.
@@ -382,7 +382,7 @@ Qed.
 
 Lemma Zmin_spec:
   forall x y, Z.min x y = if zlt x y then x else y.
-Proof.
+Proof using.
   intros. case (zlt x y); unfold Z.lt, Z.ge; intro z.
   unfold Z.min. rewrite z. auto.
   unfold Z.min. caseEq (x ?= y); intro.
@@ -393,7 +393,7 @@ Qed.
 
 Lemma Zmax_spec:
   forall x y, Z.max x y = if zlt y x then x else y.
-Proof.
+Proof using.
   intros. case (zlt y x); unfold Z.lt, Z.ge; intro z.
   unfold Z.max. rewrite <- (Zcompare_antisym y x).
   rewrite z. simpl. auto.
@@ -405,12 +405,12 @@ Qed.
 
 Lemma Zmax_bound_l:
   forall x y z, x <= y -> x <= Z.max y z.
-Proof.
+Proof using.
   intros. generalize (Z.le_max_l y z). lia.
 Qed.
 Lemma Zmax_bound_r:
   forall x y z, x <= z -> x <= Z.max y z.
-Proof.
+Proof using.
   intros. generalize (Z.le_max_r y z). lia.
 Qed.
 
@@ -418,14 +418,14 @@ Qed.
 
 Lemma Z_div_mod_eq: forall a b,
   b > 0 -> a = (b * (a / b) + a mod b).
-Proof.
+Proof using.
   intros. apply Z.div_mod. lia.
 Qed.
 
 Lemma Zmod_unique:
   forall x y a b,
   x = a * y + b -> 0 <= b < y -> x mod y = b.
-Proof.
+Proof using.
   intros. subst x. rewrite Z.add_comm.
   rewrite Z_mod_plus. apply Z.mod_small. auto. lia.
 Qed.
@@ -433,7 +433,7 @@ Qed.
 Lemma Zdiv_unique:
   forall x y a b,
   x = a * y + b -> 0 <= b < y -> x / y = a.
-Proof.
+Proof using.
   intros. subst x. rewrite Z.add_comm.
   rewrite Z_div_plus. rewrite (Zdiv_small b y H0). lia. lia.
 Qed.
@@ -441,7 +441,7 @@ Qed.
 Lemma Zdiv_Zdiv:
   forall a b c,
   b > 0 -> c > 0 -> (a / b) / c = a / (b * c).
-Proof.
+Proof using.
   intros. apply Z.div_div; lia.
 Qed.
 
@@ -450,7 +450,7 @@ Lemma Zdiv_interval_1:
   lo <= 0 -> hi > 0 -> b > 0 ->
   lo * b <= a < hi * b ->
   lo <= a/b < hi.
-Proof.
+Proof using.
   intros.
   generalize (Z_div_mod_eq a b H1). generalize (Z_mod_lt a b H1). intros.
   set (q := a/b) in *. set (r := a mod b) in *.
@@ -470,7 +470,7 @@ Lemma Zdiv_interval_2:
   forall lo hi a b,
   lo <= a <= hi -> lo <= 0 -> hi >= 0 -> b > 0 ->
   lo <= a/b <= hi.
-Proof.
+Proof using.
   intros.
   assert (lo <= a / b < hi+1).
   apply Zdiv_interval_1. lia. lia. auto.
@@ -486,7 +486,7 @@ Lemma Zmod_recombine:
   forall x a b,
   a > 0 -> b > 0 ->
   x mod (a * b) = ((x/b) mod a) * b + (x mod b).
-Proof.
+Proof using.
   intros. rewrite (Z.mul_comm a b). rewrite Z.rem_mul_r by lia. ring. 
 Qed.
 
@@ -495,7 +495,7 @@ Qed.
 Lemma Zdivide_interval:
   forall a b c,
   0 < c -> 0 <= a < b -> (c | a) -> (c | b) -> 0 <= a <= b - c.
-Proof.
+Proof using.
   intros. destruct H1 as [x EQ1]. destruct H2 as [y EQ2]. subst. destruct H0.
   split. lia. exploit Zmult_lt_reg_r; eauto. intros.
   replace (y * c - c) with ((y - 1) * c) by ring.
@@ -506,13 +506,13 @@ Qed.
 
 Lemma Z_to_nat_neg:
   forall n, n <= 0 -> Z.to_nat n = O.
-Proof.
+Proof using.
   destruct n; unfold Z.le; simpl; auto. congruence.
 Qed.
 
 Lemma Z_to_nat_max:
   forall z, Z.of_nat (Z.to_nat z) = Z.max z 0.
-Proof.
+Proof using.
   intros. destruct (zle 0 z).
 - rewrite Z2Nat.id by auto. extlia.
 - rewrite Z_to_nat_neg by lia. extlia.
@@ -525,7 +525,7 @@ Definition align (n: Z) (amount: Z) :=
   ((n + amount - 1) / amount) * amount.
 
 Lemma align_le: forall x y, y > 0 -> x <= align x y.
-Proof.
+Proof using.
   intros. unfold align.
   generalize (Z_div_mod_eq (x + y - 1) y H). intro.
   replace ((x + y - 1) / y * y)
@@ -535,12 +535,12 @@ Proof.
 Qed.
 
 Lemma align_divides: forall x y, y > 0 -> (y | align x y).
-Proof.
+Proof using.
   intros. unfold align. apply Z.divide_factor_r.
 Qed.
 
 Lemma align_lt: forall x y, y > 0 -> align x y < x + y.
-Proof.
+Proof using.
   intros. unfold align.
   generalize (Z_div_mod_eq (x + y - 1) y H); intro.
   generalize (Z_mod_lt (x + y - 1) y H); intro.
@@ -549,7 +549,7 @@ Qed.
 
 Lemma align_same:
   forall x y, y > 0 -> (y | x) -> align x y = x.
-Proof.
+Proof using.
   unfold align; intros. destruct H0 as [k E].
   replace (x  + y - 1) with (x + (y - 1)) by lia.
   rewrite E, Z.div_add_l, Z.div_small by lia.
@@ -563,7 +563,7 @@ Definition floor (n: Z) (amount: Z) := (n / amount) * amount.
 
 Lemma floor_interval:
   forall x y, y > 0 -> floor x y <= x < floor x y + y.
-Proof.
+Proof using.
   unfold floor; intros.
   generalize (Z_div_mod_eq x y H) (Z_mod_lt x y H).
   set (q := x / y). set (r := x mod y). intros. lia.
@@ -571,20 +571,20 @@ Qed.
 
 Lemma floor_divides:
   forall x y, y > 0 -> (y | floor x y).
-Proof.
+Proof using.
   unfold floor; intros. exists (x / y); auto.
 Qed.
 
 Lemma floor_same:
   forall x y, y > 0 -> (y | x) -> floor x y = x.
-Proof.
+Proof using.
   unfold floor; intros. rewrite (Zdivide_Zdiv_eq y x) at 2; auto; lia.
 Qed.
 
 Lemma floor_align_interval:
   forall x y, y > 0 ->
   floor x y <= align x y <= floor x y + y.
-Proof.
+Proof using.
   unfold floor, align; intros.
   replace (x / y * y + y) with ((x + 1 * y) / y * y).
   assert (A: forall a b, a <= b -> a / y * y <= b / y * y).
@@ -601,7 +601,7 @@ Set Implicit Arguments.
 
 Definition option_eq (A: Type) (eqA: forall (x y: A), {x=y} + {x<>y}):
   forall (x y: option A), {x=y} + {x<>y}.
-Proof. decide equality. Defined.
+Proof using. decide equality. Defined.
 Global Opaque option_eq.
 
 (** Lifting a relation to an option type. *)
@@ -633,7 +633,7 @@ Global Hint Resolve in_eq in_cons: coqlib.
 Lemma nth_error_in:
   forall (A: Type) (n: nat) (l: list A) (x: A),
   List.nth_error l n = Some x -> In x l.
-Proof.
+Proof using.
   induction n; simpl.
    destruct l; intros.
     discriminate.
@@ -646,7 +646,7 @@ Global Hint Resolve nth_error_in: coqlib.
 
 Lemma nth_error_nil:
   forall (A: Type) (idx: nat), nth_error (@nil A) idx = None.
-Proof.
+Proof using.
   induction idx; simpl; intros; reflexivity.
 Qed.
 Global Hint Resolve nth_error_nil: coqlib.
@@ -662,7 +662,7 @@ Fixpoint list_length_z_aux (A: Type) (l: list A) (acc: Z) {struct l}: Z :=
 Remark list_length_z_aux_shift:
   forall (A: Type) (l: list A) n m,
   list_length_z_aux l n = list_length_z_aux l m + (n - m).
-Proof.
+Proof using.
   induction l; intros; simpl.
   lia.
   replace (n - m) with (Z.succ n - Z.succ m) by lia. auto.
@@ -674,7 +674,7 @@ Definition list_length_z (A: Type) (l: list A) : Z :=
 Lemma list_length_z_cons:
   forall (A: Type) (hd: A) (tl: list A),
   list_length_z (hd :: tl) = list_length_z tl + 1.
-Proof.
+Proof using.
   intros. unfold list_length_z. simpl.
   rewrite (list_length_z_aux_shift tl 1 0). lia.
 Qed.
@@ -682,7 +682,7 @@ Qed.
 Lemma list_length_z_pos:
   forall (A: Type) (l: list A),
   list_length_z l >= 0.
-Proof.
+Proof using.
   induction l; simpl. unfold list_length_z; simpl. lia.
   rewrite list_length_z_cons. lia.
 Qed.
@@ -690,7 +690,7 @@ Qed.
 Lemma list_length_z_map:
   forall (A B: Type) (f: A -> B) (l: list A),
   list_length_z (map f l) = list_length_z l.
-Proof.
+Proof using.
   induction l. reflexivity. simpl. repeat rewrite list_length_z_cons. congruence.
 Qed.
 
@@ -706,7 +706,7 @@ Fixpoint list_nth_z (A: Type) (l: list A) (n: Z) {struct l}: option A :=
 Lemma list_nth_z_in:
   forall (A: Type) (l: list A) n x,
   list_nth_z l n = Some x -> In x l.
-Proof.
+Proof using.
   induction l; simpl; intros.
   congruence.
   destruct (zeq n 0). left; congruence. right; eauto.
@@ -715,7 +715,7 @@ Qed.
 Lemma list_nth_z_map:
   forall (A B: Type) (f: A -> B) (l: list A) n,
   list_nth_z (List.map f l) n = option_map f (list_nth_z l n).
-Proof.
+Proof using.
   induction l; simpl; intros.
   auto.
   destruct (zeq n 0). auto. eauto.
@@ -724,7 +724,7 @@ Qed.
 Lemma list_nth_z_range:
   forall (A: Type) (l: list A) n x,
   list_nth_z l n = Some x -> 0 <= n < list_length_z l.
-Proof.
+Proof using.
   induction l; simpl; intros.
   discriminate.
   rewrite list_length_z_cons. destruct (zeq n 0).
@@ -737,7 +737,7 @@ Qed.
 Lemma incl_cons_inv:
   forall (A: Type) (a: A) (b c: list A),
   incl (a :: b) c -> incl b c.
-Proof.
+Proof using.
   unfold incl; intros. apply H. apply in_cons. auto.
 Qed.
 Global Hint Resolve incl_cons_inv: coqlib.
@@ -745,14 +745,14 @@ Global Hint Resolve incl_cons_inv: coqlib.
 Lemma incl_app_inv_l:
   forall (A: Type) (l1 l2 m: list A),
   incl (l1 ++ l2) m -> incl l1 m.
-Proof.
+Proof using.
   unfold incl; intros. apply H. apply in_or_app. left; assumption.
 Qed.
 
 Lemma incl_app_inv_r:
   forall (A: Type) (l1 l2 m: list A),
   incl (l1 ++ l2) m -> incl l2 m.
-Proof.
+Proof using.
   unfold incl; intros. apply H. apply in_or_app. right; assumption.
 Qed.
 
@@ -761,7 +761,7 @@ Global Hint Resolve  incl_tl incl_refl incl_app_inv_l incl_app_inv_r: coqlib.
 Lemma incl_same_head:
   forall (A: Type) (x: A) (l1 l2: list A),
   incl l1 l2 -> incl (x::l1) (x::l2).
-Proof.
+Proof using.
   intros; red; simpl; intros. intuition.
 Qed.
 
@@ -771,7 +771,7 @@ Lemma list_map_exten:
   forall (A B: Type) (f f': A -> B) (l: list A),
   (forall x, In x l -> f x = f' x) ->
   List.map f' l = List.map f l.
-Proof.
+Proof using.
   induction l; simpl; intros.
   reflexivity.
   rewrite <- H. rewrite IHl. reflexivity.
@@ -782,21 +782,21 @@ Qed.
 Lemma list_map_compose:
   forall (A B C: Type) (f: A -> B) (g: B -> C) (l: list A),
   List.map g (List.map f l) = List.map (fun x => g(f x)) l.
-Proof.
+Proof using.
   induction l; simpl. reflexivity. rewrite IHl; reflexivity.
 Qed.
 
 Lemma list_map_identity:
   forall (A: Type) (l: list A),
   List.map (fun (x:A) => x) l = l.
-Proof.
+Proof using.
   induction l; simpl; congruence.
 Qed.
 
 Lemma list_map_nth:
   forall (A B: Type) (f: A -> B) (l: list A) (n: nat),
   nth_error (List.map f l) n = option_map f (nth_error l n).
-Proof.
+Proof using.
   induction l; simpl; intros.
   repeat rewrite nth_error_nil. reflexivity.
   destruct n; simpl. reflexivity. auto.
@@ -805,14 +805,14 @@ Qed.
 Lemma list_length_map:
   forall (A B: Type) (f: A -> B) (l: list A),
   List.length (List.map f l) = List.length l.
-Proof.
+Proof using.
   induction l; simpl; congruence.
 Qed.
 
 Lemma list_in_map_inv:
   forall (A B: Type) (f: A -> B) (l: list A) (y: B),
   In y (List.map f l) -> exists x:A, y = f x /\ In x l.
-Proof.
+Proof using.
   induction l; simpl; intros.
   contradiction.
   elim H; intro.
@@ -824,7 +824,7 @@ Qed.
 Lemma list_append_map:
   forall (A B: Type) (f: A -> B) (l1 l2: list A),
   List.map f (l1 ++ l2) = List.map f l1 ++ List.map f l2.
-Proof.
+Proof using.
   induction l1; simpl; intros.
   auto. rewrite IHl1. auto.
 Qed.
@@ -833,7 +833,7 @@ Lemma list_append_map_inv:
   forall (A B: Type) (f: A -> B) (m1 m2: list B) (l: list A),
   List.map f l = m1 ++ m2 ->
   exists l1, exists l2, List.map f l1 = m1 /\ List.map f l2 = m2 /\ l = l1 ++ l2.
-Proof.
+Proof using.
   induction m1; simpl; intros.
   exists (@nil A); exists l; auto.
   destruct l; simpl in H; inv H.
@@ -845,14 +845,14 @@ Qed.
 
 Lemma app_ass:
   forall (A: Type) (l1 l2 l3: list A), (l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3).
-Proof.
+Proof using.
   intros; symmetry; apply app_assoc.
 Qed.
 
 Lemma list_append_injective_l:
   forall (A: Type) (l1 l2 l1' l2': list A),
   l1 ++ l2 = l1' ++ l2' -> List.length l1 = List.length l1' -> l1 = l1' /\ l2 = l2'.
-Proof.
+Proof using.
   intros until l2'. revert l1 l1'. induction l1 as [ | a l1]; destruct l1' as [ | a' l1']; simpl; intros.
 - auto.
 - discriminate.
@@ -863,7 +863,7 @@ Qed.
 Lemma list_append_injective_r:
   forall (A: Type) (l1 l2 l1' l2': list A),
   l1 ++ l2 = l1' ++ l2' -> List.length l2 = List.length l2' -> l1 = l1' /\ l2 = l2'.
-Proof.
+Proof using.
   intros.
   assert (X: rev l2 = rev l2' /\ rev l1 = rev l1').
   { apply list_append_injective_l.
@@ -895,7 +895,7 @@ Definition list_fold_right (l: list A) (base: B) : B :=
 Remark list_fold_left_app:
   forall l1 l2 accu,
   list_fold_left accu (l1 ++ l2) = list_fold_left (list_fold_left accu l1) l2.
-Proof.
+Proof using.
   induction l1; simpl; intros.
   auto.
   rewrite IHl1. auto.
@@ -905,7 +905,7 @@ Lemma list_fold_right_eq:
   forall l base,
   list_fold_right l base =
   match l with nil => base | x :: l' => f x (list_fold_right l' base) end.
-Proof.
+Proof using.
   unfold list_fold_right; intros.
   destruct l.
   auto.
@@ -915,7 +915,7 @@ Qed.
 
 Lemma list_fold_right_spec:
   forall l base, list_fold_right l base = List.fold_right f base l.
-Proof.
+Proof using.
   induction l; simpl; intros; rewrite list_fold_right_eq; congruence.
 Qed.
 
@@ -925,20 +925,20 @@ End LIST_FOLD.
 
 Lemma in_cns:
   forall (A: Type) (x y: A) (l: list A), In x (y :: l) <-> y = x \/ In x l.
-Proof.
+Proof using.
   intros. simpl. tauto.
 Qed.
 
 Lemma in_app:
   forall (A: Type) (x: A) (l1 l2: list A), In x (l1 ++ l2) <-> In x l1 \/ In x l2.
-Proof.
+Proof using.
   intros. split; intro. apply in_app_or. auto. apply in_or_app. auto.
 Qed.
 
 Lemma list_in_insert:
   forall (A: Type) (x: A) (l1 l2: list A) (y: A),
   In x (l1 ++ l2) -> In x (l1 ++ y :: l2).
-Proof.
+Proof using.
   intros. apply in_or_app; simpl. elim (in_app_or _ _ _ H); intro; auto.
 Qed.
 
@@ -951,35 +951,35 @@ Definition list_disjoint (A: Type) (l1 l2: list A) : Prop :=
 Lemma list_disjoint_cons_l:
   forall (A: Type) (a: A) (l1 l2: list A),
   list_disjoint l1 l2 -> ~In a l2 -> list_disjoint (a :: l1) l2.
-Proof.
+Proof using.
   unfold list_disjoint; simpl; intros. destruct H1. congruence. apply H; auto.
 Qed.
 
 Lemma list_disjoint_cons_r:
   forall (A: Type) (a: A) (l1 l2: list A),
   list_disjoint l1 l2 -> ~In a l1 -> list_disjoint l1 (a :: l2).
-Proof.
+Proof using.
   unfold list_disjoint; simpl; intros. destruct H2. congruence. apply H; auto.
 Qed.
 
 Lemma list_disjoint_cons_left:
   forall (A: Type) (a: A) (l1 l2: list A),
   list_disjoint (a :: l1) l2 -> list_disjoint l1 l2.
-Proof.
+Proof using.
   unfold list_disjoint; simpl; intros. apply H; tauto.
 Qed.
 
 Lemma list_disjoint_cons_right:
   forall (A: Type) (a: A) (l1 l2: list A),
   list_disjoint l1 (a :: l2) -> list_disjoint l1 l2.
-Proof.
+Proof using.
   unfold list_disjoint; simpl; intros. apply H; tauto.
 Qed.
 
 Lemma list_disjoint_notin:
   forall (A: Type) (l1 l2: list A) (a: A),
   list_disjoint l1 l2 -> In a l1 -> ~(In a l2).
-Proof.
+Proof using.
   unfold list_disjoint; intros; red; intros.
   apply H with a a; auto.
 Qed.
@@ -987,7 +987,7 @@ Qed.
 Lemma list_disjoint_sym:
   forall (A: Type) (l1 l2: list A),
   list_disjoint l1 l2 -> list_disjoint l2 l1.
-Proof.
+Proof using.
   unfold list_disjoint; intros.
   apply not_eq_sym. apply H; auto.
 Qed.
@@ -995,7 +995,7 @@ Qed.
 Lemma list_disjoint_dec:
   forall (A: Type) (eqA_dec: forall (x y: A), {x=y} + {x<>y}) (l1 l2: list A),
   {list_disjoint l1 l2} + {~list_disjoint l1 l2}.
-Proof.
+Proof using.
   induction l1; intros.
   left; red; intros. elim H.
   case (In_dec eqA_dec a l2); intro.
@@ -1025,7 +1025,7 @@ Inductive list_norepet (A: Type) : list A -> Prop :=
 Lemma list_norepet_dec:
   forall (A: Type) (eqA_dec: forall (x y: A), {x=y} + {x<>y}) (l: list A),
   {list_norepet l} + {~list_norepet l}.
-Proof.
+Proof using.
   induction l.
   left; constructor.
   destruct IHl.
@@ -1040,7 +1040,7 @@ Lemma list_map_norepet:
   list_norepet l ->
   (forall x y, In x l -> In y l -> x <> y -> f x <> f y) ->
   list_norepet (List.map f l).
-Proof.
+Proof using.
   induction 1; simpl; intros.
   constructor.
   constructor.
@@ -1054,7 +1054,7 @@ Qed.
 Remark list_norepet_append_commut:
   forall (A: Type) (a b: list A),
   list_norepet (a ++ b) -> list_norepet (b ++ a).
-Proof.
+Proof using.
   intro A.
   assert (forall (x: A) (b: list A) (a: list A),
            list_norepet (a ++ b) -> ~(In x a) -> ~(In x b) ->
@@ -1078,7 +1078,7 @@ Lemma list_norepet_app:
   forall (A: Type) (l1 l2: list A),
   list_norepet (l1 ++ l2) <->
   list_norepet l1 /\ list_norepet l2 /\ list_disjoint l1 l2.
-Proof.
+Proof using.
   induction l1; simpl; intros; split; intros.
   intuition. constructor. red;simpl;auto.
   tauto.
@@ -1094,27 +1094,27 @@ Lemma list_norepet_append:
   forall (A: Type) (l1 l2: list A),
   list_norepet l1 -> list_norepet l2 -> list_disjoint l1 l2 ->
   list_norepet (l1 ++ l2).
-Proof.
+Proof using.
   generalize list_norepet_app; firstorder.
 Qed.
 
 Lemma list_norepet_append_right:
   forall (A: Type) (l1 l2: list A),
   list_norepet (l1 ++ l2) -> list_norepet l2.
-Proof.
+Proof using.
   generalize list_norepet_app; firstorder.
 Qed.
 
 Lemma list_norepet_append_left:
   forall (A: Type) (l1 l2: list A),
   list_norepet (l1 ++ l2) -> list_norepet l1.
-Proof.
+Proof using.
   generalize list_norepet_app; firstorder.
 Qed.
 
 Lemma list_norepet_rev:
   forall (A: Type) (l: list A), list_norepet l -> list_norepet (List.rev l).
-Proof.
+Proof using.
   induction 1; simpl.
 - constructor.
 - apply list_norepet_append_commut. simpl. constructor; auto. rewrite <- List.in_rev; auto.
@@ -1130,7 +1130,7 @@ Inductive is_tail (A: Type): list A -> list A -> Prop :=
 
 Lemma is_tail_in:
   forall (A: Type) (i: A) c1 c2, is_tail (i :: c1) c2 -> In i c2.
-Proof.
+Proof using.
   induction c2; simpl; intros.
   inversion H.
   inversion H. tauto. right; auto.
@@ -1138,7 +1138,7 @@ Qed.
 
 Lemma is_tail_cons_left:
   forall (A: Type) (i: A) c1 c2, is_tail (i :: c1) c2 -> is_tail c1 c2.
-Proof.
+Proof using.
   induction c2; intros; inversion H.
   constructor. constructor. constructor. auto.
 Qed.
@@ -1147,14 +1147,14 @@ Global Hint Resolve is_tail_refl is_tail_cons is_tail_in is_tail_cons_left: coql
 
 Lemma is_tail_incl:
   forall (A: Type) (l1 l2: list A), is_tail l1 l2 -> incl l1 l2.
-Proof.
+Proof using.
   induction 1; eauto with coqlib.
 Qed.
 
 Lemma is_tail_trans:
   forall (A: Type) (l1 l2: list A),
   is_tail l1 l2 -> forall (l3: list A), is_tail l2 l3 -> is_tail l1 l3.
-Proof.
+Proof using.
   induction 1; intros. auto. apply IHis_tail. eapply is_tail_cons_left; eauto.
 Qed.
 
@@ -1180,21 +1180,21 @@ Lemma list_forall2_app:
   forall a2 b2 a1 b1,
   list_forall2 a1 b1 -> list_forall2 a2 b2 ->
   list_forall2 (a1 ++ a2) (b1 ++ b2).
-Proof.
+Proof using.
   induction 1; intros; simpl. auto. constructor; auto.
 Qed.
 
 Lemma list_forall2_length:
   forall l1 l2,
   list_forall2 l1 l2 -> length l1 = length l2.
-Proof.
+Proof using.
   induction 1; simpl; congruence.
 Qed.
 
 Lemma list_forall2_in_left:
   forall x1 l1 l2,
   list_forall2 l1 l2 -> In x1 l1 -> exists x2, In x2 l2 /\ P x1 x2.
-Proof.
+Proof using.
   induction 1; simpl; intros. contradiction. destruct H1.
   subst; exists b1; auto.
   exploit IHlist_forall2; eauto. intros (x2 & U & V); exists x2; auto.
@@ -1203,7 +1203,7 @@ Qed.
 Lemma list_forall2_in_right:
   forall x2 l1 l2,
   list_forall2 l1 l2 -> In x2 l2 -> exists x1, In x1 l1 /\ P x1 x2.
-Proof.
+Proof using.
   induction 1; simpl; intros. contradiction. destruct H1.
   subst; exists a1; auto.
   exploit IHlist_forall2; eauto. intros (x1 & U & V); exists x1; auto.
@@ -1217,7 +1217,7 @@ Lemma list_forall2_imply:
   forall (P2: A -> B -> Prop),
   (forall v1 v2, In v1 l1 -> In v2 l2 -> P1 v1 v2 -> P2 v1 v2) ->
   list_forall2 P2 l1 l2.
-Proof.
+Proof using.
   induction 1; intros.
   constructor.
   constructor. auto with coqlib. apply IHlist_forall2; auto.
@@ -1234,14 +1234,14 @@ Fixpoint list_drop (A: Type) (n: nat) (x: list A) {struct n} : list A :=
 
 Lemma list_drop_incl:
   forall (A: Type) (x: A) n (l: list A), In x (list_drop n l) -> In x l.
-Proof.
+Proof using.
   induction n; simpl; intros. auto.
   destruct l; auto with coqlib.
 Qed.
 
 Lemma list_drop_norepet:
   forall (A: Type) n (l: list A), list_norepet l -> list_norepet (list_drop n l).
-Proof.
+Proof using.
   induction n; simpl; intros. auto.
   inv H. constructor. auto.
 Qed.
@@ -1249,7 +1249,7 @@ Qed.
 Lemma list_map_drop:
   forall (A B: Type) (f: A -> B) n (l: list A),
   list_drop n (map f l) = map f (list_drop n l).
-Proof.
+Proof using.
   induction n; simpl; intros. auto.
   destruct l; simpl; auto.
 Qed.
@@ -1263,13 +1263,13 @@ Coercion proj_sumbool: sumbool >-> bool.
 
 Lemma proj_sumbool_true:
   forall (P Q: Prop) (a: {P}+{Q}), proj_sumbool a = true -> P.
-Proof.
+Proof using.
   intros P Q a. destruct a; simpl. auto. congruence.
 Qed.
 
 Lemma proj_sumbool_is_true:
   forall (P: Prop) (a: {P}+{~P}), P -> proj_sumbool a = true.
-Proof.
+Proof using.
   intros. unfold proj_sumbool. destruct a. auto. contradiction.
 Qed.
 
@@ -1293,14 +1293,14 @@ Variable B: Type.
 Lemma dec_eq_true:
   forall (x: A) (ifso ifnot: B),
   (if dec_eq x x then ifso else ifnot) = ifso.
-Proof.
+Proof using.
   intros. destruct (dec_eq x x). auto. congruence.
 Qed.
 
 Lemma dec_eq_false:
   forall (x y: A) (ifso ifnot: B),
   x <> y -> (if dec_eq x y then ifso else ifnot) = ifnot.
-Proof.
+Proof using.
   intros. destruct (dec_eq x y). congruence. auto.
 Qed.
 
@@ -1308,7 +1308,7 @@ Lemma dec_eq_sym:
   forall (x y: A) (ifso ifnot: B),
   (if dec_eq x y then ifso else ifnot) =
   (if dec_eq y x then ifso else ifnot).
-Proof.
+Proof using.
   intros. destruct (dec_eq x y).
   subst y. rewrite dec_eq_true. auto.
   rewrite dec_eq_false; auto.
@@ -1324,13 +1324,13 @@ Variable A: Type.
 
 Lemma pred_dec_true:
   forall (a b: A), P -> (if dec then a else b) = a.
-Proof.
+Proof using.
   intros. destruct dec. auto. contradiction.
 Qed.
 
 Lemma pred_dec_false:
   forall (a b: A), ~P -> (if dec then a else b) = b.
-Proof.
+Proof using.
   intros. destruct dec. contradiction. auto.
 Qed.
 
@@ -1357,7 +1357,7 @@ Inductive lex_ord: A*B -> A*B -> Prop :=
 
 Lemma wf_lex_ord:
   well_founded ordA -> well_founded ordB -> well_founded lex_ord.
-Proof.
+Proof using.
   intros Awf Bwf.
   assert (forall a, Acc ordA a -> forall b, Acc ordB b -> Acc lex_ord (a, b)).
     induction 1. induction 1. constructor; intros. inv H3.
@@ -1368,7 +1368,7 @@ Qed.
 
 Lemma transitive_lex_ord:
   transitive _ ordA -> transitive _ ordB -> transitive _ lex_ord.
-Proof.
+Proof using.
   intros trA trB; red; intros.
   inv H; inv H0.
   left; eapply trA; eauto.
@@ -1407,6 +1407,6 @@ Lemma nlist_forall2_imply:
   forall (P2: A -> B -> Prop),
   (forall v1 v2, nIn v1 l1 -> nIn v2 l2 -> P1 v1 v2 -> P2 v1 v2) ->
   nlist_forall2 P2 l1 l2.
-Proof.
+Proof using.
   induction 1; simpl; intros; constructor; auto.
 Qed.

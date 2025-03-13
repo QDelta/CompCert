@@ -48,7 +48,7 @@ Inductive prefix: list symbol -> list symbol -> Prop :=
 (** [prefix] is transitive **)
 Lemma prefix_trans:
   forall (l1 l2 l3:list symbol), prefix l1 l2 -> prefix l2 l3 -> prefix l1 l3.
-Proof.
+Proof using.
   intros l1 l2 l3 H1 H2. revert l3 H2.
   induction H1; [now constructor|]. inversion 1. subst. constructor. eauto.
 Qed.
@@ -61,7 +61,7 @@ Fixpoint is_prefix (l1 l2:list symbol) :=
   end.
 
 Global Instance prefix_is_validator l1 l2 : IsValidator (prefix l1 l2) (is_prefix l1 l2).
-Proof.
+Proof using.
   revert l2. induction l1 as [|x1 l1 IH]=>l2 Hpref.
   - constructor.
   - destruct l2 as [|x2 l2]=>//.
@@ -108,7 +108,7 @@ Inductive prefix_pred: list (state->bool) -> list (state->bool) -> Prop :=
 Lemma prefix_pred_trans:
   forall (l1 l2 l3:list (state->bool)),
   prefix_pred l1 l2 -> prefix_pred l2 l3 -> prefix_pred l1 l3.
-Proof.
+Proof using.
   intros l1 l2 l3 H1 H2. revert l3 H2.
   induction H1 as [|l1 l2 f1 f2 Hf2f1]; [now constructor|].
   intros l3. inversion 1 as [|??? f3 Hf3f2]. subst. constructor; [|now eauto].
@@ -127,7 +127,7 @@ Fixpoint is_prefix_pred (l1 l2:list (state->bool)) :=
 
 Global Instance prefix_pred_is_validator l1 l2 :
   IsValidator (prefix_pred l1 l2) (is_prefix_pred l1 l2).
-Proof.
+Proof using.
   revert l2. induction l1 as [|x1 l1 IH]=>l2 Hpref.
   - constructor.
   - destruct l2 as [|x2 l2]=>//.
@@ -182,7 +182,7 @@ Global Instance impl_is_state_valid_after_pop_is_validator state sl pl P b :
   IsValidator P b ->
   IsValidator (state_valid_after_pop state sl pl -> P)
               (if is_state_valid_after_pop state sl pl then b else true).
-Proof.
+Proof using.
   destruct (is_state_valid_after_pop _ sl pl) eqn:EQ.
   - intros ???. by eapply is_validator.
   - intros _ _ Hsvap. exfalso. induction Hsvap=>//; [simpl in EQ; congruence|].

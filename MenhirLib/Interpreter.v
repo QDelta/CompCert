@@ -27,7 +27,7 @@ Arguments decide _ {_}.
 (** A [Comparable] type has decidable equality. *)
 Global Instance comparable_decidable_eq T `{ComparableLeibnizEq T} (x y : T) :
   Decidable (x = y).
-Proof.
+Proof using.
   unfold Decidable.
   destruct (compare x y) eqn:EQ; [left; apply compare_eq; intuition | ..];
     right; intros ->; by rewrite compare_refl in EQ.
@@ -36,7 +36,7 @@ Defined.
 Global Instance list_decidable_eq T :
   (forall x y : T, Decidable (x = y)) ->
   (forall l1 l2 : list T, Decidable (l1 = l2)).
-Proof. unfold Decidable. decide equality. Defined.
+Proof using. unfold Decidable. decide equality. Defined.
 
 Ltac subst_existT :=
   repeat
@@ -75,7 +75,7 @@ Definition cast {T : Type} (F : T -> Type) {x y : T} (eq : thunkP (x = y))
 
 Lemma cast_eq T F (x : T) (eq : thunkP (x = x)) `{forall x y, Decidable (x = y)} a :
   cast F eq a = a.
-Proof. by rewrite /cast -Eqdep_dec.eq_rect_eq_dec. Qed.
+Proof using. by rewrite /cast -Eqdep_dec.eq_rect_eq_dec. Qed.
 
 (** Input buffers and operations on them. **)
 CoInductive buffer : Type :=
@@ -99,7 +99,7 @@ Infix "++" := app_buf (at level 60, right associativity) : buffer_scope.
 
 Lemma app_buf_assoc (l1 l2:list token) (buf:buffer) :
   (l1 ++ (l2 ++ buf) = (l1 ++ l2) ++ buf)%buf.
-Proof. induction l1 as [|?? IH]=>//=. rewrite IH //. Qed.
+Proof using. induction l1 as [|?? IH]=>//=. rewrite IH //. Qed.
 
 (** The type of a non initial state: the type of semantic values associated
    with the last symbol of this state. *)
@@ -117,15 +117,15 @@ Hypothesis safe: safe.
 
 (* Properties of the automaton deduced from safety validation. *)
 Proposition shift_head_symbs: shift_head_symbs.
-Proof. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
+Proof using safe. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
 Proposition goto_head_symbs: goto_head_symbs.
-Proof. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
+Proof using safe. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
 Proposition shift_past_state: shift_past_state.
-Proof. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
+Proof using safe. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
 Proposition goto_past_state: goto_past_state.
-Proof. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
+Proof using safe. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
 Proposition reduce_ok: reduce_ok.
-Proof. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
+Proof using safe. pose proof safe; unfold ValidSafe.safe in H; intuition. Qed.
 
 Variable init : initstate.
 
@@ -191,7 +191,7 @@ unshelve refine
          | [] => fun Hp => False_rect _ _
        end Hp
    end).
-Proof.
+Proof using.
   - simpl in Hp. clear -Hp. abstract (intros _ ; specialize (Hp I); now inversion Hp).
   - clear -Hp. abstract (specialize (Hp I); now inversion Hp).
   - simpl in Hp. clear -Hp. abstract (intros _ ; specialize (Hp I); now inversion Hp).
@@ -213,7 +213,7 @@ Inductive pop_spec {A:Type} :
 Lemma pop_spec_ok {A:Type} symbols_to_pop stk Hp action stk' res:
   pop symbols_to_pop stk Hp action = (stk', res) <->
   pop_spec (A:=A) symbols_to_pop stk action stk' res.
-Proof.
+Proof using.
   revert stk Hp action.
   induction symbols_to_pop as [|t symbols_to_pop IH]=>stk Hp action /=.
   - split.
@@ -231,7 +231,7 @@ Qed.
 Lemma pop_preserves_invariant symbols_to_pop stk Hp A action :
   stack_invariant stk ->
   stack_invariant (fst (pop symbols_to_pop stk Hp (A:=A) action)).
-Proof.
+Proof using.
   revert stk Hp A action. induction symbols_to_pop as [|t q IH]=>//=.
   intros stk Hp A action Hi.
   destruct Hi as [stack Hp' Hpp [|state st stk']].
@@ -243,7 +243,7 @@ Lemma pop_state_valid symbols_to_pop stk Hp A action lpred :
   prefix_pred lpred (state_stack_of_stack stk) ->
   let stk' := fst (pop symbols_to_pop stk Hp (A:=A) action) in
   state_valid_after_pop (state_of_stack stk') symbols_to_pop lpred.
-Proof.
+Proof using.
   revert stk Hp A action lpred. induction symbols_to_pop as [|t q IH]=>/=.
   - intros stk Hp A a lpred Hpp. destruct lpred as [|pred lpred]; constructor.
     inversion Hpp as [|? lpred' ? pred' Himpl Hpp' eq1 eq2]; subst.
@@ -308,7 +308,7 @@ refine
       Accept_sr sem buffer
     end (fun _ => _))
    (fun _ => pop_state_valid _ _ _ _ _ _ _)).
-Proof.
+Proof using.
   - clear -Hi Hval.
     abstract (intros _; destruct Hi=>//; eapply prefix_trans; [by apply Hval|eassumption]).
   - clear -Hval.
@@ -321,7 +321,7 @@ Defined.
 Lemma reduce_step_stack_invariant_preserved stk prod buffer Hv Hi stk' buffer':
   reduce_step stk prod buffer Hv Hi = Progress_sr stk' buffer' ->
   stack_invariant stk'.
-Proof.
+Proof using safe.
   unfold reduce_step.
   match goal with
   | |- context [pop ?symbols_to_pop stk ?Hp ?action] =>
@@ -377,7 +377,7 @@ Definition step stk buffer (Hi : thunkP (stack_invariant stk)): step_result :=
 Lemma step_stack_invariant_preserved stk buffer Hi stk' buffer':
   step stk buffer Hi = Progress_sr stk' buffer' ->
   stack_invariant stk'.
-Proof.
+Proof using.
   unfold step.
   generalize (reduce_ok (state_of_stack stk))=>Hred.
   assert (Hshift1 := shift_head_symbs (state_of_stack stk)).
@@ -439,7 +439,7 @@ refine (match proj1_sig (parse_fix [] buffer log_n_steps _) with
         | Accept_sr sem buffer' => Parsed_pr sem buffer'
         | Progress_sr _ _ => Timeout_pr
         end).
-Proof.
+Proof using safe.
   abstract (repeat constructor; intros; by destruct singleton_state_pred).
 Defined.
 

@@ -86,7 +86,7 @@ Definition set (p: positive) (v: L.t) (x: t) : t :=
 Lemma gsspec:
   forall p v x q,
   L.eq (get q (set p v x)) (if peq q p then v else get q x).
-Proof.
+Proof using.
   intros. unfold set, get.
   destruct (L.beq v L.bot) eqn:EBOT.
   rewrite PTree.grspec. unfold PTree.elt_eq. destruct (peq q p).
@@ -99,24 +99,24 @@ Definition eq (x y: t) : Prop :=
   forall p, L.eq (get p x) (get p y).
 
 Lemma eq_refl: forall x, eq x x.
-Proof.
+Proof using.
   unfold eq; intros. apply L.eq_refl.
 Qed.
 
 Lemma eq_sym: forall x y, eq x y -> eq y x.
-Proof.
+Proof using.
   unfold eq; intros. apply L.eq_sym; auto.
 Qed.
 
 Lemma eq_trans: forall x y z, eq x y -> eq y z -> eq x z.
-Proof.
+Proof using.
   unfold eq; intros. eapply L.eq_trans; eauto.
 Qed.
 
 Definition beq (x y: t) : bool := PTree.beq L.beq x y.
 
 Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-Proof.
+Proof using.
   unfold beq; intros; red; intros. unfold get.
   rewrite PTree.beq_correct in H. specialize (H p).
   destruct (x!p); destruct (y!p); intuition.
@@ -128,24 +128,24 @@ Definition ge (x y: t) : Prop :=
   forall p, L.ge (get p x) (get p y).
 
 Lemma ge_refl: forall x y, eq x y -> ge x y.
-Proof.
+Proof using.
   unfold ge, eq; intros. apply L.ge_refl. auto.
 Qed.
 
 Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-Proof.
+Proof using.
   unfold ge; intros. apply L.ge_trans with (get p y); auto.
 Qed.
 
 Definition bot : t := PTree.empty _.
 
 Lemma get_bot: forall p, get p bot = L.bot.
-Proof.
+Proof using.
   intros; reflexivity.
 Qed.
 
 Lemma ge_bot: forall x, ge x bot.
-Proof.
+Proof using.
   unfold ge; intros. rewrite get_bot. apply L.ge_bot.
 Qed.
 
@@ -159,17 +159,17 @@ Definition opt_eq (ox oy: option L.t) : Prop :=
   end.
 
 Lemma opt_eq_refl: forall ox, opt_eq ox ox.
-Proof.
+Proof using.
   intros. unfold opt_eq. destruct ox. apply L.eq_refl. auto.
 Qed.
 
 Lemma opt_eq_sym: forall ox oy, opt_eq ox oy -> opt_eq oy ox.
-Proof.
+Proof using.
   unfold opt_eq. destruct ox; destruct oy; auto. apply L.eq_sym.
 Qed.
 
 Lemma opt_eq_trans: forall ox oy oz, opt_eq ox oy -> opt_eq oy oz -> opt_eq ox oz.
-Proof.
+Proof using.
   unfold opt_eq. destruct ox; destruct oy; destruct oz; intuition.
   eapply L.eq_trans; eauto.
 Qed.
@@ -183,7 +183,7 @@ Definition opt_beq (ox oy: option L.t) : bool :=
 
 Lemma opt_beq_correct:
   forall ox oy, opt_beq ox oy = true -> opt_eq ox oy.
-Proof.
+Proof using.
   unfold opt_beq, opt_eq. destruct ox; destruct oy; try congruence.
   intros. apply L.beq_correct; auto.
   auto.
@@ -279,7 +279,7 @@ Definition tree_agree (m1 m2 m: PTree.t L.t) : Prop :=
 Lemma tree_agree_node: forall l1 o1 r1 l2 o2 r2 l o r,
   tree_agree l1 l2 l -> tree_agree r1 r2 r -> opt_eq (f o1 o2) o ->
   tree_agree (PTree.Node l1 o1 r1) (PTree.Node l2 o2 r2) (PTree.Node l o r).
-Proof.
+Proof using.
   intros; red; intros. rewrite ! PTree.gNode. destruct i; auto using opt_eq_sym.
 Qed.
 
@@ -291,7 +291,7 @@ Lemma gxcombine_l: forall m,
   | Changed m' => forall i, opt_eq m'!i (f m!i None)
   | _ => False
   end.
-Proof.
+Proof using f_none_none.
   unfold xcombine_l. induction m using PTree.tree_ind.
 - simpl; intros. rewrite PTree.gempty, f_none_none. auto.
 - rewrite PTree.unroll_tree_rec by auto.
@@ -309,7 +309,7 @@ Lemma gxcombine_r: forall m,
   | Changed m' => forall i, opt_eq m'!i (f None m!i)
   | _ => False
   end.
-Proof.
+Proof using f_none_none.
   unfold xcombine_r. induction m using PTree.tree_ind.
 - simpl; intros. rewrite PTree.gempty, f_none_none. auto.
 - rewrite PTree.unroll_tree_rec by auto.
@@ -334,7 +334,7 @@ Inductive xcombine_spec (m1 m2: PTree.t L.t) : changed -> Prop :=
 Local Hint Constructors xcombine_spec : combine.
 
 Lemma gxcombine: forall m1 m2, xcombine_spec m1 m2 (xcombine m1 m2).
-Proof.
+Proof using f_none_none.
   Local Opaque opt_eq.
   unfold xcombine.
   induction m1 using PTree.tree_ind; induction m2 using PTree.tree_ind; intros.
@@ -361,7 +361,7 @@ Definition combine (m1 m2: PTree.t L.t) : PTree.t L.t :=
 
 Theorem gcombine:
   forall m1 m2 i, opt_eq (PTree.get i (combine m1 m2)) (f (PTree.get i m1) (PTree.get i m2)).
-Proof.
+Proof using f_none_none.
   intros. unfold combine. 
   generalize (gxcombine m1 m2); intros XS; inv XS; auto.
 Qed.
@@ -383,7 +383,7 @@ Lemma gcombine_bot:
   f None None = None ->
   L.eq (get p (combine f t1 t2))
        (match f t1!p t2!p with Some x => x | None => L.bot end).
-Proof.
+Proof using.
   intros. unfold get. generalize (gcombine f H t1 t2 p). unfold opt_eq.
   destruct ((combine f t1 t2)!p); destruct (f t1!p t2!p).
   auto. contradiction. contradiction. intros; apply L.eq_refl.
@@ -391,7 +391,7 @@ Qed.
 
 Lemma ge_lub_left:
   forall x y, ge (lub x y) x.
-Proof.
+Proof using.
   unfold ge, lub; intros.
   eapply L.ge_trans. apply L.ge_refl. apply gcombine_bot; auto.
   unfold get. destruct x!p. destruct y!p.
@@ -402,7 +402,7 @@ Qed.
 
 Lemma ge_lub_right:
   forall x y, ge (lub x y) y.
-Proof.
+Proof using.
   unfold ge, lub; intros.
   eapply L.ge_trans. apply L.ge_refl. apply gcombine_bot; auto.
   unfold get. destruct y!p. destruct x!p.
@@ -444,7 +444,7 @@ Lemma gsspec:
   forall p v x q,
   x <> Bot -> ~L.eq v L.bot ->
   L.eq (get q (set p v x)) (if peq q p then v else get q x).
-Proof.
+Proof using.
   intros. unfold set. destruct x. congruence.
   destruct (L.beq v L.bot) eqn:EBOT.
   elim H0. apply L.beq_correct; auto.
@@ -459,17 +459,17 @@ Definition eq (x y: t) : Prop :=
   forall p, L.eq (get p x) (get p y).
 
 Lemma eq_refl: forall x, eq x x.
-Proof.
+Proof using.
   unfold eq; intros. apply L.eq_refl.
 Qed.
 
 Lemma eq_sym: forall x y, eq x y -> eq y x.
-Proof.
+Proof using.
   unfold eq; intros. apply L.eq_sym; auto.
 Qed.
 
 Lemma eq_trans: forall x y z, eq x y -> eq y z -> eq x z.
-Proof.
+Proof using.
   unfold eq; intros. eapply L.eq_trans; eauto.
 Qed.
 
@@ -481,7 +481,7 @@ Definition beq (x y: t) : bool :=
   end.
 
 Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-Proof.
+Proof using.
   destruct x; destruct y; simpl; intro; try congruence.
   apply eq_refl.
   red; intro; simpl.
@@ -495,36 +495,36 @@ Definition ge (x y: t) : Prop :=
   forall p, L.ge (get p x) (get p y).
 
 Lemma ge_refl: forall x y, eq x y -> ge x y.
-Proof.
+Proof using.
   unfold ge, eq; intros. apply L.ge_refl. auto.
 Qed.
 
 Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-Proof.
+Proof using.
   unfold ge; intros. apply L.ge_trans with (get p y); auto.
 Qed.
 
 Definition bot := Bot.
 
 Lemma get_bot: forall p, get p bot = L.bot.
-Proof.
+Proof using.
   unfold bot; intros; simpl. auto.
 Qed.
 
 Lemma ge_bot: forall x, ge x bot.
-Proof.
+Proof using.
   unfold ge; intros. rewrite get_bot. apply L.ge_bot.
 Qed.
 
 Definition top := Top_except (PTree.empty L.t).
 
 Lemma get_top: forall p, get p top = L.top.
-Proof.
+Proof using.
   unfold top; intros; auto.
 Qed.
 
 Lemma ge_top: forall x, ge top x.
-Proof.
+Proof using.
   unfold ge; intros. rewrite get_top. apply L.ge_top.
 Qed.
 
@@ -554,7 +554,7 @@ Lemma gcombine_top:
   f None None = None ->
   L.eq (get p (Top_except (LM.combine f t1 t2)))
        (match f t1!p t2!p with Some x => x | None => L.top end).
-Proof.
+Proof using.
   intros. simpl. generalize (LM.gcombine f H t1 t2 p). unfold LM.opt_eq.
   destruct ((LM.combine f t1 t2)!p); destruct (f t1!p t2!p).
   auto. contradiction. contradiction. intros; apply L.eq_refl.
@@ -562,7 +562,7 @@ Qed.
 
 Lemma ge_lub_left:
   forall x y, ge (lub x y) x.
-Proof.
+Proof using.
   unfold ge, lub; intros. destruct x; destruct y.
   rewrite get_bot. apply L.ge_bot.
   rewrite get_bot. apply L.ge_bot.
@@ -577,7 +577,7 @@ Qed.
 
 Lemma ge_lub_right:
   forall x y, ge (lub x y) y.
-Proof.
+Proof using.
   unfold ge, lub; intros. destruct x; destruct y.
   rewrite get_bot. apply L.ge_bot.
   apply L.ge_refl. apply L.eq_refl.
@@ -611,29 +611,29 @@ Module LFSet (S: FSetInterface.WS) <: SEMILATTICE.
 
   Definition ge (x y: t) := S.Subset y x.
   Lemma ge_refl: forall x y, eq x y -> ge x y.
-  Proof.
+  Proof using.
     unfold eq, ge, S.Equal, S.Subset; intros. firstorder.
   Qed.
   Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-  Proof.
+  Proof using.
     unfold ge, S.Subset; intros. eauto.
   Qed.
 
   Definition  bot: t := S.empty.
   Lemma ge_bot: forall x, ge x bot.
-  Proof.
+  Proof using.
     unfold ge, bot, S.Subset; intros. elim (S.empty_1 H).
   Qed.
 
   Definition lub: t -> t -> t := S.union.
 
   Lemma ge_lub_left: forall x y, ge (lub x y) x.
-  Proof.
+  Proof using.
     unfold lub, ge, S.Subset; intros. apply S.union_2; auto.
   Qed.
 
   Lemma ge_lub_right: forall x y, ge (lub x y) y.
-  Proof.
+  Proof using.
     unfold lub, ge, S.Subset; intros. apply S.union_3; auto.
   Qed.
 
@@ -669,7 +669,7 @@ Definition beq (x y: t) : bool :=
   end.
 
 Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-Proof.
+Proof using.
   unfold eq; destruct x; destruct y; simpl; try congruence; intro.
   destruct (X.eq t0 t1); congruence.
 Qed.
@@ -683,12 +683,12 @@ Definition ge (x y: t) : Prop :=
   end.
 
 Lemma ge_refl: forall x y, eq x y -> ge x y.
-Proof.
+Proof using.
   unfold eq, ge; intros; subst y; destruct x; auto.
 Qed.
 
 Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-Proof.
+Proof using.
   unfold ge; destruct x; destruct y; try destruct z; intuition.
   transitivity t1; auto.
 Qed.
@@ -696,14 +696,14 @@ Qed.
 Definition bot: t := Bot.
 
 Lemma ge_bot: forall x, ge x bot.
-Proof.
+Proof using.
   destruct x; simpl; auto.
 Qed.
 
 Definition top: t := Top.
 
 Lemma ge_top: forall x, ge top x.
-Proof.
+Proof using.
   destruct x; simpl; auto.
 Qed.
 
@@ -717,13 +717,13 @@ Definition lub (x y: t) : t :=
   end.
 
 Lemma ge_lub_left: forall x y, ge (lub x y) x.
-Proof.
+Proof using.
   destruct x; destruct y; simpl; auto.
   case (X.eq t0 t1); simpl; auto.
 Qed.
 
 Lemma ge_lub_right: forall x y, ge (lub x y) y.
-Proof.
+Proof using.
   destruct x; destruct y; simpl; auto.
   case (X.eq t0 t1); simpl; auto.
 Qed.
@@ -752,28 +752,28 @@ Proof eqb_prop.
 Definition ge (x y: t) : Prop := x = y \/ x = true.
 
 Lemma ge_refl: forall x y, eq x y -> ge x y.
-Proof. unfold ge; tauto. Qed.
+Proof using. unfold ge; tauto. Qed.
 
 Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-Proof. unfold ge; intuition congruence. Qed.
+Proof using. unfold ge; intuition congruence. Qed.
 
 Definition bot := false.
 
 Lemma ge_bot: forall x, ge x bot.
-Proof. destruct x; compute; tauto. Qed.
+Proof using. destruct x; compute; tauto. Qed.
 
 Definition top := true.
 
 Lemma ge_top: forall x, ge top x.
-Proof. unfold ge, top; tauto. Qed.
+Proof using. unfold ge, top; tauto. Qed.
 
 Definition lub (x y: t) := x || y.
 
 Lemma ge_lub_left: forall x y, ge (lub x y) x.
-Proof. destruct x; destruct y; compute; tauto. Qed.
+Proof using. destruct x; destruct y; compute; tauto. Qed.
 
 Lemma ge_lub_right: forall x y, ge (lub x y) y.
-Proof. destruct x; destruct y; compute; tauto. Qed.
+Proof using. destruct x; destruct y; compute; tauto. Qed.
 
 End LBoolean.
 
@@ -794,17 +794,17 @@ Definition eq (x y: t) : Prop :=
   end.
 
 Lemma eq_refl: forall x, eq x x.
-Proof.
+Proof using.
   unfold eq; intros; destruct x. apply L.eq_refl. auto.
 Qed.
 
 Lemma eq_sym: forall x y, eq x y -> eq y x.
-Proof.
+Proof using.
   unfold eq; intros; destruct x; destruct y; auto. apply L.eq_sym; auto.
 Qed.
 
 Lemma eq_trans: forall x y z, eq x y -> eq y z -> eq x z.
-Proof.
+Proof using.
   unfold eq; intros; destruct x; destruct y; destruct z; auto.
   eapply L.eq_trans; eauto.
   contradiction.
@@ -818,7 +818,7 @@ Definition beq (x y: t) : bool :=
   end.
 
 Lemma beq_correct: forall x y, beq x y = true -> eq x y.
-Proof.
+Proof using.
   unfold beq, eq; intros; destruct x; destruct y.
   apply L.beq_correct; auto.
   discriminate. discriminate. auto.
@@ -832,14 +832,14 @@ Definition ge (x y: t) : Prop :=
   end.
 
 Lemma ge_refl: forall x y, eq x y -> ge x y.
-Proof.
+Proof using.
   unfold eq, ge; intros; destruct x; destruct y.
   apply L.ge_refl; auto.
   auto. elim H. auto.
 Qed.
 
 Lemma ge_trans: forall x y z, ge x y -> ge y z -> ge x z.
-Proof.
+Proof using.
   unfold ge; intros; destruct x; destruct y; destruct z; auto.
   eapply L.ge_trans; eauto. contradiction.
 Qed.
@@ -847,7 +847,7 @@ Qed.
 Definition bot : t := Some L.bot.
 
 Lemma ge_bot: forall x, ge x bot.
-Proof.
+Proof using.
   unfold ge, bot; intros. destruct x; auto. apply L.ge_bot.
 Qed.
 
@@ -859,19 +859,19 @@ Definition lub (x y: t) : t :=
   end.
 
 Lemma ge_lub_left: forall x y, ge (lub x y) x.
-Proof.
+Proof using.
   unfold ge, lub; intros; destruct x; destruct y; auto. apply L.ge_lub_left.
 Qed.
 
 Lemma ge_lub_right: forall x y, ge (lub x y) y.
-Proof.
+Proof using.
   unfold ge, lub; intros; destruct x; destruct y; auto. apply L.ge_lub_right.
 Qed.
 
 Definition top : t := None.
 
 Lemma ge_top: forall x, ge top x.
-Proof.
+Proof using.
   unfold ge, top; intros. auto.
 Qed.
 

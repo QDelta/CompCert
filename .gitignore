@@ -85,3 +85,8 @@
 .nia.cache
 .nra.cache
 .csdp.cache
+
+*_sentences.jsonl
+*_context.v
+*.log
+*_generated.v

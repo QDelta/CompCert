@@ -117,7 +117,7 @@ Definition forallb_items items_map (P:state -> production -> nat -> TerminalSet.
 
 Global Instance is_validator_subset S1 S2 :
   IsValidator (TerminalSet.Subset S1 S2) (TerminalSet.subset S1 S2).
-Proof. intros ?. by apply TerminalSet.subset_2. Qed.
+Proof using. intros ?. by apply TerminalSet.subset_2. Qed.
 
 (* While the specification of the validator always quantify over
    possible lookahead tokens individually, the validator usually
@@ -132,7 +132,7 @@ Lemma is_validator_state_has_future_subset st prod pos lookahead lset im fut :
   IsItemsMap im ->
   IsValidator (state_has_future st prod fut lookahead)
               (TerminalSet.subset lset (find_items_map im st prod pos)).
-Proof.
+Proof using.
   intros ? -> -> HSS%TerminalSet.subset_2. exists pos. split=>//. by apply HSS.
 Qed.
 (* We do not declare this lemma as an instance, and use [Hint Extern]
@@ -151,7 +151,7 @@ Global Hint Extern 2 (IsValidator (state_has_future _ _ _ _) _) =>
 Global Instance is_validator_forall_lookahead_set lset P b:
   (forall lookahead, TerminalSet.In lookahead lset -> IsValidator (P lookahead) b) ->
   IsValidator (forall lookahead, TerminalSet.In lookahead lset -> P lookahead) b.
-Proof. unfold IsValidator. firstorder. Qed.
+Proof using. unfold IsValidator. firstorder. Qed.
 
 
 (* Dually, we sometimes still need to explicitelly iterate over a
@@ -162,7 +162,7 @@ Lemma is_validator_iterate_lset P b lookahead lset :
   IsValidator P (b lookahead) ->
   IsValidator P (TerminalSet.fold (fun lookahead acc =>
     if acc then b lookahead else false) lset true).
-Proof.
+Proof using.
   intros Hlset%TerminalSet.elements_1 Hval Val. apply Hval.
   revert Val. rewrite TerminalSet.fold_1. generalize true at 1. clear -Hlset.
   induction Hlset as [? l <-%compare_eq|? l ? IH]=> /= b' Val.
@@ -214,7 +214,7 @@ Lemma is_validator_forall_items P1 b1 P2 b2 im :
                  | [] => b1 st prod pos lset
                  | s :: fut' => b2 st prod pos lset s fut'
                  end)).
-Proof.
+Proof using.
   intros -> Hval1 Hval2 Val st prod fut lookahead (pos & -> & Hlookahead).
   rewrite /forallb_items StateProdPosMap.fold_1 in Val.
   assert (match future_of_prod prod pos with
@@ -251,7 +251,7 @@ Global Instance is_validator_forall_state_has_future im st prod :
     (forall look, state_has_future st prod (rev' (prod_rhs_rev prod)) look)
     (let lookaheads := find_items_map im st prod 0 in
      forallb (fun t => TerminalSet.mem t lookaheads) all_list).
-Proof.
+Proof using.
   move=> -> /forallb_forall Val look.
   specialize (Val look (all_list_forall _)). exists 0. split=>//.
   by apply TerminalSet.mem_2.
@@ -388,6 +388,6 @@ Proof. intros im. subst is_complete_0. instantiate (1:=fun im => _). apply _. Qe
 
 Definition is_complete (_:unit) := is_complete_0 (items_map ()).
 Lemma complete_is_validator : IsValidator complete (is_complete ()).
-Proof. by apply complete_0_is_validator. Qed.
+Proof using. by apply complete_0_is_validator. Qed.
 
 End Make.

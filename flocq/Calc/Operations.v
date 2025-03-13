@@ -45,7 +45,7 @@ Theorem Falign_spec :
   forall f1 f2 : float beta,
   let '(m1, m2, e) := Falign f1 f2 in
   F2R f1 = @F2R beta (Float m1 e) /\ F2R f2 = @F2R beta (Float m2 e).
-Proof.
+Proof using.
 unfold Falign.
 intros (m1, e1) (m2, e2).
 generalize (Zle_cases e1 e2).
@@ -59,7 +59,7 @@ Qed.
 Theorem Falign_spec_exp:
   forall f1 f2 : float beta,
   snd (Falign f1 f2) = Z.min (Fexp f1) (Fexp f2).
-Proof.
+Proof using.
 intros (m1,e1) (m2,e2).
 unfold Falign; simpl.
 generalize (Zle_cases e1 e2);case (Zle_bool e1 e2); intros He.
@@ -96,7 +96,7 @@ Definition Fplus (f1 f2 : float beta) : float beta :=
 Theorem F2R_plus :
   forall f1 f2 : float beta,
   F2R (Fplus f1 f2) = (F2R f1 + F2R f2)%R.
-Proof.
+Proof using.
 intros f1 f2.
 unfold Fplus.
 generalize (Falign_spec f1 f2).
@@ -111,7 +111,7 @@ Qed.
 Theorem Fplus_same_exp :
   forall m1 m2 e,
   Fplus (Float m1 e) (Float m2 e) = Float (m1 + m2) e.
-Proof.
+Proof using.
 intros m1 m2 e.
 unfold Fplus.
 simpl.
@@ -121,7 +121,7 @@ Qed.
 Theorem Fexp_Fplus :
   forall f1 f2 : float beta,
   Fexp (Fplus f1 f2) = Z.min (Fexp f1) (Fexp f2).
-Proof.
+Proof using.
 intros f1 f2.
 unfold Fplus.
 rewrite <- Falign_spec_exp.
@@ -134,7 +134,7 @@ Definition Fminus (f1 f2 : float beta) :=
 Theorem F2R_minus :
   forall f1 f2 : float beta,
   F2R (Fminus f1 f2) = (F2R f1 - F2R f2)%R.
-Proof.
+Proof using.
 intros f1 f2; unfold Fminus.
 rewrite F2R_plus, F2R_opp.
 ring.
@@ -143,7 +143,7 @@ Qed.
 Theorem Fminus_same_exp :
   forall m1 m2 e,
   Fminus (Float m1 e) (Float m2 e) = Float (m1 - m2) e.
-Proof.
+Proof using.
 intros m1 m2 e.
 unfold Fminus.
 apply Fplus_same_exp.
@@ -157,7 +157,7 @@ Definition Fmult (f1 f2 : float beta) : float beta :=
 Theorem F2R_mult :
   forall f1 f2 : float beta,
   F2R (Fmult f1 f2) = (F2R f1 * F2R f2)%R.
-Proof.
+Proof using.
 intros (m1, e1) (m2, e2).
 unfold Fmult, F2R. simpl.
 rewrite mult_IZR, bpow_plus.

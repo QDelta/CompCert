@@ -98,22 +98,22 @@ Infix "**" := Eapp (at level 60, right associativity).
 Infix "***" := Eappinf (at level 60, right associativity).
 
 Lemma E0_left: forall t, E0 ** t = t.
-Proof. auto. Qed.
+Proof using. auto. Qed.
 
 Lemma E0_right: forall t, t ** E0 = t.
-Proof. intros. unfold E0, Eapp. rewrite app_nil_r. auto. Qed.
+Proof using. intros. unfold E0, Eapp. rewrite app_nil_r. auto. Qed.
 
 Lemma Eapp_assoc: forall t1 t2 t3, (t1 ** t2) ** t3 = t1 ** (t2 ** t3).
-Proof. intros. unfold Eapp, trace. apply app_ass. Qed.
+Proof using. intros. unfold Eapp, trace. apply app_ass. Qed.
 
 Lemma Eapp_E0_inv: forall t1 t2, t1 ** t2 = E0 -> t1 = E0 /\ t2 = E0.
 Proof (@app_eq_nil event).
 
 Lemma E0_left_inf: forall T, E0 *** T = T.
-Proof. auto. Qed.
+Proof using. auto. Qed.
 
 Lemma Eappinf_assoc: forall t1 t2 T, (t1 ** t2) *** T = t1 *** (t2 *** T).
-Proof.
+Proof using.
   induction t1; intros; simpl. auto. decEq; auto.
 Qed.
 
@@ -152,21 +152,21 @@ CoInductive traceinf_sim: traceinf -> traceinf -> Prop :=
 
 Lemma traceinf_sim_refl:
   forall T, traceinf_sim T T.
-Proof.
+Proof using.
   cofix COINDHYP; intros.
   destruct T. constructor. apply COINDHYP.
 Qed.
 
 Lemma traceinf_sim_sym:
   forall T1 T2, traceinf_sim T1 T2 -> traceinf_sim T2 T1.
-Proof.
+Proof using.
   cofix COINDHYP; intros. inv H; constructor; auto.
 Qed.
 
 Lemma traceinf_sim_trans:
   forall T1 T2 T3,
   traceinf_sim T1 T2 -> traceinf_sim T2 T3 -> traceinf_sim T1 T3.
-Proof.
+Proof using.
   cofix COINDHYP;intros. inv H; inv H0; constructor; eauto.
 Qed.
 
@@ -176,7 +176,7 @@ CoInductive traceinf_sim': traceinf -> traceinf -> Prop :=
 
 Lemma traceinf_sim'_sim:
   forall T1 T2, traceinf_sim' T1 T2 -> traceinf_sim T1 T2.
-Proof.
+Proof using.
   cofix COINDHYP; intros. inv H.
   destruct t. elim H0; auto.
 Transparent Eappinf.
@@ -215,20 +215,20 @@ CoFixpoint traceinf_of_traceinf' (T': traceinf') : traceinf :=
 
 Remark unroll_traceinf':
   forall T, T = match T with Econsinf' t T' NE => Econsinf' t T' NE end.
-Proof.
+Proof using.
   intros. destruct T; auto.
 Qed.
 
 Remark unroll_traceinf:
   forall T, T = match T with Econsinf t T' => Econsinf t T' end.
-Proof.
+Proof using.
   intros. destruct T; auto.
 Qed.
 
 Lemma traceinf_traceinf'_app:
   forall t T NE,
   traceinf_of_traceinf' (Econsinf' t T NE) = t *** traceinf_of_traceinf' T.
-Proof.
+Proof using.
   induction t.
   intros. elim NE. auto.
   intros. simpl.
@@ -250,7 +250,7 @@ Lemma trace_prefix_app:
   forall t1 t2 t,
   trace_prefix t1 t2 ->
   trace_prefix (t ** t1) (t ** t2).
-Proof.
+Proof using.
   intros. destruct H as [t3 EQ]. exists t3. traceEq.
 Qed.
 
@@ -258,7 +258,7 @@ Lemma traceinf_prefix_app:
   forall t1 T2 t,
   traceinf_prefix t1 T2 ->
   traceinf_prefix (t ** t1) (t *** T2).
-Proof.
+Proof using.
   intros. destruct H as [T3 EQ]. exists T3. subst T2. traceEq.
 Qed.
 
@@ -301,27 +301,27 @@ Inductive eventval_list_match: list eventval -> list typ -> list val -> Prop :=
 Lemma eventval_match_type:
   forall ev ty v,
   eventval_match ev ty v -> Val.has_type v ty.
-Proof.
+Proof using.
   intros. inv H; simpl; auto. unfold Tptr; destruct Archi.ptr64; auto.
 Qed.
 
 Lemma eventval_list_match_length:
   forall evl tyl vl, eventval_list_match evl tyl vl -> List.length vl = List.length tyl.
-Proof.
+Proof using.
   induction 1; simpl; eauto.
 Qed.
 
 Lemma eventval_match_lessdef:
   forall ev ty v1 v2,
   eventval_match ev ty v1 -> Val.lessdef v1 v2 -> eventval_match ev ty v2.
-Proof.
+Proof using.
   intros. inv H; inv H0; constructor; auto.
 Qed.
 
 Lemma eventval_list_match_lessdef:
   forall evl tyl vl1, eventval_list_match evl tyl vl1 ->
   forall vl2, Val.lessdef_list vl1 vl2 -> eventval_list_match evl tyl vl2.
-Proof.
+Proof using.
   induction 1; intros. inv H; constructor.
   inv H1. constructor. eapply eventval_match_lessdef; eauto. eauto.
 Qed.
@@ -330,13 +330,13 @@ Qed.
 
 Lemma eventval_match_determ_1:
   forall ev ty v1 v2, eventval_match ev ty v1 -> eventval_match ev ty v2 -> v1 = v2.
-Proof.
+Proof using.
   intros. inv H; inv H0; auto. congruence.
 Qed.
 
 Lemma eventval_match_determ_2:
   forall ev1 ev2 ty v, eventval_match ev1 ty v -> eventval_match ev2 ty v -> ev1 = ev2.
-Proof.
+Proof using.
   intros. inv H; inv H0; auto.
   decEq. eapply Senv.find_symbol_injective; eauto.
 Qed.
@@ -344,7 +344,7 @@ Qed.
 Lemma eventval_list_match_determ_2:
   forall evl1 tyl vl, eventval_list_match evl1 tyl vl ->
   forall evl2, eventval_list_match evl2 tyl vl -> evl1 = evl2.
-Proof.
+Proof using.
   induction 1; intros. inv H. auto. inv H1. f_equal; eauto.
   eapply eventval_match_determ_2; eauto.
 Qed.
@@ -374,7 +374,7 @@ Lemma eventval_match_receptive:
   eventval_match ev1 ty v1 ->
   eventval_valid ev1 -> eventval_valid ev2 -> eventval_type ev1 = eventval_type ev2 ->
   exists v2, eventval_match ev2 ty v2.
-Proof.
+Proof using.
   intros. unfold eventval_type, Tptr in H2. remember Archi.ptr64 as ptr64.
   inversion H; subst ev1 ty v1; clear H; destruct ev2; simpl in H2; inv H2.
 - exists (Vint i0); constructor.
@@ -397,14 +397,14 @@ Qed.
 
 Lemma eventval_match_valid:
   forall ev ty v, eventval_match ev ty v -> eventval_valid ev.
-Proof.
+Proof using.
   destruct 1; simpl; auto.
 Qed.
 
 Lemma eventval_match_same_type:
   forall ev1 ty v1 ev2 v2,
   eventval_match ev1 ty v1 -> eventval_match ev2 ty v2 -> eventval_type ev1 = eventval_type ev2.
-Proof.
+Proof using.
   destruct 1; intros EV; inv EV; auto.
 Qed.
 
@@ -421,7 +421,7 @@ Hypothesis public_preserved:
 
 Lemma eventval_valid_preserved:
   forall ev, eventval_valid ge1 ev -> eventval_valid ge2 ev.
-Proof.
+Proof using public_preserved.
   intros. destruct ev; simpl in *; auto. rewrite <- H; auto.
 Qed.
 
@@ -431,7 +431,7 @@ Hypothesis symbols_preserved:
 Lemma eventval_match_preserved:
   forall ev ty v,
   eventval_match ge1 ev ty v -> eventval_match ge2 ev ty v.
-Proof.
+Proof using symbols_preserved public_preserved.
   induction 1; constructor; auto.
   rewrite public_preserved; auto.
   rewrite symbols_preserved; auto.
@@ -440,7 +440,7 @@ Qed.
 Lemma eventval_list_match_preserved:
   forall evl tyl vl,
   eventval_list_match ge1 evl tyl vl -> eventval_list_match ge2 evl tyl vl.
-Proof.
+Proof using symbols_preserved public_preserved.
   induction 1; constructor; auto. eapply eventval_match_preserved; eauto.
 Qed.
 
@@ -470,7 +470,7 @@ Hypothesis symb_inj: symbols_inject.
 Lemma eventval_match_inject:
   forall ev ty v1 v2,
   eventval_match ge1 ev ty v1 -> Val.inject f v1 v2 -> eventval_match ge2 ev ty v2.
-Proof.
+Proof using symb_inj.
   intros. inv H; inv H0; try constructor; auto.
   destruct symb_inj as (A & B & C & D). exploit C; eauto. intros [b3 [EQ FS]]. rewrite H4 in EQ; inv EQ.
   rewrite Ptrofs.add_zero. constructor; auto. rewrite A; auto.
@@ -480,7 +480,7 @@ Lemma eventval_match_inject_2:
   forall ev ty v1,
   eventval_match ge1 ev ty v1 ->
   exists v2, eventval_match ge2 ev ty v2 /\ Val.inject f v1 v2.
-Proof.
+Proof using symb_inj.
   intros. inv H; try (econstructor; split; eauto; constructor; fail).
   destruct symb_inj as (A & B & C & D). exploit C; eauto. intros [b2 [EQ FS]].
   exists (Vptr b2 ofs); split. econstructor; eauto.
@@ -490,7 +490,7 @@ Qed.
 Lemma eventval_list_match_inject:
   forall evl tyl vl1, eventval_list_match ge1 evl tyl vl1 ->
   forall vl2, Val.inject_list f vl1 vl2 -> eventval_list_match ge2 evl tyl vl2.
-Proof.
+Proof using symb_inj.
   induction 1; intros. inv H; constructor.
   inv H1. constructor. eapply eventval_match_inject; eauto. eauto.
 Qed.
@@ -535,7 +535,7 @@ Hypothesis public_preserved:
 
 Lemma match_traces_preserved:
   forall t1 t2, match_traces ge1 t1 t2 -> match_traces ge2 t1 t2.
-Proof.
+Proof using public_preserved.
   induction 1; constructor; auto; eapply eventval_valid_preserved; eauto.
 Qed.
 
@@ -723,7 +723,7 @@ Lemma volatile_load_preserved:
   Senv.equiv ge1 ge2 ->
   volatile_load ge1 chunk m b ofs t v ->
   volatile_load ge2 chunk m b ofs t v.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). inv H0; constructor; auto.
   rewrite C; auto.
   rewrite A; auto.
@@ -736,7 +736,7 @@ Lemma volatile_load_extends:
   volatile_load ge chunk m b ofs t v ->
   Mem.extends m m' ->
   exists v', volatile_load ge chunk m' b ofs t v' /\ Val.lessdef v v'.
-Proof.
+Proof using.
   intros. inv H.
   econstructor; split; eauto. econstructor; eauto.
   exploit Mem.load_extends; eauto. intros [v' [A B]]. exists v'; split; auto. constructor; auto.
@@ -749,7 +749,7 @@ Lemma volatile_load_inject:
   Val.inject f (Vptr b ofs) (Vptr b' ofs') ->
   Mem.inject f m m' ->
   exists v', volatile_load ge2 chunk m' b' ofs' t v' /\ Val.inject f v v'.
-Proof.
+Proof using.
   intros until m'; intros SI VL VI MI. generalize SI; intros (A & B & C & D).
   inv VL.
 - (* volatile load *)
@@ -770,7 +770,7 @@ Lemma volatile_load_receptive:
   forall ge chunk m b ofs t1 t2 v1,
   volatile_load ge chunk m b ofs t1 v1 -> match_traces ge t1 t2 ->
   exists v2, volatile_load ge chunk m b ofs t2 v2.
-Proof.
+Proof using.
   intros. inv H; inv H0.
   exploit eventval_match_receptive; eauto. intros [v' EM].
   exists (Val.load_result chunk v'). constructor; auto.
@@ -781,7 +781,7 @@ Lemma volatile_load_ok:
   forall chunk,
   extcall_properties (volatile_load_sem chunk)
                      [Xptr ---> xtype_of_chunk chunk].
-Proof.
+Proof using.
   intros; constructor; intros.
 (* well typed *)
 - inv H. inv H0. apply Val.load_result_xtype.
@@ -834,7 +834,7 @@ Lemma volatile_store_preserved:
   Senv.equiv ge1 ge2 ->
   volatile_store ge1 chunk m1 b ofs v t m2 ->
   volatile_store ge2 chunk m1 b ofs v t m2.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). inv H0; constructor; auto.
   rewrite C; auto.
   rewrite A; auto.
@@ -849,7 +849,7 @@ Lemma unchanged_on_readonly:
   Mem.loadbytes m2 b ofs n = Some bytes ->
   (forall i, ofs <= i < ofs + n -> ~Mem.perm m1 b i Max Writable) ->
   Mem.loadbytes m1 b ofs n = Some bytes.
-Proof.
+Proof using.
   intros.
   rewrite <- H1. symmetry.
   apply Mem.loadbytes_unchanged_on_1 with (P := loc_not_writable m1); auto.
@@ -859,7 +859,7 @@ Lemma volatile_store_readonly:
   forall ge chunk1 m1 b1 ofs1 v t m2,
   volatile_store ge chunk1 m1 b1 ofs1 v t m2 ->
   Mem.unchanged_on (loc_not_writable m1) m1 m2.
-Proof.
+Proof using.
   intros. inv H.
 - apply Mem.unchanged_on_refl.
 - eapply Mem.store_unchanged_on; eauto.
@@ -877,7 +877,7 @@ Lemma volatile_store_extends:
      volatile_store ge chunk m1' b ofs v' t m2'
   /\ Mem.extends m2 m2'
   /\ Mem.unchanged_on (loc_out_of_bounds m1) m1' m2'.
-Proof.
+Proof using.
   intros. inv H.
 - econstructor; split. econstructor; eauto.
   eapply eventval_match_lessdef; eauto. apply Val.load_result_lessdef; auto.
@@ -905,7 +905,7 @@ Lemma volatile_store_inject:
     /\ Mem.inject f m2 m2'
     /\ Mem.unchanged_on (loc_unmapped f) m1 m2
     /\ Mem.unchanged_on (loc_out_of_reach f m1) m1' m2'.
-Proof.
+Proof using.
   intros until v'; intros SI VS AI VI MI.
   generalize SI; intros (P & Q & R & S).
   inv VS.
@@ -937,7 +937,7 @@ Qed.
 Lemma volatile_store_receptive:
   forall ge chunk m b ofs v t1 m1 t2,
   volatile_store ge chunk m b ofs v t1 m1 -> match_traces ge t1 t2 -> t1 = t2.
-Proof.
+Proof using.
   intros. inv H; inv H0; auto.
 Qed.
 
@@ -945,7 +945,7 @@ Lemma volatile_store_ok:
   forall chunk,
   extcall_properties (volatile_store_sem chunk)
                      [Xptr; xtype_of_chunk chunk ---> Xvoid].
-Proof.
+Proof using.
   intros; constructor; intros.
 (* well typed *)
 - unfold proj_sig_res; simpl. inv H; constructor.
@@ -990,7 +990,7 @@ Inductive extcall_malloc_sem (ge: Senv.t):
 Lemma extcall_malloc_ok:
   extcall_properties extcall_malloc_sem
                      [Xsize_t ---> Xptr].
-Proof.
+Proof using.
   assert (UNCHANGED:
     forall (P: block -> Z -> Prop) m lo hi v m' b m'',
     Mem.alloc m lo hi = (m', b) ->
@@ -1077,7 +1077,7 @@ Inductive extcall_free_sem (ge: Senv.t):
 Lemma extcall_free_ok:
   extcall_properties extcall_free_sem
                      [Xptr ---> Xvoid].
-Proof.
+Proof using.
   constructor; intros.
 (* well typed *)
 - inv H; simpl; auto.
@@ -1185,7 +1185,7 @@ Lemma extcall_memcpy_ok:
   forall sz al,
   extcall_properties (extcall_memcpy_sem sz al)
                      [Xptr; Xptr ---> Xvoid].
-Proof.
+Proof using.
   intros. constructor.
 - (* return type *)
   intros. inv H. exact I.
@@ -1297,7 +1297,7 @@ Lemma extcall_annot_ok:
   forall text targs,
   extcall_properties (extcall_annot_sem text targs)
                      (mksignature (List.map inj_type targs) Xvoid cc_default).
-Proof.
+Proof using.
   intros; constructor; intros.
 (* well typed *)
 - inv H. simpl. auto.
@@ -1342,7 +1342,7 @@ Lemma extcall_annot_val_ok:
   forall text targ,
   extcall_properties (extcall_annot_val_sem text targ)
                      [inj_type targ ---> inj_type targ].
-Proof.
+Proof using.
   intros; constructor; intros.
 (* well typed *)
 - inv H. apply Val.has_inj_type. eapply eventval_match_type; eauto.
@@ -1386,7 +1386,7 @@ Lemma extcall_debug_ok:
   forall targs,
   extcall_properties extcall_debug_sem
                      (mksignature (List.map inj_type targs) Xvoid cc_default).
-Proof.
+Proof using.
   intros; constructor; intros.
 (* well typed *)
 - inv H. simpl. auto.
@@ -1430,7 +1430,7 @@ Inductive known_builtin_sem (bf: builtin_function) (ge: Senv.t):
 
 Lemma known_builtin_ok: forall bf,
   extcall_properties (known_builtin_sem bf) (builtin_function_sig bf).
-Proof.
+Proof using.
   intros. set (bsem := builtin_function_sem bf). constructor; intros.
 (* well typed *)
 - inv H.
@@ -1501,7 +1501,7 @@ Definition builtin_or_external_sem name sg :=
 
 Lemma builtin_or_external_sem_ok: forall name sg,
   extcall_properties (builtin_or_external_sem name sg) sg.
-Proof.
+Proof using.
   unfold builtin_or_external_sem; intros. 
   destruct (lookup_builtin_function name sg) as [bf|] eqn:L.
 - exploit lookup_builtin_function_sig; eauto. intros EQ; subst sg.
@@ -1539,7 +1539,7 @@ Definition external_call (ef: external_function): extcall_sem :=
 Theorem external_call_spec:
   forall ef,
   extcall_properties (external_call ef) (ef_sig ef).
-Proof.
+Proof using.
   intros. unfold external_call, ef_sig; destruct ef.
   apply external_functions_properties.
   apply builtin_or_external_sem_ok.
@@ -1572,7 +1572,7 @@ Lemma external_call_well_typed:
   forall ef ge vargs m1 t vres m2,
   external_call ef ge vargs m1 t vres m2 ->
   Val.has_type vres (proj_sig_res (ef_sig ef)).
-Proof.
+Proof using.
   intros. apply Val.has_proj_xtype. eapply external_call_well_typed_gen; eauto.
 Qed.
 
@@ -1582,7 +1582,7 @@ Lemma external_call_nextblock:
   forall ef ge vargs m1 t vres m2,
   external_call ef ge vargs m1 t vres m2 ->
   Ple (Mem.nextblock m1) (Mem.nextblock m2).
-Proof.
+Proof using.
   intros. destruct (plt (Mem.nextblock m2) (Mem.nextblock m1)).
   exploit external_call_valid_block; eauto. intros.
   eelim Plt_strict; eauto.
@@ -1610,7 +1610,7 @@ Lemma external_call_mem_inject:
     /\ Mem.unchanged_on (loc_out_of_reach f m1) m1' m2'
     /\ inject_incr f f'
     /\ inject_separated f f' m1 m1'.
-Proof.
+Proof using.
   intros. destruct H as (A & B & C). eapply external_call_mem_inject_gen with (ge1 := ge); eauto.
   repeat split; intros.
   + simpl in H3. exploit A; eauto. intros EQ; rewrite EQ in H; inv H. auto.
@@ -1630,7 +1630,7 @@ Lemma external_call_match_traces:
   external_call ef ge vargs m t1 vres1 m1 ->
   external_call ef ge vargs m t2 vres2 m2 ->
   match_traces ge t1 t2.
-Proof.
+Proof using.
   intros. exploit external_call_determ. eexact H. eexact H0. tauto.
 Qed.
 
@@ -1639,7 +1639,7 @@ Lemma external_call_deterministic:
   external_call ef ge vargs m t vres1 m1 ->
   external_call ef ge vargs m t vres2 m2 ->
   vres1 = vres2 /\ m1 = m2.
-Proof.
+Proof using.
   intros. exploit external_call_determ. eexact H. eexact H0. intuition.
 Qed.
 
@@ -1687,7 +1687,7 @@ Definition eval_builtin_args (al: list (builtin_arg A)) (vl: list val) : Prop :=
 
 Lemma eval_builtin_arg_determ:
   forall a v, eval_builtin_arg a v -> forall v', eval_builtin_arg a v' -> v' = v.
-Proof.
+Proof using.
   induction 1; intros v' EV; inv EV; try congruence.
   f_equal; eauto.
   apply IHeval_builtin_arg1 in H3. apply IHeval_builtin_arg2 in H5. subst; auto. 
@@ -1695,7 +1695,7 @@ Qed.
 
 Lemma eval_builtin_args_determ:
   forall al vl, eval_builtin_args al vl -> forall vl', eval_builtin_args al vl' -> vl' = vl.
-Proof.
+Proof using.
   induction 1; intros v' EV; inv EV; f_equal; eauto using eval_builtin_arg_determ.
 Qed.
 
@@ -1719,7 +1719,7 @@ Hypothesis symbols_preserved:
 
 Lemma eval_builtin_arg_preserved:
   forall a v, eval_builtin_arg ge1 e sp m a v -> eval_builtin_arg ge2 e sp m a v.
-Proof.
+Proof using symbols_preserved.
   assert (EQ: forall id ofs, Senv.symbol_address ge2 id ofs = Senv.symbol_address ge1 id ofs).
   { unfold Senv.symbol_address; simpl; intros. rewrite symbols_preserved; auto. }
   induction 1; eauto with barg. rewrite <- EQ in H; eauto with barg. rewrite <- EQ; eauto with barg.
@@ -1727,7 +1727,7 @@ Qed.
 
 Lemma eval_builtin_args_preserved:
   forall al vl, eval_builtin_args ge1 e sp m al vl -> eval_builtin_args ge2 e sp m al vl.
-Proof.
+Proof using symbols_preserved.
   induction 1; constructor; auto; eapply eval_builtin_arg_preserved; eauto.
 Qed.
 
@@ -1749,7 +1749,7 @@ Hypothesis mem_extends: Mem.extends m1 m2.
 Lemma eval_builtin_arg_lessdef:
   forall a v1, eval_builtin_arg ge e1 sp m1 a v1 ->
   exists v2, eval_builtin_arg ge e2 sp m2 a v2 /\ Val.lessdef v1 v2.
-Proof.
+Proof using mem_extends env_lessdef.
   induction 1.
 - exists (e2 x); auto with barg.
 - econstructor; eauto with barg.
@@ -1772,7 +1772,7 @@ Qed.
 Lemma eval_builtin_args_lessdef:
   forall al vl1, eval_builtin_args ge e1 sp m1 al vl1 ->
   exists vl2, eval_builtin_args ge e2 sp m2 al vl2 /\ Val.lessdef_list vl1 vl2.
-Proof.
+Proof using mem_extends env_lessdef.
   induction 1.
 - econstructor; split. constructor. auto.
 - exploit eval_builtin_arg_lessdef; eauto. intros (v1' & P & Q).

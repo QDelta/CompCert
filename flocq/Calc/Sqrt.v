@@ -54,7 +54,7 @@ Lemma mag_sqrt_F2R :
   forall m1 e1,
   (0 < m1)%Z ->
   mag beta (sqrt (F2R (Float beta m1 e1))) = Z.div2 (Zdigits beta m1 + e1 + 1) :> Z.
-Proof.
+Proof using.
 intros m1 e1 Hm1.
 rewrite <- (mag_F2R_Zdigits beta m1 e1) by now apply Zgt_not_eq.
 apply mag_sqrt.
@@ -76,7 +76,7 @@ Theorem Fsqrt_core_correct :
   (2 * e <= e1)%Z ->
   let '(m, l) := Fsqrt_core m1 e1 e in
   inbetween_float beta m e (sqrt (F2R (Float beta m1 e1))) l.
-Proof.
+Proof using.
 intros m1 e1 e Hm1 He.
 unfold Fsqrt_core.
 set (m' := Zmult _ _).
@@ -182,7 +182,7 @@ Theorem Fsqrt_correct :
   let '(m, e, l) := Fsqrt x in
   (e <= cexp beta fexp (sqrt (F2R x)))%Z /\
   inbetween_float beta m e (sqrt (F2R x)) l.
-Proof.
+Proof using.
 intros [m1 e1] Hm1.
 apply gt_0_F2R in Hm1.
 unfold Fsqrt.

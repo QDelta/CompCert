@@ -176,25 +176,25 @@ Inductive operation : Type :=
 (** Comparison functions (used in modules [CSE] and [Allocation]). *)
 
 Definition eq_condition (x y: condition) : {x=y} + {x<>y}.
-Proof.
+Proof using.
   generalize Int.eq_dec Int64.eq_dec; intro.
   assert (forall (x y: comparison), {x=y}+{x<>y}). decide equality.
   decide equality.
 Defined.
 
 Definition eq_addressing (x y: addressing) : {x=y} + {x<>y}.
-Proof.
+Proof using.
   generalize ident_eq Ptrofs.eq_dec zeq; intros.
   decide equality.
 Defined.
 
 Definition beq_operation: forall (x y: operation), bool.
-Proof.
+Proof using.
   generalize Int.eq_dec Int64.eq_dec Float.eq_dec Float32.eq_dec ident_eq typ_eq eq_addressing eq_condition; boolean_equality.
 Defined.
 
 Definition eq_operation: forall (x y: operation), {x=y} + {x<>y}.
-Proof.
+Proof using.
   decidable_equality_from beq_operation.
 Defined.
 
@@ -446,21 +446,21 @@ Definition eval_operation
 Remark eval_addressing_Aglobal:
   forall (F V: Type) (genv: Genv.t F V) sp id ofs,
   eval_addressing genv sp (Aglobal id ofs) nil = Some (Genv.symbol_address genv id ofs).
-Proof.
+Proof using.
   intros. unfold eval_addressing, eval_addressing32, eval_addressing64; destruct Archi.ptr64; auto.
 Qed.
 
 Remark eval_addressing_Ainstack:
   forall (F V: Type) (genv: Genv.t F V) sp ofs,
   eval_addressing genv sp (Ainstack ofs) nil = Some (Val.offset_ptr sp ofs).
-Proof.
+Proof using.
   intros. unfold eval_addressing, eval_addressing32, eval_addressing64; destruct Archi.ptr64; auto.
 Qed.
 
 Remark eval_addressing_Ainstack_inv:
   forall (F V: Type) (genv: Genv.t F V) sp ofs vl v,
   eval_addressing genv sp (Ainstack ofs) vl = Some v -> vl = nil /\ v = Val.offset_ptr sp ofs.
-Proof.
+Proof using.
   unfold eval_addressing, eval_addressing32, eval_addressing64;
   intros; destruct Archi.ptr64; destruct vl; inv H; auto.
 Qed.
@@ -627,13 +627,13 @@ Variable genv: Genv.t A V.
 
 Remark type_add:
   forall v1 v2, Val.has_type (Val.add v1 v2) Tint.
-Proof.
+Proof using.
   intros. unfold Val.has_type, Val.add. destruct Archi.ptr64, v1, v2; auto.
 Qed.
 
 Remark type_addl:
   forall v1 v2, Val.has_type (Val.addl v1 v2) Tlong.
-Proof.
+Proof using.
   intros. unfold Val.has_type, Val.addl. destruct Archi.ptr64, v1, v2; auto.
 Qed.
 
@@ -641,7 +641,7 @@ Lemma type_of_addressing64_sound:
   forall addr vl sp v,
   eval_addressing64 genv sp addr vl = Some v ->
   Val.has_type v Tlong.
-Proof.
+Proof using.
   intros. destruct addr; simpl in H; FuncInv; subst; simpl; auto using type_addl.
 - unfold Genv.symbol_address; destruct (Genv.find_symbol genv i); simpl; auto.
 - destruct sp; simpl; auto.
@@ -651,7 +651,7 @@ Lemma type_of_addressing32_sound:
   forall addr vl sp v,
   eval_addressing32 genv sp addr vl = Some v ->
   Val.has_type v Tint.
-Proof.
+Proof using.
   intros. destruct addr; simpl in H; FuncInv; subst; simpl; auto using type_add.
 - unfold Genv.symbol_address; destruct (Genv.find_symbol genv i); simpl; auto.
 - destruct sp; simpl; auto.
@@ -661,7 +661,7 @@ Corollary type_of_addressing_sound:
   forall addr vl sp v,
   eval_addressing genv sp addr vl = Some v ->
   Val.has_type v Tptr.
-Proof.
+Proof using.
   unfold eval_addressing, Tptr; intros.
   destruct Archi.ptr64; eauto using type_of_addressing64_sound, type_of_addressing32_sound.
 Qed.
@@ -671,7 +671,7 @@ Lemma type_of_operation_sound:
   op <> Omove ->
   eval_operation genv sp op vl m = Some v ->
   Val.has_type v (snd (type_of_operation op)).
-Proof with (try exact I; try reflexivity).
+Proof using () with (try exact I; try reflexivity).
   intros.
   destruct op; simpl in H0; FuncInv; subst; simpl.
   congruence.
@@ -793,7 +793,7 @@ Lemma is_move_operation_correct:
   forall (A: Type) (op: operation) (args: list A) (a: A),
   is_move_operation op args = Some a ->
   op = Omove /\ args = a :: nil.
-Proof.
+Proof using.
   intros until a. unfold is_move_operation; destruct op;
   try (intros; discriminate).
   destruct args. intros; discriminate.
@@ -825,7 +825,7 @@ Definition negate_condition (cond: condition): condition :=
 Lemma eval_negate_condition:
   forall cond vl m,
   eval_condition (negate_condition cond) vl m = option_map negb (eval_condition cond vl m).
-Proof.
+Proof using.
   intros. destruct cond; simpl.
   repeat (destruct vl; auto). apply Val.negate_cmp_bool.
   repeat (destruct vl; auto). apply Val.negate_cmpu_bool.
@@ -860,13 +860,13 @@ Definition shift_stack_operation (delta: Z) (op: operation) :=
 
 Lemma type_shift_stack_addressing:
   forall delta addr, type_of_addressing (shift_stack_addressing delta addr) = type_of_addressing addr.
-Proof.
+Proof using.
   intros. destruct addr; auto.
 Qed.
 
 Lemma type_shift_stack_operation:
   forall delta op, type_of_operation (shift_stack_operation delta op) = type_of_operation op.
-Proof.
+Proof using.
   intros. destruct op; auto; simpl; decEq; destruct a; auto.
 Qed.
 
@@ -874,7 +874,7 @@ Lemma eval_shift_stack_addressing32:
   forall F V (ge: Genv.t F V) sp addr vl delta,
   eval_addressing32 ge (Vptr sp Ptrofs.zero) (shift_stack_addressing delta addr) vl =
   eval_addressing32 ge (Vptr sp (Ptrofs.repr delta)) addr vl.
-Proof.
+Proof using.
   intros.
   assert (A: forall i, Ptrofs.add Ptrofs.zero (Ptrofs.add i (Ptrofs.repr delta)) = Ptrofs.add (Ptrofs.repr delta) i).
   { intros. rewrite Ptrofs.add_zero_l. apply Ptrofs.add_commut. }
@@ -885,7 +885,7 @@ Lemma eval_shift_stack_addressing64:
   forall F V (ge: Genv.t F V) sp addr vl delta,
   eval_addressing64 ge (Vptr sp Ptrofs.zero) (shift_stack_addressing delta addr) vl =
   eval_addressing64 ge (Vptr sp (Ptrofs.repr delta)) addr vl.
-Proof.
+Proof using.
   intros.
   assert (A: forall i, Ptrofs.add Ptrofs.zero (Ptrofs.add i (Ptrofs.repr delta)) = Ptrofs.add (Ptrofs.repr delta) i).
   { intros. rewrite Ptrofs.add_zero_l. apply Ptrofs.add_commut. }
@@ -896,7 +896,7 @@ Lemma eval_shift_stack_addressing:
   forall F V (ge: Genv.t F V) sp addr vl delta,
   eval_addressing ge (Vptr sp Ptrofs.zero) (shift_stack_addressing delta addr) vl =
   eval_addressing ge (Vptr sp (Ptrofs.repr delta)) addr vl.
-Proof.
+Proof using.
   intros. unfold eval_addressing.
   destruct Archi.ptr64; auto using eval_shift_stack_addressing32, eval_shift_stack_addressing64.
 Qed.
@@ -905,7 +905,7 @@ Lemma eval_shift_stack_operation:
   forall F V (ge: Genv.t F V) sp op vl m delta,
   eval_operation ge (Vptr sp Ptrofs.zero) (shift_stack_operation delta op) vl m =
   eval_operation ge (Vptr sp (Ptrofs.repr delta)) op vl m.
-Proof.
+Proof using.
   intros. destruct op; simpl; auto using eval_shift_stack_addressing32, eval_shift_stack_addressing64.
 Qed.
 
@@ -934,7 +934,7 @@ Lemma eval_offset_addressing_total_32:
   forall (F V: Type) (ge: Genv.t F V) sp addr args delta v,
   eval_addressing32 ge sp addr args = Some v ->
   eval_addressing32 ge sp (offset_addressing_total addr delta) args = Some(Val.add v (Vint (Int.repr delta))).
-Proof.
+Proof using.
   assert (A: forall x y, Int.add (Int.repr x) (Int.repr y) = Int.repr (x + y)).
   { intros. apply Int.eqm_samerepr; auto with ints. }
   assert (B: forall delta, Archi.ptr64 = false -> Ptrofs.repr delta = Ptrofs.of_int (Int.repr delta)).
@@ -954,7 +954,7 @@ Lemma eval_offset_addressing_total_64:
   forall (F V: Type) (ge: Genv.t F V) sp addr args delta v,
   eval_addressing64 ge sp addr args = Some v ->
   eval_addressing64 ge sp (offset_addressing_total addr delta) args = Some(Val.addl v (Vlong (Int64.repr delta))).
-Proof.
+Proof using.
   assert (A: forall x y, Int64.add (Int64.repr x) (Int64.repr y) = Int64.repr (x + y)).
   { intros. apply Int64.eqm_samerepr; auto with ints. }
   assert (B: forall delta, Archi.ptr64 = true -> Ptrofs.repr delta = Ptrofs.of_int64 (Int64.repr delta)).
@@ -976,7 +976,7 @@ Lemma eval_offset_addressing:
   eval_addressing ge sp addr args = Some v ->
   Archi.ptr64 = false ->
   eval_addressing ge sp addr' args = Some(Val.add v (Vint (Int.repr delta))).
-Proof.
+Proof using.
   intros. unfold offset_addressing in H. destruct (addressing_valid (offset_addressing_total addr delta)); inv H.
   unfold eval_addressing in *; rewrite H1 in *. apply eval_offset_addressing_total_32; auto.
 Qed.
@@ -1017,7 +1017,7 @@ Lemma condition_depends_on_memory_correct:
   forall c args m1 m2,
   condition_depends_on_memory c = false ->
   eval_condition c args m1 = eval_condition c args m2.
-Proof.
+Proof using.
   intros until m2. 
   destruct c; simpl; intros SF; auto; rewrite ? negb_false_iff in SF;
   unfold Val.cmpu_bool, Val.cmplu_bool; rewrite SF; reflexivity.
@@ -1027,7 +1027,7 @@ Lemma op_depends_on_memory_correct:
   forall (F V: Type) (ge: Genv.t F V) sp op args m1 m2,
   op_depends_on_memory op = false ->
   eval_operation ge sp op args m1 = eval_operation ge sp op args m2.
-Proof.
+Proof using.
   intros until m2. destruct op; simpl; try congruence; intros C.
 - f_equal; f_equal; apply condition_depends_on_memory_correct; auto.
 - destruct args; auto. destruct args; auto.
@@ -1071,7 +1071,7 @@ Hypothesis agree_on_symbols:
 Lemma eval_addressing32_preserved:
   forall sp addr vl,
   eval_addressing32 ge2 sp addr vl = eval_addressing32 ge1 sp addr vl.
-Proof.
+Proof using agree_on_symbols.
   intros.
   unfold eval_addressing32, Genv.symbol_address; destruct addr; try rewrite agree_on_symbols;
   reflexivity.
@@ -1080,7 +1080,7 @@ Qed.
 Lemma eval_addressing64_preserved:
   forall sp addr vl,
   eval_addressing64 ge2 sp addr vl = eval_addressing64 ge1 sp addr vl.
-Proof.
+Proof using agree_on_symbols.
   intros.
   unfold eval_addressing64, Genv.symbol_address; destruct addr; try rewrite agree_on_symbols;
   reflexivity.
@@ -1089,7 +1089,7 @@ Qed.
 Lemma eval_addressing_preserved:
   forall sp addr vl,
   eval_addressing ge2 sp addr vl = eval_addressing ge1 sp addr vl.
-Proof.
+Proof using agree_on_symbols.
   intros.
   unfold eval_addressing; destruct Archi.ptr64; auto using eval_addressing32_preserved, eval_addressing64_preserved.
 Qed.
@@ -1097,7 +1097,7 @@ Qed.
 Lemma eval_operation_preserved:
   forall sp op vl m,
   eval_operation ge2 sp op vl m = eval_operation ge1 sp op vl m.
-Proof.
+Proof using agree_on_symbols.
   intros.
   unfold eval_operation; destruct op; auto using eval_addressing32_preserved, eval_addressing64_preserved.
   unfold Genv.symbol_address. rewrite agree_on_symbols. auto.
@@ -1165,7 +1165,7 @@ Lemma eval_condition_inj:
   Val.inject_list f vl1 vl2 ->
   eval_condition cond vl1 m1 = Some b ->
   eval_condition cond vl2 m2 = Some b.
-Proof.
+Proof using weak_valid_pointer_no_overflow weak_valid_pointer_inj valid_pointer_inj valid_different_pointers_inj.
   intros. destruct cond; simpl in H0; FuncInv; InvInject; simpl; auto.
 - inv H3; inv H2; simpl in H0; inv H0; auto.
 - eauto 3 using Val.cmpu_bool_inject, Mem.valid_pointer_implies.
@@ -1199,7 +1199,7 @@ Lemma eval_addressing32_inj:
   Val.inject_list f vl1 vl2 ->
   eval_addressing32 ge1 sp1 addr vl1 = Some v1 ->
   exists v2, eval_addressing32 ge2 sp2 addr vl2 = Some v2 /\ Val.inject f v1 v2.
-Proof.
+Proof using.
   assert (A: forall v1 v2 v1' v2', Val.inject f v1 v1' -> Val.inject f v2 v2' -> Val.inject f (Val.mul v1 v2) (Val.mul v1' v2')).
   { intros. inv H; simpl; auto. inv H0; auto. }
   intros. destruct addr; simpl in *; FuncInv; InvInject; TrivialExists; eauto using Val.add_inject, Val.offset_ptr_inject with coqlib.
@@ -1214,7 +1214,7 @@ Lemma eval_addressing64_inj:
   Val.inject_list f vl1 vl2 ->
   eval_addressing64 ge1 sp1 addr vl1 = Some v1 ->
   exists v2, eval_addressing64 ge2 sp2 addr vl2 = Some v2 /\ Val.inject f v1 v2.
-Proof.
+Proof using.
   assert (A: forall v1 v2 v1' v2', Val.inject f v1 v1' -> Val.inject f v2 v2' -> Val.inject f (Val.mull v1 v2) (Val.mull v1' v2')).
   { intros. inv H; simpl; auto. inv H0; auto. }
   intros. destruct addr; simpl in *; FuncInv; InvInject; TrivialExists; eauto using Val.addl_inject, Val.offset_ptr_inject with coqlib.
@@ -1229,7 +1229,7 @@ Lemma eval_addressing_inj:
   Val.inject_list f vl1 vl2 ->
   eval_addressing ge1 sp1 addr vl1 = Some v1 ->
   exists v2, eval_addressing ge2 sp2 addr vl2 = Some v2 /\ Val.inject f v1 v2.
-Proof.
+Proof using.
   unfold eval_addressing; intros. destruct Archi.ptr64; eauto using eval_addressing32_inj, eval_addressing64_inj.
 Qed.
 
@@ -1242,7 +1242,7 @@ Lemma eval_operation_inj:
   Val.inject_list f vl1 vl2 ->
   eval_operation ge1 sp1 op vl1 m1 = Some v1 ->
   exists v2, eval_operation ge2 sp2 op vl2 m2 = Some v2 /\ Val.inject f v1 v2.
-Proof.
+Proof using weak_valid_pointer_no_overflow weak_valid_pointer_inj valid_pointer_inj valid_different_pointers_inj.
   intros until v1; intros GL; intros. destruct op; simpl in H1; simpl; FuncInv; InvInject; TrivialExists.
   apply GL; simpl; auto.
   inv H4; simpl; auto.
@@ -1370,7 +1370,7 @@ Remark valid_pointer_extends:
   Some(b1, 0) = Some(b2, delta) ->
   Mem.valid_pointer m1 b1 (Ptrofs.unsigned ofs) = true ->
   Mem.valid_pointer m2 b2 (Ptrofs.unsigned (Ptrofs.add ofs (Ptrofs.repr delta))) = true.
-Proof.
+Proof using.
   intros. inv H0. rewrite Ptrofs.add_zero. eapply Mem.valid_pointer_extends; eauto.
 Qed.
 
@@ -1380,7 +1380,7 @@ Remark weak_valid_pointer_extends:
   Some(b1, 0) = Some(b2, delta) ->
   Mem.weak_valid_pointer m1 b1 (Ptrofs.unsigned ofs) = true ->
   Mem.weak_valid_pointer m2 b2 (Ptrofs.unsigned (Ptrofs.add ofs (Ptrofs.repr delta))) = true.
-Proof.
+Proof using.
   intros. inv H0. rewrite Ptrofs.add_zero. eapply Mem.weak_valid_pointer_extends; eauto.
 Qed.
 
@@ -1389,7 +1389,7 @@ Remark weak_valid_pointer_no_overflow_extends:
   Some(b1, 0) = Some(b2, delta) ->
   Mem.weak_valid_pointer m1 b1 (Ptrofs.unsigned ofs) = true ->
   0 <= Ptrofs.unsigned ofs + Ptrofs.unsigned (Ptrofs.repr delta) <= Ptrofs.max_unsigned.
-Proof.
+Proof using.
   intros. inv H. rewrite Z.add_0_r. apply Ptrofs.unsigned_range_2.
 Qed.
 
@@ -1402,7 +1402,7 @@ Remark valid_different_pointers_extends:
   Some(b2, 0) = Some (b2', delta2) ->
   b1' <> b2' \/
   Ptrofs.unsigned(Ptrofs.add ofs1 (Ptrofs.repr delta1)) <> Ptrofs.unsigned(Ptrofs.add ofs2 (Ptrofs.repr delta2)).
-Proof.
+Proof using.
   intros. inv H2; inv H3. auto.
 Qed.
 
@@ -1412,7 +1412,7 @@ Lemma eval_condition_lessdef:
   Mem.extends m1 m2 ->
   eval_condition cond vl1 m1 = Some b ->
   eval_condition cond vl2 m2 = Some b.
-Proof.
+Proof using.
   intros. eapply eval_condition_inj with (f := fun b => Some(b, 0)) (m1 := m1).
   apply valid_pointer_extends; auto.
   apply weak_valid_pointer_extends; auto.
@@ -1427,7 +1427,7 @@ Lemma eval_operation_lessdef:
   Mem.extends m1 m2 ->
   eval_operation genv sp op vl1 m1 = Some v1 ->
   exists v2, eval_operation genv sp op vl2 m2 = Some v2 /\ Val.lessdef v1 v2.
-Proof.
+Proof using.
   intros. rewrite val_inject_list_lessdef in H.
   assert (exists v2 : val,
           eval_operation genv sp op vl2 m2 = Some v2
@@ -1449,7 +1449,7 @@ Lemma eval_addressing_lessdef:
   Val.lessdef_list vl1 vl2 ->
   eval_addressing genv sp addr vl1 = Some v1 ->
   exists v2, eval_addressing genv sp addr vl2 = Some v2 /\ Val.lessdef v1 v2.
-Proof.
+Proof using.
   intros. rewrite val_inject_list_lessdef in H.
   assert (exists v2 : val,
           eval_addressing genv sp addr vl2 = Some v2
@@ -1478,7 +1478,7 @@ Hypothesis sp_inj: f sp1 = Some(sp2, delta).
 
 Remark symbol_address_inject:
   forall id ofs, Val.inject f (Genv.symbol_address genv id ofs) (Genv.symbol_address genv id ofs).
-Proof.
+Proof using globals.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol genv id) eqn:?; auto.
   exploit (proj1 globals); eauto. intros.
   econstructor; eauto. rewrite Ptrofs.add_zero; auto.
@@ -1490,7 +1490,7 @@ Lemma eval_condition_inject:
   Mem.inject f m1 m2 ->
   eval_condition cond vl1 m1 = Some b ->
   eval_condition cond vl2 m2 = Some b.
-Proof.
+Proof using.
   intros. eapply eval_condition_inj with (f := f) (m1 := m1); eauto.
   intros; eapply Mem.valid_pointer_inject_val; eauto.
   intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
@@ -1505,7 +1505,7 @@ Lemma eval_addressing_inject:
   exists v2,
      eval_addressing genv (Vptr sp2 Ptrofs.zero) (shift_stack_addressing delta addr) vl2 = Some v2
   /\ Val.inject f v1 v2.
-Proof.
+Proof using sp_inj globals.
   intros.
   rewrite eval_shift_stack_addressing.
   eapply eval_addressing_inj with (sp1 := Vptr sp1 Ptrofs.zero); eauto.
@@ -1521,7 +1521,7 @@ Lemma eval_operation_inject:
   exists v2,
      eval_operation genv (Vptr sp2 Ptrofs.zero) (shift_stack_operation delta op) vl2 m2 = Some v2
   /\ Val.inject f v1 v2.
-Proof.
+Proof using sp_inj globals.
   intros.
   rewrite eval_shift_stack_operation. simpl.
   eapply eval_operation_inj with (sp1 := Vptr sp1 Ptrofs.zero) (m1 := m1); eauto.

@@ -579,7 +579,7 @@ Definition semantics (p: program) :=
 
 Lemma semantics_receptive:
   forall (p: program), receptive (semantics p).
-Proof.
+Proof using.
   intros. constructor; simpl; intros.
 (* receptiveness *)
   assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
@@ -598,7 +598,7 @@ Qed.
 Lemma eval_expr_determ:
   forall ge sp e m a v, eval_expr ge sp e m a v ->
   forall v', eval_expr ge sp e m a v' -> v' = v.
-Proof.
+Proof using.
   induction 1; intros v' E'; inv E'.
 - congruence.
 - congruence.
@@ -610,7 +610,7 @@ Qed.
 Lemma eval_exprlist_determ:
   forall ge sp e m al vl, eval_exprlist ge sp e m al vl ->
   forall vl', eval_exprlist ge sp e m al vl' -> vl' = vl.
-Proof.
+Proof using.
   induction 1; intros vl' E'; inv E'.
   - auto.
   - f_equal; eauto using eval_expr_determ.
@@ -634,7 +634,7 @@ Ltac Determ :=
 
 Lemma semantics_determinate:
   forall (p: program), determinate (semantics p).
-Proof.
+Proof using.
   intros. constructor; set (ge := Genv.globalenv p); simpl; intros.
 - (* determ *)
   inv H; inv H0; Determ.
@@ -973,13 +973,13 @@ Inductive outcome_state_match
 
 Remark is_call_cont_call_cont:
   forall k, is_call_cont (call_cont k).
-Proof.
+Proof using.
   induction k; simpl; auto.
 Qed.
 
 Remark call_cont_is_call_cont:
   forall k, is_call_cont k -> call_cont k = k.
-Proof.
+Proof using.
   destruct k; simpl; intros; auto || contradiction.
 Qed.
 
@@ -996,7 +996,7 @@ Lemma eval_funcall_exec_stmt_steps:
    exists S,
    star step ge (State f s k sp e m) t S
    /\ outcome_state_match sp e' m' f k out S).
-Proof.
+Proof using.
   apply eval_funcall_exec_stmt_ind2; intros.
 
 (* funcall internal *)
@@ -1167,7 +1167,7 @@ Lemma evalinf_funcall_forever:
   forall m fd args T k,
   evalinf_funcall ge m fd args T ->
   forever_plus step ge (Callstate fd args k m) T.
-Proof.
+Proof using.
   cofix CIH_FUN.
   assert (forall sp e m s T f k,
           execinf_stmt ge f sp e m s T ->
@@ -1233,7 +1233,7 @@ Qed.
 
 Theorem bigstep_semantics_sound:
   bigstep_sound (bigstep_semantics prog) (semantics prog).
-Proof.
+Proof using.
   constructor; intros.
 (* termination *)
   inv H. econstructor; econstructor.

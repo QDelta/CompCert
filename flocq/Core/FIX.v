@@ -40,7 +40,7 @@ Definition FIX_exp (e : Z) := emin.
 (** Properties of the FIX format *)
 
 Global Instance FIX_exp_valid : Valid_exp FIX_exp.
-Proof.
+Proof using.
 intros k.
 unfold FIX_exp.
 split ; intros H.
@@ -52,7 +52,7 @@ Qed.
 
 Theorem generic_format_FIX :
   forall x, FIX_format x -> generic_format beta FIX_exp x.
-Proof.
+Proof using.
 intros x [[xm xe] Hx1 Hx2].
 rewrite Hx1.
 now apply generic_format_canonical.
@@ -60,7 +60,7 @@ Qed.
 
 Theorem FIX_format_generic :
   forall x, generic_format beta FIX_exp x -> FIX_format x.
-Proof.
+Proof using.
 intros x H.
 rewrite H.
 eexists ; repeat split.
@@ -68,7 +68,7 @@ Qed.
 
 Theorem FIX_format_satisfies_any :
   satisfies_any FIX_format.
-Proof.
+Proof using.
 refine (satisfies_any_eq _ _ _ (generic_format_satisfies_any beta FIX_exp)).
 intros x.
 split.
@@ -77,14 +77,14 @@ apply generic_format_FIX.
 Qed.
 
 Global Instance FIX_exp_monotone : Monotone_exp FIX_exp.
-Proof.
+Proof using.
 intros ex ey H.
 apply Z.le_refl.
 Qed.
 
 Theorem ulp_FIX :
   forall x, ulp beta FIX_exp x = bpow emin.
-Proof.
+Proof using.
 intros x; unfold ulp.
 case Req_bool_spec; intros Zx.
 case (negligible_exp_spec FIX_exp).
@@ -96,7 +96,7 @@ Qed.
 
 Global Instance exists_NE_FIX :
       Exists_NE beta FIX_exp.
-Proof.
+Proof using.
 unfold Exists_NE, FIX_exp; simpl.
 right; split; auto.
 Qed.
@@ -106,7 +106,7 @@ End RND_FIX.
 Theorem round_FIX_IZR :
   forall f x,
   round radix2 (FIX_exp 0) f x = IZR (f x).
-Proof.
+Proof using.
   intros f x. unfold round, F2R. simpl. rewrite Rmult_1_r. apply f_equal.
   apply f_equal. unfold scaled_mantissa. simpl. apply Rmult_1_r.
 Qed.

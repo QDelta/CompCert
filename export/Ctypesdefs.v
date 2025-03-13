@@ -246,7 +246,7 @@ Fixpoint string_of_ident (p: positive) : string :=
 
 Lemma string_of_ident_of_string:
   forall s, string_of_ident (ident_of_string s) = s.
-Proof.
+Proof using.
   induction s as [ | c s]; simpl.
 - auto.
 - rewrite <- IHs at 2. destruct c as [[] [] [] [] [] [] [] []]; reflexivity.
@@ -254,7 +254,7 @@ Qed.
 
 Corollary ident_of_string_injective:
   forall s1 s2, ident_of_string s1 = ident_of_string s2 -> s1 = s2.
-Proof.
+Proof using.
   intros. rewrite <- (string_of_ident_of_string s1), <- (string_of_ident_of_string s2).
   congruence.
 Qed.

@@ -25,7 +25,7 @@ Require Export Conventions1.
 Lemma loc_arguments_acceptable_2:
   forall s l,
   In l (regs_of_rpairs (loc_arguments s)) -> loc_argument_acceptable l.
-Proof.
+Proof using.
   intros until l. generalize (loc_arguments_acceptable s). generalize (loc_arguments s).
   induction l0 as [ | p pl]; simpl; intros.
 - contradiction.
@@ -58,7 +58,7 @@ Definition size_arguments (s: signature) : Z :=
 
 Remark fold_max_outgoing_above:
   forall l n, fold_left max_outgoing_2 l n >= n.
-Proof.
+Proof using.
   assert (A: forall n l, max_outgoing_1 n l >= n).
   { intros; unfold max_outgoing_1. destruct l as [_ | []]; extlia. }
   induction l; simpl; intros. 
@@ -69,7 +69,7 @@ Qed.
 
 Lemma size_arguments_above:
   forall s, size_arguments s >= 0.
-Proof.
+Proof using.
   intros. apply fold_max_outgoing_above.
 Qed.
 
@@ -77,7 +77,7 @@ Lemma loc_arguments_bounded:
   forall (s: signature) (ofs: Z) (ty: typ),
   In (S Outgoing ofs ty) (regs_of_rpairs (loc_arguments s)) ->
   ofs + typesize ty <= size_arguments s.
-Proof.
+Proof using.
   intros until ty.
   assert (A: forall n l, n <= max_outgoing_1 n l).
   { intros; unfold max_outgoing_1. destruct l as [_ | []]; extlia. }
@@ -121,7 +121,7 @@ Lemma incoming_slot_in_parameters:
   forall ofs ty sg,
   In (S Incoming ofs ty) (regs_of_rpairs (loc_parameters sg)) ->
   In (S Outgoing ofs ty) (regs_of_rpairs (loc_arguments sg)).
-Proof.
+Proof using.
   intros.
   replace (regs_of_rpairs (loc_parameters sg)) with (List.map parameter_of_argument (regs_of_rpairs (loc_arguments sg))) in H.
   change (S Incoming ofs ty) with (parameter_of_argument (S Outgoing ofs ty)) in H.
@@ -156,14 +156,14 @@ Definition tailcall_is_possible (sg: signature) : bool :=
 
 Lemma tailcall_is_possible_correct:
   forall s, tailcall_is_possible s = true -> tailcall_possible s.
-Proof.
+Proof using.
   unfold tailcall_is_possible; intros. rewrite forallb_forall in H.
   red; intros. apply H in H0. destruct l; [auto|discriminate].
 Qed.
 
 Lemma zero_size_arguments_tailcall_possible:
   forall sg, size_arguments sg = 0 -> tailcall_possible sg.
-Proof.
+Proof using.
   intros; red; intros. exploit loc_arguments_acceptable_2; eauto.
   unfold loc_argument_acceptable.
   destruct l; intros. auto. destruct sl; try contradiction. destruct H1.
@@ -206,7 +206,7 @@ Lemma locmap_get_set_loc_result:
   forall sg v rs l,
   match l with R r => is_callee_save r = true | S _ _ _ => True end ->
   Locmap.setpair (loc_result sg) v rs l = rs l.
-Proof.
+Proof using.
   intros. apply Locmap.gpo. 
   assert (X: forall r, is_callee_save r = false -> Loc.diff l (R r)).
   { intros. destruct l; simpl. congruence. auto. }
@@ -217,7 +217,7 @@ Lemma locmap_get_set_loc_result_callee_save:
   forall sg v rs l,
   callee_save_loc l ->
   Locmap.setpair (loc_result sg) v rs l = rs l.
-Proof.
+Proof using.
   intros. apply locmap_get_set_loc_result. 
   red in H; destruct l; auto.
 Qed.

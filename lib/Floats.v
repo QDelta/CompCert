@@ -34,7 +34,7 @@ Definition float32 := binary32. (**r the type of IEE754 single-precision FP numb
 
 Lemma integer_representable_n :
   forall n : Z, - 2 ^ 53 <= n <= 2 ^ 53 -> integer_representable 53 1024 n.
-Proof.
+Proof using.
 now apply integer_representable_n.
 Qed.
 
@@ -63,43 +63,43 @@ Lemma cmp_of_comparison_swap:
   forall c x,
   cmp_of_comparison (swap_comparison c) x =
   cmp_of_comparison c (match x with None => None | Some x => Some (CompOpp x) end).
-Proof.
+Proof using.
   intros. destruct c; destruct x as [[]|]; reflexivity.
 Qed.
 
 Lemma cmp_of_comparison_ne_eq:
   forall x, cmp_of_comparison Cne x = negb (cmp_of_comparison Ceq x).
-Proof.
+Proof using.
   intros. destruct x as [[]|]; reflexivity.
 Qed.
 
 Lemma cmp_of_comparison_lt_eq_false:
   forall x, cmp_of_comparison Clt x = true -> cmp_of_comparison Ceq x = true -> False.
-Proof.
+Proof using.
   destruct x as [[]|]; simpl; intros; discriminate.
 Qed.
 
 Lemma cmp_of_comparison_le_lt_eq:
   forall x, cmp_of_comparison Cle x = cmp_of_comparison Clt x || cmp_of_comparison Ceq x.
-Proof.
+Proof using.
   destruct x as [[]|]; reflexivity.
 Qed.
 
 Lemma cmp_of_comparison_gt_eq_false:
   forall x, cmp_of_comparison Cgt x = true -> cmp_of_comparison Ceq x = true -> False.
-Proof.
+Proof using.
   destruct x as [[]|]; simpl; intros; discriminate.
 Qed.
 
 Lemma cmp_of_comparison_ge_gt_eq:
   forall x, cmp_of_comparison Cge x = cmp_of_comparison Cgt x || cmp_of_comparison Ceq x.
-Proof.
+Proof using.
   destruct x as [[]|]; reflexivity.
 Qed.
 
 Lemma cmp_of_comparison_lt_gt_false:
   forall x, cmp_of_comparison Clt x = true -> cmp_of_comparison Cgt x = true -> False.
-Proof.
+Proof using.
   destruct x as [[]|]; simpl; intros; discriminate.
 Qed.
 
@@ -108,7 +108,7 @@ Qed.
 Lemma normalized_nan: forall prec n p,
   Z.of_nat n = prec - 1 -> 1 < prec ->
   nan_pl prec (Z.to_pos (P_mod_two_p p n)) = true.
-Proof.
+Proof using.
   intros. unfold nan_pl. apply Z.ltb_lt. rewrite Digits.Zpos_digits2_pos.
   set (p' := P_mod_two_p p n).
   assert (A: 0 <= p' < 2 ^ Z.of_nat n).
@@ -126,7 +126,7 @@ Definition quiet_nan_64_payload (p: positive) :=
   Z.to_pos (P_mod_two_p (Pos.lor p ((iter_nat xO 51 1%positive))) 52%nat).
 
 Lemma quiet_nan_64_proof: forall p, nan_pl 53 (quiet_nan_64_payload p) = true.
-Proof. intros; apply normalized_nan; auto; lia. Qed.
+Proof using. intros; apply normalized_nan; auto; lia. Qed.
 
 Definition quiet_nan_64 (sp: bool * positive) : {x :float | is_nan _ _ x = true} :=
   let (s, p) := sp in
@@ -138,7 +138,7 @@ Definition quiet_nan_32_payload (p: positive) :=
   Z.to_pos (P_mod_two_p (Pos.lor p ((iter_nat xO 22 1%positive))) 23%nat).
 
 Lemma quiet_nan_32_proof: forall p, nan_pl 24 (quiet_nan_32_payload p) = true.
-Proof. intros; apply normalized_nan; auto; lia. Qed.
+Proof using. intros; apply normalized_nan; auto; lia. Qed.
 
 Definition quiet_nan_32 (sp: bool * positive) : {x :float32 | is_nan _ _ x = true} :=
   let (s, p) := sp in
@@ -167,7 +167,7 @@ Definition expand_nan_payload (p: positive) := Pos.shiftl_nat p 29.
 Lemma expand_nan_proof (p : positive) :
   nan_pl 24 p = true ->
   nan_pl 53 (expand_nan_payload p) = true.
-Proof.
+Proof using.
   unfold nan_pl, expand_nan_payload. intros K.
   rewrite Z.ltb_lt in *.
   unfold Pos.shiftl_nat, nat_rect, Digits.digits2_pos.
@@ -356,14 +356,14 @@ Ltac smart_omega :=
 
 Theorem add_commut:
   forall x y, is_nan _ _ x = false \/ is_nan _ _ y = false -> add x y = add y x.
-Proof.
+Proof using.
   intros. apply Bplus_commut.
   destruct x, y; try reflexivity; now destruct H.
 Qed.
 
 Theorem mul_commut:
   forall x y, is_nan _ _ x = false \/ is_nan _ _ y = false -> mul x y = mul y x.
-Proof.
+Proof using.
   intros. apply Bmult_commut.
   destruct x, y; try reflexivity; now destruct H.
 Qed.
@@ -372,7 +372,7 @@ Qed.
 
 Theorem mul2_add:
   forall f, add f f = mul f (of_int (Int.repr 2%Z)).
-Proof.
+Proof using.
   intros. apply Bmult2_Bplus.
   intros x y Hx Hy. unfold binop_nan.
   destruct x; try discriminate. simpl. rewrite Archi.choose_nan_64_idem. 
@@ -385,7 +385,7 @@ Definition exact_inverse : float -> option float := Bexact_inverse 53 1024 __ __
 
 Theorem div_mul_inverse:
   forall x y z, exact_inverse y = Some z -> div x y = mul x z.
-Proof.
+Proof using.
   intros. apply Bdiv_mult_inverse. 2: easy.
   intros x0 y0 z0 Hx Hy Hz. unfold binop_nan.
   destruct x0; try discriminate.
@@ -396,44 +396,44 @@ Qed.
 
 Theorem cmp_swap:
   forall c x y, cmp (swap_comparison c) x y = cmp c y x.
-Proof.
+Proof using.
   unfold cmp, compare; intros. rewrite (Bcompare_swap _ _ x y).
   apply cmp_of_comparison_swap.
 Qed.
 
 Theorem cmp_ne_eq:
   forall f1 f2, cmp Cne f1 f2 = negb (cmp Ceq f1 f2).
-Proof.
+Proof using.
   intros; apply cmp_of_comparison_ne_eq.
 Qed.
 
 Theorem cmp_lt_eq_false:
   forall f1 f2, cmp Clt f1 f2 = true -> cmp Ceq f1 f2 = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_lt_eq_false.
 Qed.
 
 Theorem cmp_le_lt_eq:
   forall f1 f2, cmp Cle f1 f2 = cmp Clt f1 f2 || cmp Ceq f1 f2.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_le_lt_eq.
 Qed.
 
 Theorem cmp_gt_eq_false:
   forall x y, cmp Cgt x y = true -> cmp Ceq x y = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_gt_eq_false.
 Qed.
 
 Theorem cmp_ge_gt_eq:
   forall f1 f2, cmp Cge f1 f2 = cmp Cgt f1 f2 || cmp Ceq f1 f2.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_ge_gt_eq.
 Qed.
 
 Theorem cmp_lt_gt_false:
   forall f1 f2, cmp Clt f1 f2 = true -> cmp Cgt f1 f2 = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_lt_gt_false.
 Qed.
 
@@ -442,7 +442,7 @@ Qed.
 
 Theorem of_to_bits:
   forall f, of_bits (to_bits f) = f.
-Proof.
+Proof using.
   intros; unfold of_bits, to_bits, bits_of_b64, b64_of_bits.
   rewrite Int64.unsigned_repr, binary_float_of_bits_of_binary_float; [reflexivity|].
   generalize (bits_of_binary_float_range 52 11 __ __ f).
@@ -451,7 +451,7 @@ Qed.
 
 Theorem to_of_bits:
   forall b, to_bits (of_bits b) = b.
-Proof.
+Proof using.
   intros; unfold of_bits, to_bits, bits_of_b64, b64_of_bits.
   rewrite bits_of_binary_float_of_bits. apply Int64.repr_unsigned.
   apply Int64.unsigned_range.
@@ -469,7 +469,7 @@ Theorem of_intu_of_int_1:
   forall x,
   Int.ltu x ox8000_0000 = true ->
   of_intu x = of_int x.
-Proof.
+Proof using.
   unfold of_intu, of_int, Int.signed, Int.ltu; intro.
   change (Int.unsigned ox8000_0000) with Int.half_modulus.
   destruct (zlt (Int.unsigned x) Int.half_modulus); now intuition auto.
@@ -479,7 +479,7 @@ Theorem of_intu_of_int_2:
   forall x,
   Int.ltu x ox8000_0000 = false ->
   of_intu x = add (of_int (Int.sub x ox8000_0000)) (of_intu ox8000_0000).
-Proof.
+Proof using.
   unfold add, of_intu, of_int; intros.
   set (y := Int.sub x ox8000_0000).
   pose proof (Int.unsigned_range x); pose proof (Int.signed_range y).
@@ -497,7 +497,7 @@ Qed.
 Theorem of_intu_of_int_3:
   forall x,
   of_intu x = sub (of_int (Int.and x ox7FFF_FFFF)) (of_int (Int.and x ox8000_0000)).
-Proof.
+Proof using.
   intros.
   set (hi := Int.and x ox8000_0000).
   set (lo := Int.and x ox7FFF_FFFF).
@@ -539,7 +539,7 @@ Theorem to_intu_to_int_1:
   cmp Clt x (of_intu ox8000_0000) = true ->
   to_intu x = Some n ->
   to_int x = Some n.
-Proof.
+Proof using.
   intros. unfold to_intu in H0.
   destruct (ZofB_range 53 1024 x 0 Int.max_unsigned) as [p|] eqn:E; simpl in H0; inv H0.
   exploit ZofB_range_inversion; eauto. intros (A & B & C).
@@ -569,7 +569,7 @@ Theorem to_intu_to_int_2:
   cmp Clt x (of_intu ox8000_0000) = false ->
   to_intu x = Some n ->
   to_int (sub x (of_intu ox8000_0000)) = Some (Int.sub n ox8000_0000).
-Proof.
+Proof using.
   intros. unfold to_intu in H0.
   destruct (ZofB_range _ _ x 0 Int.max_unsigned) as [p|] eqn:E; simpl in H0; inv H0.
   exploit ZofB_range_inversion; eauto. intros (A & B & C).
@@ -606,7 +606,7 @@ Definition ox4330_0000 := Int.repr 1127219200.        (**r [0x4330_0000] *)
 Lemma split_bits_or:
   forall x,
   split_bits 52 11 (Int64.unsigned (Int64.ofwords ox4330_0000 x)) = (false, Int.unsigned x, 1075).
-Proof.
+Proof using.
   intros.
   transitivity (split_bits 52 11 (join_bits 52 11 false (Int.unsigned x) 1075)).
   - f_equal. rewrite Int64.ofwords_add'. reflexivity.
@@ -621,7 +621,7 @@ Lemma from_words_value:
      B2R _ _ (from_words ox4330_0000 x) = (bpow radix2 52 + IZR (Int.unsigned x))%R
   /\ is_finite _ _ (from_words ox4330_0000 x) = true
   /\ Bsign _ _ (from_words ox4330_0000 x) = false.
-Proof.
+Proof using.
   intros; unfold from_words, of_bits, b64_of_bits, binary_float_of_bits.
   rewrite B2R_FF2B, is_finite_FF2B, Bsign_FF2B.
   unfold binary_float_of_bits_aux; rewrite split_bits_or; simpl; pose proof (Int.unsigned_range x).
@@ -634,7 +634,7 @@ Qed.
 
 Lemma from_words_eq:
   forall x, from_words ox4330_0000 x = BofZ 53 1024 __ __ (2^52 + Int.unsigned x).
-Proof.
+Proof using.
   intros.
   pose proof (Int.unsigned_range x).
   destruct (from_words_value x) as (A & B & C).
@@ -648,7 +648,7 @@ Qed.
 Theorem of_intu_from_words:
   forall x,
   of_intu x = sub (from_words ox4330_0000 x) (from_words ox4330_0000 Int.zero).
-Proof.
+Proof using.
   intros. pose proof (Int.unsigned_range x).
   rewrite ! from_words_eq. unfold sub. rewrite BofZ_minus.
   unfold of_intu. apply (f_equal (BofZ 53 1024 __ __)). rewrite Int.unsigned_zero. lia.
@@ -659,7 +659,7 @@ Qed.
 Lemma ox8000_0000_signed_unsigned:
   forall x,
     Int.unsigned (Int.add x ox8000_0000) = Int.signed x + Int.half_modulus.
-Proof.
+Proof using.
   intro; unfold Int.signed, Int.add; pose proof (Int.unsigned_range x).
   destruct (zlt (Int.unsigned x) Int.half_modulus).
   rewrite Int.unsigned_repr; compute_this (Int.unsigned ox8000_0000); now smart_omega.
@@ -672,7 +672,7 @@ Theorem of_int_from_words:
   forall x,
   of_int x = sub (from_words ox4330_0000 (Int.add x ox8000_0000))
                  (from_words ox4330_0000 ox8000_0000).
-Proof.
+Proof using.
   intros.
   pose proof (Int.signed_range x).
   rewrite ! from_words_eq. rewrite ox8000_0000_signed_unsigned.
@@ -688,7 +688,7 @@ Definition ox4530_0000 := Int.repr 1160773632.        (**r [0x4530_0000] *)
 Lemma split_bits_or':
   forall x,
   split_bits 52 11 (Int64.unsigned (Int64.ofwords ox4530_0000 x)) = (false, Int.unsigned x, 1107).
-Proof.
+Proof using.
   intros.
   transitivity (split_bits 52 11 (join_bits 52 11 false (Int.unsigned x) 1107)).
   - f_equal. rewrite Int64.ofwords_add'. reflexivity.
@@ -703,7 +703,7 @@ Lemma from_words_value':
      B2R _ _ (from_words ox4530_0000 x) = (bpow radix2 84 + IZR (Int.unsigned x * two_p 32))%R
   /\ is_finite _ _ (from_words ox4530_0000 x) = true
   /\ Bsign _ _ (from_words ox4530_0000 x) = false.
-Proof.
+Proof using.
   intros; unfold from_words, of_bits, b64_of_bits, binary_float_of_bits.
   rewrite B2R_FF2B, is_finite_FF2B, Bsign_FF2B.
   unfold binary_float_of_bits_aux; rewrite split_bits_or'; simpl; pose proof (Int.unsigned_range x).
@@ -718,7 +718,7 @@ Qed.
 
 Lemma from_words_eq':
   forall x, from_words ox4530_0000 x = BofZ 53 1024 __ __ (2^84 + Int.unsigned x * 2^32).
-Proof.
+Proof using.
   intros.
   pose proof (Int.unsigned_range x).
   destruct (from_words_value' x) as (A & B & C).
@@ -738,7 +738,7 @@ Theorem of_longu_from_words:
     add (sub (from_words ox4530_0000 (Int64.hiword l))
              (from_words ox4530_0000 (Int.repr (two_p 20))))
         (from_words ox4330_0000 (Int64.loword l)).
-Proof.
+Proof using.
   intros.
   pose proof (Int64.unsigned_range l).
   pose proof (Int.unsigned_range (Int64.hiword l)).
@@ -770,7 +770,7 @@ Theorem of_long_from_words:
     add (sub (from_words ox4530_0000 (Int.add (Int64.hiword l) ox8000_0000))
              (from_words ox4530_0000 (Int.repr (two_p 20+two_p 31))))
         (from_words ox4330_0000 (Int64.loword l)).
-Proof.
+Proof using.
   intros.
   pose proof (Int64.signed_range l).
   pose proof (Int.signed_range (Int64.hiword l)).
@@ -807,7 +807,7 @@ Theorem of_longu_decomp:
   forall l,
   of_longu l = add (mul (of_intu (Int64.hiword l)) (BofZ 53 1024 __ __ (2^32)))
                    (of_intu (Int64.loword l)).
-Proof.
+Proof using.
   intros.
   unfold of_longu, of_intu, add, mul.
   pose proof (Int.unsigned_range (Int64.loword l)).
@@ -830,7 +830,7 @@ Theorem of_long_decomp:
   forall l,
   of_long l = add (mul (of_int (Int64.hiword l)) (BofZ 53 1024 __ __ (2^32)))
                   (of_intu (Int64.loword l)).
-Proof.
+Proof using.
   intros.
   unfold of_long, of_int, of_intu, add, mul.
   pose proof (Int.unsigned_range (Int64.loword l)).
@@ -857,7 +857,7 @@ Theorem of_longu_of_long_1:
   forall x,
   Int64.ltu x (Int64.repr Int64.half_modulus) = true ->
   of_longu x = of_long x.
-Proof.
+Proof using.
   unfold of_longu, of_long, Int64.signed, Int64.ltu; intro.
   change (Int64.unsigned (Int64.repr Int64.half_modulus)) with Int64.half_modulus.
   destruct (zlt (Int64.unsigned x) Int64.half_modulus); now intuition auto.
@@ -869,7 +869,7 @@ Theorem of_longu_of_long_2:
   of_longu x = mul (of_long (Int64.or (Int64.shru x Int64.one)
                                       (Int64.and x Int64.one)))
                    (of_int (Int.repr 2)).
-Proof.
+Proof using.
   intros. change (of_int (Int.repr 2)) with (BofZ 53 1024 __ __ (2^1)).
   pose proof (Int64.unsigned_range x).
   unfold Int64.ltu in H.
@@ -940,7 +940,7 @@ Remark ZofB_range_widen:
   ZofB_range _ _ f min1 max1 = Some n ->
   min2 <= min1 -> max1 <= max2 ->
   ZofB_range _ _ f min2 max2 = Some n.
-Proof.
+Proof using.
   intros. exploit ZofB_range_inversion; eauto. intros (A & B & C).
   unfold ZofB_range; rewrite C.
   replace (min2 <=? n) with true. replace (n <=? max2) with true. auto.
@@ -950,7 +950,7 @@ Qed.
 
 Theorem to_int_to_long:
   forall f n, to_int f = Some n -> to_long f = Some (Int64.repr (Int.signed n)).
-Proof.
+Proof using.
   unfold to_int, to_long; intros.
   destruct (ZofB_range 53 1024 f Int.min_signed Int.max_signed) as [z|] eqn:Z; inv H.
   exploit ZofB_range_inversion; eauto. intros (A & B & C).
@@ -961,7 +961,7 @@ Qed.
 
 Theorem to_intu_to_longu:
   forall f n, to_intu f = Some n -> to_longu f = Some (Int64.repr (Int.unsigned n)).
-Proof.
+Proof using.
   unfold to_intu, to_longu; intros.
   destruct (ZofB_range 53 1024 f 0 Int.max_unsigned) as [z|] eqn:Z; inv H.
   exploit ZofB_range_inversion; eauto. intros (A & B & C).
@@ -972,7 +972,7 @@ Qed.
 
 Theorem to_intu_to_long:
   forall f n, to_intu f = Some n -> to_long f = Some (Int64.repr (Int.unsigned n)).
-Proof.
+Proof using.
   unfold to_intu, to_long; intros.
   destruct (ZofB_range 53 1024 f 0 Int.max_unsigned) as [z|] eqn:Z; inv H.
   exploit ZofB_range_inversion; eauto. intros (A & B & C).
@@ -983,21 +983,21 @@ Qed.
 
 Theorem of_int_of_long:
   forall n, of_int n = of_long (Int64.repr (Int.signed n)).
-Proof.
+Proof using.
   unfold of_int, of_long. intros. f_equal. rewrite Int64.signed_repr. auto.
   generalize (Int.signed_range n). compute_this Int64.min_signed. compute_this Int64.max_signed. smart_omega.
 Qed.
 
 Theorem of_intu_of_longu:
   forall n, of_intu n = of_longu (Int64.repr (Int.unsigned n)).
-Proof.
+Proof using.
   unfold of_intu, of_longu. intros. f_equal. rewrite Int64.unsigned_repr. auto.
   generalize (Int.unsigned_range n). smart_omega.
 Qed.
 
 Theorem of_intu_of_long:
   forall n, of_intu n = of_long (Int64.repr (Int.unsigned n)).
-Proof.
+Proof using.
   unfold of_intu, of_long. intros. f_equal. rewrite Int64.signed_repr. auto.
   generalize (Int.unsigned_range n). compute_this Int64.min_signed; compute_this Int64.max_signed; smart_omega.
 Qed.
@@ -1111,14 +1111,14 @@ Definition of_bits (b: int): float32 := b32_of_bits (Int.unsigned b).
 
 Theorem add_commut:
   forall x y, is_nan _ _ x = false \/ is_nan _ _ y = false -> add x y = add y x.
-Proof.
+Proof using.
   intros. apply Bplus_commut. 
   destruct x, y; try reflexivity; now destruct H.
 Qed.
 
 Theorem mul_commut:
   forall x y, is_nan _ _ x = false \/ is_nan _ _ y = false -> mul x y = mul y x.
-Proof.
+Proof using.
   intros. apply Bmult_commut.
   destruct x, y; try reflexivity; now destruct H.
 Qed.
@@ -1127,7 +1127,7 @@ Qed.
 
 Theorem mul2_add:
   forall f, add f f = mul f (of_int (Int.repr 2%Z)).
-Proof.
+Proof using.
   intros. apply Bmult2_Bplus.
   intros x y Hx Hy. unfold binop_nan.
   destruct x; try discriminate. simpl. rewrite Archi.choose_nan_32_idem. 
@@ -1140,7 +1140,7 @@ Definition exact_inverse : float32 -> option float32 := Bexact_inverse 24 128 __
 
 Theorem div_mul_inverse:
   forall x y z, exact_inverse y = Some z -> div x y = mul x z.
-Proof.
+Proof using.
   intros. apply Bdiv_mult_inverse. 2: easy.
   intros x0 y0 z0 Hx Hy Hz. unfold binop_nan.
   destruct x0; try discriminate.
@@ -1151,50 +1151,50 @@ Qed.
 
 Theorem cmp_swap:
   forall c x y, cmp (swap_comparison c) x y = cmp c y x.
-Proof.
+Proof using.
   unfold cmp, compare; intros. rewrite (Bcompare_swap _ _ x y).
   apply cmp_of_comparison_swap.
 Qed.
 
 Theorem cmp_ne_eq:
   forall f1 f2, cmp Cne f1 f2 = negb (cmp Ceq f1 f2).
-Proof.
+Proof using.
   intros; apply cmp_of_comparison_ne_eq.
 Qed.
 
 Theorem cmp_lt_eq_false:
   forall f1 f2, cmp Clt f1 f2 = true -> cmp Ceq f1 f2 = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_lt_eq_false.
 Qed.
 
 Theorem cmp_le_lt_eq:
   forall f1 f2, cmp Cle f1 f2 = cmp Clt f1 f2 || cmp Ceq f1 f2.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_le_lt_eq.
 Qed.
 
 Theorem cmp_gt_eq_false:
   forall x y, cmp Cgt x y = true -> cmp Ceq x y = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_gt_eq_false.
 Qed.
 
 Theorem cmp_ge_gt_eq:
   forall f1 f2, cmp Cge f1 f2 = cmp Cgt f1 f2 || cmp Ceq f1 f2.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_ge_gt_eq.
 Qed.
 
 Theorem cmp_lt_gt_false:
   forall f1 f2, cmp Clt f1 f2 = true -> cmp Cgt f1 f2 = true -> False.
-Proof.
+Proof using.
   intros f1 f2; apply cmp_of_comparison_lt_gt_false.
 Qed.
 
 Theorem cmp_double:
   forall f1 f2 c, cmp c f1 f2 = Float.cmp c (to_double f1) (to_double f2).
-Proof.
+Proof using.
   unfold cmp, Float.cmp; intros. f_equal. symmetry. apply Bcompare_Bconv_widen.
   red; lia. lia. lia.
 Qed.
@@ -1204,7 +1204,7 @@ Qed.
 
 Theorem of_to_bits:
   forall f, of_bits (to_bits f) = f.
-Proof.
+Proof using.
   intros; unfold of_bits, to_bits, bits_of_b32, b32_of_bits.
   rewrite Int.unsigned_repr, binary_float_of_bits_of_binary_float; [reflexivity|].
   generalize (bits_of_binary_float_range 23 8 __ __ f).
@@ -1213,7 +1213,7 @@ Qed.
 
 Theorem to_of_bits:
   forall b, to_bits (of_bits b) = b.
-Proof.
+Proof using.
   intros; unfold of_bits, to_bits, bits_of_b32, b32_of_bits.
   rewrite bits_of_binary_float_of_bits. apply Int.repr_unsigned.
   apply Int.unsigned_range.
@@ -1225,14 +1225,14 @@ Qed.
 
 Theorem of_int_double:
   forall n, of_int n = of_double (Float.of_int n).
-Proof.
+Proof using.
   intros. symmetry. apply Bconv_BofZ.
   apply integer_representable_n. generalize (Int.signed_range n); Float.smart_omega.
 Qed.
 
 Theorem of_intu_double:
   forall n, of_intu n = of_double (Float.of_intu n).
-Proof.
+Proof using.
   intros. symmetry. apply Bconv_BofZ.
   apply integer_representable_n; auto. generalize (Int.unsigned_range n); Float.smart_omega.
 Qed.
@@ -1243,7 +1243,7 @@ Qed.
 
 Theorem to_int_double:
   forall f n, to_int f = Some n -> Float.to_int (to_double f) = Some n.
-Proof.
+Proof using.
   intros.
   unfold to_int in H.
   destruct (ZofB_range _ _ f Int.min_signed Int.max_signed) as [n'|] eqn:E; inv H.
@@ -1253,7 +1253,7 @@ Qed.
 
 Theorem to_intu_double:
   forall f n, to_intu f = Some n -> Float.to_intu (to_double f) = Some n.
-Proof.
+Proof using.
   intros.
   unfold to_intu in H.
   destruct (ZofB_range _ _ f 0 Int.max_unsigned) as [n'|] eqn:E; inv H.
@@ -1263,7 +1263,7 @@ Qed.
 
 Theorem to_long_double:
   forall f n, to_long f = Some n -> Float.to_long (to_double f) = Some n.
-Proof.
+Proof using.
   intros.
   unfold to_long in H.
   destruct (ZofB_range _ _ f Int64.min_signed Int64.max_signed) as [n'|] eqn:E; inv H.
@@ -1273,7 +1273,7 @@ Qed.
 
 Theorem to_longu_double:
   forall f n, to_longu f = Some n -> Float.to_longu (to_double f) = Some n.
-Proof.
+Proof using.
   intros.
   unfold to_longu in H.
   destruct (ZofB_range _ _ f 0 Int64.max_unsigned) as [n'|] eqn:E; inv H.
@@ -1289,7 +1289,7 @@ Qed.
 Lemma int_round_odd_plus:
   forall p n, 0 <= p ->
   int_round_odd n p = Z.land (Z.lor n (Z.land n (2^p-1) + (2^p-1))) (-(2^p)).
-Proof.
+Proof using.
   intros.
   assert (POS: 0 < 2^p) by (apply (Zpower_gt_0 radix2); auto).
   assert (A: Z.land n (2^p-1) = n mod 2^p).
@@ -1331,7 +1331,7 @@ Lemma of_long_round_odd:
   forall n conv_nan,
   2^36 <= Z.abs n < 2^64 ->
   BofZ 24 128 __ __ n = Bconv _ _ 24 128 __ __ conv_nan mode_NE (BofZ 53 1024 __ __ (Z.land (Z.lor n ((Z.land n 2047) + 2047)) (-2048))).
-Proof.
+Proof using.
   intros. rewrite <- (int_round_odd_plus 11) by lia.
   assert (-2^64 <= int_round_odd n 11).
   { change (-2^64) with (int_round_odd (-2^64) 11). apply int_round_odd_le; extlia. }
@@ -1352,7 +1352,7 @@ Theorem of_longu_double_1:
   forall n,
   Int64.unsigned n <= 2^53 ->
   of_longu n = of_double (Float.of_longu n).
-Proof.
+Proof using.
   intros. symmetry; apply Bconv_BofZ. apply integer_representable_n; auto.
   pose proof (Int64.unsigned_range n); lia.
 Qed.
@@ -1365,7 +1365,7 @@ Theorem of_longu_double_2:
                                                 (Int64.add (Int64.and n (Int64.repr 2047))
                                                            (Int64.repr 2047)))
                                       (Int64.repr (-2048)))).
-Proof.
+Proof using.
   intros.
   pose proof (Int64.unsigned_range n).
   unfold of_longu. erewrite of_long_round_odd.
@@ -1399,7 +1399,7 @@ Theorem of_long_double_1:
   forall n,
   Z.abs (Int64.signed n) <= 2^53 ->
   of_long n = of_double (Float.of_long n).
-Proof.
+Proof using.
   intros. symmetry; apply Bconv_BofZ. apply integer_representable_n; auto. extlia.
 Qed.
 
@@ -1411,7 +1411,7 @@ Theorem of_long_double_2:
                                                 (Int64.add (Int64.and n (Int64.repr 2047))
                                                            (Int64.repr 2047)))
                                       (Int64.repr (-2048)))).
-Proof.
+Proof using.
   intros.
   pose proof (Int64.signed_range n).
   unfold of_long. erewrite of_long_round_odd.

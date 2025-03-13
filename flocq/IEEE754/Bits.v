@@ -42,7 +42,7 @@ Lemma join_bits_range :
   (0 <= m < 2^mw)%Z ->
   (0 <= e < 2^ew)%Z ->
   (0 <= join_bits s m e < 2 ^ (mw + ew + 1))%Z.
-Proof.
+Proof using.
 intros s m e Hm He.
 assert (0 <= mw)%Z as Hmw.
   destruct mw as [|mw'|mw'] ; try easy.
@@ -84,7 +84,7 @@ Theorem split_join_bits :
   (0 <= m < Zpower 2 mw)%Z ->
   (0 <= e < Zpower 2 ew)%Z ->
   split_bits (join_bits s m e) = (s, m, e).
-Proof.
+Proof using.
 intros s m e Hm He.
 assert (0 <= mw)%Z as Hmw.
   destruct mw as [|mw'|mw'] ; try easy.
@@ -136,20 +136,20 @@ Notation fexp := (fexp prec emax) (only parsing).
 Notation binary_float := (binary_float prec emax) (only parsing).
 
 Let Hprec : (0 < prec)%Z.
-Proof.
+Proof using.
 unfold prec.
 apply Zle_lt_succ.
 now apply Zlt_le_weak.
 Qed.
 
 Let Hm_gt_0 : (0 < 2^mw)%Z.
-Proof.
+Proof using.
 apply (Zpower_gt_0 radix2).
 now apply Zlt_le_weak.
 Qed.
 
 Let He_gt_0 : (0 < 2^ew)%Z.
-Proof.
+Proof using.
 apply (Zpower_gt_0 radix2).
 now apply Zlt_le_weak.
 Qed.
@@ -161,7 +161,7 @@ Theorem join_split_bits :
   (0 <= x < Zpower 2 (mw + ew + 1))%Z ->
   let '(s, m, e) := split_bits x in
   join_bits s m e = x.
-Proof.
+Proof using Hmw Hew Hm_gt_0 He_gt_0.
 intros x Hx.
 unfold split_bits, join_bits.
 rewrite Z.shiftl_mul_pow2 by now apply Zlt_le_weak.
@@ -206,7 +206,7 @@ Theorem split_bits_inj :
   (0 <= y < Zpower 2 (mw + ew + 1))%Z ->
   split_bits x = split_bits y ->
   x = y.
-Proof.
+Proof using Hprec Hmw Hew Hm_gt_0 He_gt_0.
 intros x y Hx Hy.
 generalize (join_split_bits x Hx) (join_split_bits y Hy).
 destruct (split_bits x) as ((sx, mx), ex).
@@ -246,7 +246,7 @@ Definition split_bits_of_binary_float (x : binary_float) :=
 Theorem split_bits_of_binary_float_correct :
   forall x,
   split_bits (bits_of_binary_float x) = split_bits_of_binary_float x.
-Proof.
+Proof using Hmw Hew Hm_gt_0 He_gt_0.
 intros [sx|sx|sx plx Hplx|sx mx ex Hx] ;
   try ( simpl ; apply split_join_bits ; split ; try apply Z.le_refl ; try apply Zlt_pred ; trivial ; lia ).
 simpl. apply split_join_bits; split; try lia.
@@ -302,7 +302,7 @@ Qed.
 
 Theorem bits_of_binary_float_range:
   forall x, (0 <= bits_of_binary_float x < 2^(mw+ew+1))%Z.
-Proof.
+Proof using Hmw Hew Hm_gt_0 He_gt_0.
 unfold bits_of_binary_float.
 intros [sx|sx|sx pl pl_range|sx mx ex H].
 - apply join_bits_range ; now split.
@@ -368,7 +368,7 @@ Definition binary_float_of_bits_aux x :=
 Lemma binary_float_of_bits_aux_correct :
   forall x,
   valid_binary prec emax (binary_float_of_bits_aux x) = true.
-Proof.
+Proof using Hprec Hmw Hew Hm_gt_0 He_gt_0 Hmax.
 intros x.
 unfold binary_float_of_bits_aux, split_bits.
 assert (Hnan: nan_pl prec 1 = true).
@@ -494,7 +494,7 @@ Definition binary_float_of_bits x :=
 Theorem binary_float_of_bits_of_binary_float :
   forall x,
   binary_float_of_bits (bits_of_binary_float x) = x.
-Proof.
+Proof using.
 intros x.
 apply B2FF_inj.
 unfold binary_float_of_bits.
@@ -560,7 +560,7 @@ Theorem bits_of_binary_float_of_bits :
   forall x,
   (0 <= x < 2^(mw+ew+1))%Z ->
   bits_of_binary_float (binary_float_of_bits x) = x.
-Proof.
+Proof using.
 intros x Hx.
 unfold binary_float_of_bits, bits_of_binary_float.
 set (Cx := binary_float_of_bits_aux_correct x).
@@ -620,17 +620,17 @@ Arguments B754_nan {prec} {emax}.
 Definition binary32 := binary_float 24 128.
 
 Let Hprec : (0 < 24)%Z.
-Proof.
+Proof using.
 apply refl_equal.
 Qed.
 
 Let Hprec_emax : (24 < 128)%Z.
-Proof.
+Proof using.
 apply refl_equal.
 Qed.
 
 Let Hemax : (3 <= 128)%Z.
-Proof.
+Proof using.
 intros H.
 discriminate H.
 Qed.
@@ -687,17 +687,17 @@ Arguments B754_nan {prec} {emax}.
 Definition binary64 := binary_float 53 1024.
 
 Let Hprec : (0 < 53)%Z.
-Proof.
+Proof using.
 apply refl_equal.
 Qed.
 
 Let Hprec_emax : (53 < 1024)%Z.
-Proof.
+Proof using.
 apply refl_equal.
 Qed.
 
 Let Hemax : (3 <= 1024)%Z.
-Proof.
+Proof using.
 intros H.
 discriminate H.
 Qed.

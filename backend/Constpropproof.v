@@ -25,7 +25,7 @@ Definition match_prog (prog tprog: program) :=
 
 Lemma transf_program_match:
   forall prog, match_prog prog (transf_program prog).
-Proof.
+Proof using.
   intros. eapply match_transform_program_contextual. auto.
 Qed.
 
@@ -54,7 +54,7 @@ Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists cunit, Genv.find_funct tge v = Some (transf_fundef (romem_for cunit) f) /\ linkorder cunit prog.
-Proof.
+Proof using TRANSL.
   intros. exploit (Genv.find_funct_match TRANSL); eauto.
   intros (cu & tf & A & B & C). subst tf. exists cu; auto.
 Qed.
@@ -63,7 +63,7 @@ Lemma function_ptr_translated:
   forall (b: block) (f: fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists cunit, Genv.find_funct_ptr tge b = Some (transf_fundef (romem_for cunit) f) /\ linkorder cunit prog.
-Proof.
+Proof using TRANSL.
   intros. exploit (Genv.find_funct_ptr_match TRANSL); eauto.
   intros (cu & tf & A & B & C). subst tf. exists cu; auto.
 Qed.
@@ -71,7 +71,7 @@ Qed.
 Lemma sig_function_translated:
   forall rm f,
   funsig (transf_fundef rm f) = funsig f.
-Proof.
+Proof using.
   intros. destruct f; reflexivity.
 Qed.
 
@@ -79,7 +79,7 @@ Lemma init_regs_lessdef:
   forall rl vl1 vl2,
   Val.lessdef_list vl1 vl2 ->
   regs_lessdef (init_regs vl1 rl) (init_regs vl2 rl).
-Proof.
+Proof using.
   induction rl; simpl; intros.
   red; intros. rewrite Regmap.gi. auto.
   inv H. red; intros. rewrite Regmap.gi. auto.
@@ -95,7 +95,7 @@ Lemma transf_ros_correct:
   exists cunit,
      find_function tge (transf_ros ae ros) rs' = Some (transf_fundef (romem_for cunit) f)
   /\ linkorder cunit prog.
-Proof.
+Proof using TRANSL.
   intros until rs'; intros GE EM FF RLD. destruct ros; simpl in *.
 - (* function pointer *)
   generalize (EM r); fold (areg ae r); intro VM. generalize (RLD r); intro LD.
@@ -128,7 +128,7 @@ Lemma const_for_result_correct:
   bc sp = BCstack ->
   genv_match bc ge ->
   exists v', eval_operation tge (Vptr sp Ptrofs.zero) op nil m = Some v' /\ Val.lessdef v v'.
-Proof.
+Proof using TRANSL.
   intros. exploit ConstpropOpproof.const_for_result_correct; eauto. intros (v' & A & B).
   exists v'; split.
   rewrite <- A; apply eval_operation_preserved. exact symbols_preserved.
@@ -154,7 +154,7 @@ Lemma match_successor_rec:
   ematch bc rs ae ->
   forall n pc,
   match_pc f rs m n pc (successor_rec n f ae pc).
-Proof.
+Proof using.
   induction n; simpl; intros.
 - apply match_pc_base.
 - destruct (fn_code f)!pc as [[]|] eqn:INSTR; try apply match_pc_base.
@@ -172,7 +172,7 @@ Qed.
 Lemma match_successor:
   forall f rs m bc ae pc,
   ematch bc rs ae -> match_pc f rs m num_iter pc (successor f ae pc).
-Proof.
+Proof using.
   intros. eapply match_successor_rec; eauto.
 Qed.
 
@@ -181,7 +181,7 @@ Lemma builtin_arg_reduction_correct:
   forall a v,
   eval_builtin_arg ge (fun r => rs#r) sp m a v ->
   eval_builtin_arg ge (fun r => rs#r) sp m (builtin_arg_reduction ae a) v.
-Proof.
+Proof using.
   induction 2; simpl; eauto with barg.
 - specialize (H x). unfold areg. destruct (AE.get x ae); try constructor.
   + inv H. constructor.
@@ -198,7 +198,7 @@ Lemma builtin_arg_strength_reduction_correct:
   ematch bc rs ae ->
   eval_builtin_arg ge (fun r => rs#r) sp m a v ->
   eval_builtin_arg ge (fun r => rs#r) sp m (builtin_arg_strength_reduction ae a c) v.
-Proof.
+Proof using.
   intros. unfold builtin_arg_strength_reduction.
   destruct (builtin_arg_ok (builtin_arg_reduction ae a) c).
   eapply builtin_arg_reduction_correct; eauto.
@@ -211,7 +211,7 @@ Lemma builtin_args_strength_reduction_correct:
   eval_builtin_args ge (fun r => rs#r) sp m al vl ->
   forall cl,
   eval_builtin_args ge (fun r => rs#r) sp m (builtin_args_strength_reduction ae al cl) vl.
-Proof.
+Proof using.
   induction 2; simpl; constructor.
   eapply builtin_arg_strength_reduction_correct; eauto.
   apply IHlist_forall2.
@@ -222,7 +222,7 @@ Lemma debug_strength_reduction_correct:
   forall al vl,
   eval_builtin_args ge (fun r => rs#r) sp m al vl ->
   exists vl', eval_builtin_args ge (fun r => rs#r) sp m (debug_strength_reduction ae al) vl'.
-Proof.
+Proof using.
   induction 2; simpl.
 - exists (@nil val); constructor.
 - destruct IHlist_forall2 as (vl' & A).
@@ -241,7 +241,7 @@ Lemma builtin_strength_reduction_correct:
   exists vargs',
      eval_builtin_args ge (fun r => rs#r) sp m (builtin_strength_reduction ae ef args) vargs'
   /\ external_call ef ge vargs' m t vres m'.
-Proof.
+Proof using.
   intros.
   assert (DEFAULT: forall cl,
     exists vargs',
@@ -325,7 +325,7 @@ Lemma match_states_succ:
   Mem.extends m m' ->
   match_states O (State s f sp pc rs m)
                  (State s' (transf_function (romem_for cu) f) sp pc rs' m').
-Proof.
+Proof using.
   intros. apply match_states_intro; auto. constructor.
 Qed.
 
@@ -333,7 +333,7 @@ Lemma transf_instr_at:
   forall rm f pc i,
   f.(fn_code)!pc = Some i ->
   (transf_function rm f).(fn_code)!pc = Some(transf_instr f (analyze rm f) rm pc i).
-Proof.
+Proof using.
   intros. simpl. rewrite PTree.gmap. rewrite H. auto.
 Qed.
 
@@ -353,7 +353,7 @@ Lemma transf_step_correct:
   forall n1 s1' (SS: sound_state prog s1) (MS: match_states n1 s1 s1'),
   (exists n2, exists s2', step tge s1' t s2' /\ match_states n2 s2 s2')
   \/ (exists n2, n2 < n1 /\ t = E0 /\ match_states n2 s2 s1')%nat.
-Proof.
+Proof using TRANSL.
   induction 1; intros; inv MS; try InvSoundState; try (inv PC; try congruence).
 
 - (* Inop, preserved *)
@@ -581,7 +581,7 @@ Qed.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists n, exists st2, initial_state tprog st2 /\ match_states n st1 st2.
-Proof.
+Proof using TRANSL.
   intros. inversion H.
   exploit function_ptr_translated; eauto. intros (cu & FIND & LINK).
   exists O; exists (Callstate nil (transf_fundef (romem_for cu) f) nil m0); split.
@@ -597,7 +597,7 @@ Qed.
 Lemma transf_final_states:
   forall n st1 st2 r,
   match_states n st1 st2 -> final_state st1 r -> final_state st2 r.
-Proof.
+Proof using.
   intros. inv H0. inv H. inv STACKS. inv RES. constructor.
 Qed.
 
@@ -606,7 +606,7 @@ Qed.
 
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
-Proof.
+Proof using TRANSL.
   apply Forward_simulation with lt (fun n s1 s2 => sound_state prog s1 /\ match_states n s1 s2); constructor.
 - apply lt_wf.
 - simpl; intros. exploit transf_initial_states; eauto. intros (n & st2 & A & B).

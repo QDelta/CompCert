@@ -27,21 +27,21 @@ Hypothesis complete: complete.
 
 (* Properties of the automaton deduced from completeness validation. *)
 Proposition nullable_stable: nullable_stable.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition first_stable: first_stable.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition start_future: start_future.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition terminal_shift: terminal_shift.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition end_reduce: end_reduce.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition start_goto: start_goto.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition non_terminal_goto: non_terminal_goto.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 Proposition non_terminal_closed: non_terminal_closed.
-Proof. pose proof complete; unfold Valid.complete in H; intuition. Qed.
+Proof using complete. pose proof complete; unfold Valid.complete in H; intuition. Qed.
 
 (** If the nullable predicate has been validated, then it is correct. **)
 Lemma nullable_correct head word :
@@ -49,7 +49,7 @@ Lemma nullable_correct head word :
 with nullable_correct_list heads word :
   word = [] ->
   parse_tree_list heads word -> nullable_word heads = true.
-Proof.
+Proof using complete.
   - destruct 2=>//. assert (Hnull := nullable_stable prod).
     erewrite nullable_correct_list in Hnull; eauto.
   - intros Hword. destruct 1=>//=. destruct (app_eq_nil _ _ Hword).
@@ -61,7 +61,7 @@ Lemma first_word_set_app t word1 word2 :
   TerminalSet.In t (first_word_set (word1 ++ word2)) <->
   TerminalSet.In t (first_word_set word1) \/
   TerminalSet.In t (first_word_set word2) /\ nullable_word (rev word1) = true.
-Proof.
+Proof using.
   induction word1 as [|s word1 IH]=>/=.
   - split; [tauto|]. move=>[/TerminalSet.empty_1 ?|[? _]]//.
   - rewrite /nullable_word forallb_app /=. destruct nullable_symb=>/=.
@@ -83,7 +83,7 @@ with first_correct_list heads word t q :
   word = t::q ->
   parse_tree_list heads word ->
   TerminalSet.In (token_term t) (first_word_set (rev' heads)).
-Proof.
+Proof using complete.
   - intros Hword. destruct 1=>//.
     + inversion Hword. subst. apply TerminalSet.singleton_2, compare_refl.
     + eapply first_stable. eauto.
@@ -116,7 +116,7 @@ Lemma pop_stack_compat_pop_spec {A symbs word}
     (ptl:parse_tree_list symbs word) (stk:stack) (stk0:stack) action :
   ptl_stack_compat stk0 ptl stk ->
   pop_spec symbs stk action stk0 (ptl_sem (A:=A) ptl action).
-Proof.
+Proof using.
   revert stk. induction ptl=>stk /= Hstk.
   - subst. constructor.
   - destruct stk as [|[st sem] stk]=>//. destruct Hstk as [Hstk [??]]. subst.
@@ -315,19 +315,19 @@ Lemma ptz_stack_compat_cons_state_has_future {symbsq wordq symbt wordt} stk
   ptz_stack_compat stk (Cons_ptl_ptz ptl ptlz) ->
   state_has_future (state_of_stack init stk) (ptlz_prod ptlz)
                    (symbt::ptlz_future ptlz) (ptlz_lookahead ptlz).
-Proof. move=>[stk0 [? [? ?]]] //. Qed.
+Proof using. move=>[stk0 [? [? ?]]] //. Qed.
 
 Lemma ptlz_future_ptlz_prod hole_symbs hole_word
       (ptlz:ptl_zipper hole_symbs hole_word) :
   rev_append (ptlz_future ptlz) hole_symbs = prod_rhs_rev (ptlz_prod ptlz).
-Proof. induction ptlz=>//=. Qed.
+Proof using. induction ptlz=>//=. Qed.
 
 Lemma ptlz_future_first {symbs word} (ptlz : ptl_zipper symbs word) :
   TerminalSet.In (token_term (buf_head (ptlz_buffer ptlz)))
     (first_word_set (ptlz_future ptlz)) \/
   token_term (buf_head (ptlz_buffer ptlz)) = ptlz_lookahead ptlz /\
   nullable_word (ptlz_future ptlz) = true.
-Proof.
+Proof using complete.
   induction ptlz as [|??? [|tok] pt ptlz IH]; [by auto| |]=>/=.
   - rewrite (nullable_correct _ _ eq_refl pt).
     destruct IH as [|[??]]; [left|right]=>/=; auto using TerminalSet.union_3.
@@ -448,7 +448,7 @@ with sem_build_from_pt_rec {symbs word}
      Hsymbs :
   ptlz_sem ptlz (fun _ f => ptl_sem ptl f)
   = ptd_sem (build_pt_dot_from_pt_rec ptl Hsymbs ptlz).
-Proof.
+Proof using.
   - destruct pt as [tok|prod word ptl]=>/=.
     + revert ptz. generalize [tok].
       generalize (token_sem tok). generalize I.
@@ -468,14 +468,14 @@ Lemma sem_build_from_ptl {symbs word}
       (ptl : parse_tree_list symbs word) (ptlz : ptl_zipper symbs word) :
   ptlz_sem ptlz (fun _ f => ptl_sem ptl f)
   = ptd_sem (build_pt_dot_from_ptl ptl ptlz).
-Proof. destruct ptlz=>//=. by rewrite -sem_build_from_pt. Qed.
+Proof using. destruct ptlz=>//=. by rewrite -sem_build_from_pt. Qed.
 
 Lemma sem_next_ptd (ptd : pt_dot) :
   match next_ptd ptd with
   | None => True
   | Some ptd' => ptd_sem ptd = ptd_sem ptd'
   end.
-Proof.
+Proof using.
   destruct ptd as [prod word ptl ptz|tok symbs word ptl ptlz] =>/=.
   - change (ptl_sem ptl (prod_action prod))
       with (pt_sem (Non_terminal_pt prod ptl)).
@@ -489,7 +489,7 @@ Lemma sem_next_ptd_iter (ptd : pt_dot) (log_n_steps : nat) :
   | None => True
   | Some ptd' => ptd_sem ptd = ptd_sem ptd'
   end.
-Proof.
+Proof using.
   revert ptd.
   induction log_n_steps as [|log_n_steps IH]; [by apply sem_next_ptd|]=>/= ptd.
   assert (IH1 := IH ptd). destruct next_ptd_iter as [ptd'|]=>//.
@@ -504,7 +504,7 @@ with ptd_buffer_build_from_pt_rec {symbs word}
      (ptl : parse_tree_list symbs word) (ptlz : ptl_zipper symbs word)
      Hsymbs :
   (word ++ ptlz_buffer ptlz)%buf = ptd_buffer (build_pt_dot_from_pt_rec ptl Hsymbs ptlz).
-Proof.
+Proof using.
   - destruct pt as [tok|prod word ptl]=>/=.
     + f_equal. revert ptz. generalize [tok].
       generalize (token_sem tok). generalize I.
@@ -525,7 +525,7 @@ Qed.
 Lemma ptd_buffer_build_from_ptl {symbs word}
       (ptl : parse_tree_list symbs word) (ptlz : ptl_zipper symbs word) :
   ptlz_buffer ptlz = ptd_buffer (build_pt_dot_from_ptl ptl ptlz).
-Proof.
+Proof using.
   destruct ptlz as [|???? pt]=>//=. by rewrite -ptd_buffer_build_from_pt.
 Qed.
 
@@ -542,7 +542,7 @@ with ptd_stack_compat_build_from_pt_rec {symbs word}
   state_has_future (state_of_stack init stk) (ptlz_prod ptlz)
                    (rev' (prod_rhs_rev (ptlz_prod ptlz))) (ptlz_lookahead ptlz) ->
   ptd_stack_compat (build_pt_dot_from_pt_rec ptl Hsymbs ptlz) stk.
-Proof.
+Proof using complete.
   - intros Hstk. destruct pt as [tok|prod word ptl]=>/=.
     + revert ptz Hstk. generalize [tok]. generalize (token_sem tok). generalize I.
       change True with (match T (token_term tok) with T _ => True | NT _ => False end) at 1.
@@ -579,7 +579,7 @@ Lemma ptd_stack_compat_build_from_ptl {symbs word}
   state_has_future (state_of_stack init stk) (ptlz_prod ptlz)
                    (ptlz_future ptlz) (ptlz_lookahead ptlz) ->
   ptd_stack_compat (build_pt_dot_from_ptl ptl ptlz) stk.
-Proof.
+Proof using complete.
   intros Hstk0 Hstk Hfut. destruct ptlz=>/=.
   - eauto.
   - apply ptd_stack_compat_build_from_pt=>/=. eauto.
@@ -606,7 +606,7 @@ Lemma reduce_step_next_ptd (prod : production) (word : list token)
         Progress_sr stk' (ptd_buffer ptd) /\
       ptd_stack_compat ptd stk'
   end.
-Proof.
+Proof using complete.
   intros (stk0 & _ & Hstk & Hstk0).
   apply pop_stack_compat_pop_spec with (action := prod_action prod) in Hstk.
   rewrite <-pop_spec_ok with (Hp := reduce_step_subproof init stk prod Hval Hi) in Hstk.
@@ -663,7 +663,7 @@ Lemma step_next_ptd (ptd : pt_dot) (stk : stack) Hi :
         Progress_sr stk' (ptd_buffer ptd') /\
       ptd_stack_compat ptd' stk'
   end.
-Proof.
+Proof using complete.
   intros Hstk. unfold step.
   generalize (reduce_ok safe (state_of_stack init stk)).
   destruct ptd as [prod word ptl ptz|tok symbs word ptl ptlz].
@@ -697,7 +697,7 @@ Lemma parse_fix_next_ptd_iter (ptd : pt_dot) (stk : stack) (log_n_steps : nat) H
         Progress_sr stk' (ptd_buffer ptd') /\
       ptd_stack_compat ptd' stk'
   end.
-Proof.
+Proof using complete.
   revert ptd stk Hi.
   induction log_n_steps as [|log_n_steps IH]; [by apply step_next_ptd|].
   move => /= ptd stk Hi Hstk. assert (IH1 := IH ptd stk Hi Hstk).
@@ -741,7 +741,7 @@ with ptd_cost_build_from_pt_rec {symbs word}
      (ptl : parse_tree_list symbs word) (ptlz : ptl_zipper symbs word)
      Hsymbs :
   ptl_size ptl + ptlz_cost ptlz = ptd_cost (build_pt_dot_from_pt_rec ptl Hsymbs ptlz).
-Proof.
+Proof using.
   - destruct pt as [tok|prod word ptl']=>/=.
     + revert ptz. generalize [tok]. generalize (token_sem tok). generalize I.
       change True with (match T (token_term tok) with T _ => True | NT _ => False end) at 1.
@@ -760,7 +760,7 @@ Qed.
 Lemma ptd_cost_build_from_ptl {symbs word}
       (ptl : parse_tree_list symbs word) (ptlz : ptl_zipper symbs word) :
   ptlz_cost ptlz = ptd_cost (build_pt_dot_from_ptl ptl ptlz).
-Proof.
+Proof using.
   destruct ptlz=>//. apply eq_add_S. rewrite -ptd_cost_build_from_pt /=. ring.
 Qed.
 
@@ -769,7 +769,7 @@ Lemma next_ptd_cost ptd:
   | None => ptd_cost ptd = 0
   | Some ptd' => ptd_cost ptd = S (ptd_cost ptd')
   end.
-Proof.
+Proof using.
   destruct ptd as [prod word ptl ptz|tok symbq wordq ptl ptlz] =>/=.
   - generalize (Non_terminal_pt prod ptl). clear ptl.
     destruct ptz as [|?? ptl ?? ptlz]=>// pt. by rewrite -ptd_cost_build_from_ptl.
@@ -781,7 +781,7 @@ Lemma next_ptd_iter_cost ptd log_n_steps :
   | None => ptd_cost ptd < 2^log_n_steps
   | Some ptd' => ptd_cost ptd = 2^log_n_steps + ptd_cost ptd'
   end.
-Proof.
+Proof using.
   revert ptd. induction log_n_steps as [|log_n_steps IH]=>ptd /=.
   - assert (Hptd := next_ptd_cost ptd). destruct next_ptd=>//. by rewrite Hptd.
   - rewrite Nat.add_0_r. assert (IH1 := IH ptd). destruct next_ptd_iter as [ptd'|].
@@ -804,7 +804,7 @@ Theorem parse_complete log_n_steps:
   | Timeout_pr => 2^log_n_steps < pt_size full_pt
   | Fail_pr => False
   end.
-Proof.
+Proof using complete.
   assert (Hstk : ptd_stack_compat (build_pt_dot_from_pt full_pt Top_ptz) []) by
       by apply ptd_stack_compat_build_from_pt.
   unfold parse.

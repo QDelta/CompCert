@@ -36,7 +36,7 @@ Theorem parse_correct
         pt_sem pt = sem
     | _ => True
   end.
-Proof. apply Correct.parse_correct. Qed.
+Proof using. apply Correct.parse_correct. Qed.
 
 (** Completeness theorem. **)
 Theorem parse_complete
@@ -50,7 +50,7 @@ Theorem parse_complete
     pt_size tree <= 2^log_n_steps
   | Timeout_pr => 2^log_n_steps < pt_size tree
   end.
-Proof.
+Proof using.
   intros. now apply Complete.parse_complete, Complete.Valid.complete_is_validator.
 Qed.
 
@@ -60,7 +60,7 @@ Theorem unambiguity:
   forall init word,
   forall (tree1 tree2:parse_tree (NT (start_nt init)) word),
     pt_sem tree1 = pt_sem tree2.
-Proof.
+Proof using.
   intros Hsafe Hcomp [tok] init word tree1 tree2.
   pose (buf_end := cofix buf_end := (tok :: buf_end)%buf).
   assert (Hcomp1 := parse_complete Hsafe init (pt_size tree1) word buf_end

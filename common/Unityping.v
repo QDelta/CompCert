@@ -111,7 +111,7 @@ Lemma move_shape:
   move e r1 r2 = OK (changed, e') ->
   (e'.(te_equ) = e.(te_equ) \/ e'.(te_equ) = (r1, r2) :: e.(te_equ))
   /\ (changed = true -> e'.(te_equ) = e.(te_equ)).
-Proof.
+Proof using.
   unfold move; intros.
   destruct (peq r1 r2). inv H. auto.
   destruct e.(te_typ)!r1 as [ty1|]; destruct e.(te_typ)!r2 as [ty2|]; inv H; simpl.
@@ -125,7 +125,7 @@ Lemma length_move:
   forall e r1 r2 changed e',
   move e r1 r2 = OK (changed, e') ->
   length e'.(te_equ) + (if changed then 1 else 0) <= S(length e.(te_equ)).
-Proof.
+Proof using.
   unfold move; intros.
   destruct (peq r1 r2). inv H. lia.
   destruct e.(te_typ)!r1 as [ty1|]; destruct e.(te_typ)!r2 as [ty2|]; inv H; simpl.
@@ -139,7 +139,7 @@ Lemma length_solve_rec:
   forall q e ch e' ch',
   solve_rec e ch q = OK (e', ch') ->
   length e'.(te_equ) + (if ch' && negb ch then 1 else 0) <= length e.(te_equ) + length q.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. replace (ch' && negb ch') with false. lia. destruct ch'; auto.
 - destruct a as [r1 r2]; monadInv H. rename x0 into e0. rename x into ch0.
@@ -163,7 +163,7 @@ Function solve_constraints (e: typenv) {measure weight_typenv e}: res typenv :=
   | OK(e', true)  => solve_constraints e'   (**r one more iteration *)
   | Error msg => Error msg
   end.
-Proof.
+Proof using.
   intros. exploit length_solve_rec; eauto. simpl. intros.
   unfold weight_typenv. lia.
 Qed.
@@ -183,7 +183,7 @@ Definition satisf (te: typassign) (e: typenv) : Prop :=
 /\ (forall x y, In (x, y) e.(te_equ) -> te x = te y).
 
 Lemma satisf_initial: forall te, satisf te initial.
-Proof.
+Proof using.
   unfold initial; intros; split; simpl; intros.
   rewrite PTree.gempty in H; discriminate.
   contradiction.
@@ -193,7 +193,7 @@ Qed.
 
 Lemma set_incr:
   forall te x ty e e', set e x ty = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   unfold set; intros. destruct (te_typ e)!x as [ty'|] eqn:E.
 - destruct (T.eq ty ty'); inv H. auto.
 - inv H. destruct H0 as [A B]; simpl in *. red; split; intros; auto.
@@ -204,7 +204,7 @@ Global Hint Resolve set_incr: ty.
 
 Lemma set_sound:
   forall te x ty e e', set e x ty = OK e' -> satisf te e' -> te x = ty.
-Proof.
+Proof using.
   unfold set; intros. destruct H0 as [P Q].
   destruct (te_typ e)!x as [ty'|] eqn:E.
 - destruct (T.eq ty ty'); inv H. eauto.
@@ -213,7 +213,7 @@ Qed.
 
 Lemma set_list_incr:
   forall te xl tyl e e', set_list e xl tyl = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H; eauto with ty.
 Qed.
 
@@ -221,7 +221,7 @@ Global Hint Resolve set_list_incr: ty.
 
 Lemma set_list_sound:
   forall te xl tyl e e', set_list e xl tyl = OK e' -> satisf te e' -> map te xl = tyl.
-Proof.
+Proof using.
   induction xl; destruct tyl; simpl; intros; monadInv H.
   auto.
   f_equal. eapply set_sound; eauto with ty. eauto.
@@ -230,7 +230,7 @@ Qed.
 Lemma move_incr:
   forall te e r1 r2 e' changed,
   move e r1 r2 = OK(changed, e') -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   unfold move; intros. destruct H0 as [P Q].
   destruct (peq r1 r2). inv H; split; auto.
   destruct (te_typ e)!r1 as [ty1|] eqn:E1;
@@ -248,7 +248,7 @@ Global Hint Resolve move_incr: ty.
 Lemma move_sound:
   forall te e r1 r2 e' changed,
   move e r1 r2 = OK(changed, e') -> satisf te e' -> te r1 = te r2.
-Proof.
+Proof using.
   unfold move; intros. destruct H0 as [P Q].
   destruct (peq r1 r2). congruence.
   destruct (te_typ e)!r1 as [ty1|] eqn:E1;
@@ -264,7 +264,7 @@ Qed.
 Lemma solve_rec_incr:
   forall te q e changed e' changed',
   solve_rec e changed q = OK(e', changed') -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. auto.
 - destruct a as [r1 r2]; monadInv H. eauto with ty.
@@ -274,7 +274,7 @@ Lemma solve_rec_sound:
   forall te r1 r2 q e changed e' changed',
   solve_rec e changed q = OK(e', changed') -> In (r1, r2) q -> satisf te e' ->
   te r1 = te r2.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - contradiction.
 - destruct a as [r3 r4]; monadInv H. destruct H0.
@@ -286,7 +286,7 @@ Lemma move_false:
   forall e r1 r2 e',
   move e r1 r2 = OK(false, e') ->
   te_typ e' = te_typ e /\ makeassign e r1 = makeassign e r2.
-Proof.
+Proof using.
   unfold move; intros.
   destruct (peq r1 r2). inv H. split; auto.
   unfold makeassign;
@@ -303,7 +303,7 @@ Lemma solve_rec_false:
   solve_rec e changed q = OK(e', false) ->
   changed = false /\
   (In (r1, r2) q -> makeassign e r1 = makeassign e r2).
-Proof.
+Proof using.
   induction q; simpl; intros.
 - inv H. tauto.
 - destruct a as [r3 r4]; monadInv H.
@@ -316,7 +316,7 @@ Qed.
 
 Lemma solve_constraints_incr:
   forall te e e', solve_constraints e = OK e' -> satisf te e' -> satisf te e.
-Proof.
+Proof using.
   intros te e; functional induction (solve_constraints e); intros.
 - inv H. auto.
 - exploit solve_rec_incr; eauto. intros [A B].
@@ -326,7 +326,7 @@ Qed.
 
 Lemma solve_constraints_sound:
   forall e e', solve_constraints e = OK e' -> satisf (makeassign e') e'.
-Proof.
+Proof using.
   intros e0; functional induction (solve_constraints e0); intros.
 - inv H. split; intros.
   unfold makeassign; rewrite H. split; auto with ty.
@@ -337,7 +337,7 @@ Qed.
 
 Theorem solve_sound:
   forall e te, solve e = OK te -> satisf te e.
-Proof.
+Proof using.
   unfold solve; intros. monadInv H.
   eapply solve_constraints_incr. eauto. eapply solve_constraints_sound; eauto.
 Qed.
@@ -347,7 +347,7 @@ Qed.
 Lemma set_complete:
   forall te e x ty,
   satisf te e -> te x = ty -> exists e', set e x ty = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   unfold set; intros. generalize H; intros [P Q].
   destruct (te_typ e)!x as [ty1|] eqn:E.
 - replace ty1 with ty. rewrite dec_eq_true. exists e; auto.
@@ -360,7 +360,7 @@ Lemma set_list_complete:
   forall te xl tyl e,
   satisf te e -> map te xl = tyl ->
   exists e', set_list e xl tyl = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   induction xl; intros; inv H0; simpl.
   econstructor; eauto.
   exploit (set_complete te e a (te a)); auto. intros (e1 & P & Q).
@@ -372,7 +372,7 @@ Lemma move_complete:
   forall te e r1 r2,
   satisf te e -> te r1 = te r2 ->
   exists changed e', move e r1 r2 = OK(changed, e') /\ satisf te e'.
-Proof.
+Proof using.
   unfold move; intros. elim H; intros P Q.
   assert (Q': forall x y, In (x, y) ((r1, r2) :: te_equ e) -> te x = te y).
   { intros. destruct H1; auto. congruence. }
@@ -398,7 +398,7 @@ Lemma solve_rec_complete:
   satisf te e ->
   (forall r1 r2, In (r1, r2) q -> te r1 = te r2) ->
   exists e' changed', solve_rec e changed q = OK(e', changed') /\ satisf te e'.
-Proof.
+Proof using.
   induction q; simpl; intros.
 - econstructor; econstructor; eauto.
 - destruct a as [r1 r2].
@@ -409,7 +409,7 @@ Qed.
 
 Lemma solve_constraints_complete:
   forall te e, satisf te e -> exists e', solve_constraints e = OK e' /\ satisf te e'.
-Proof.
+Proof using.
   intros te e. functional induction (solve_constraints e); intros.
 - exists e; auto.
 - exploit (solve_rec_complete te (te_equ e) {| te_typ := te_typ e; te_equ := nil |} false).
@@ -426,7 +426,7 @@ Qed.
 
 Lemma solve_complete:
   forall te e, satisf te e -> exists te', solve e = OK te'.
-Proof.
+Proof using.
   intros. unfold solve.
   destruct (solve_constraints_complete te e H) as (e' & P & Q).
   econstructor. rewrite P. simpl. eauto.
