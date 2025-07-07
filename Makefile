@@ -404,12 +404,12 @@ endif
 
 cleanvok:
 	rm -f $(patsubst %, %/*.vok, $(DIRS))
-
-cleangen:
 	rm -f $(patsubst %, %/*_context.v, $(DIRS))
 	rm -f $(patsubst %, %/*_generated.v, $(DIRS))
-	rm -f $(patsubst %, %/*_sentences.jsonl, $(DIRS))
 	rm -f $(patsubst %, %/*.log, $(DIRS))
+
+cleangen:
+	rm -f $(patsubst %, %/*_sentences.jsonl, $(DIRS))
 
 clean:
 	rm -f $(patsubst %, %/*.vo*, $(DIRS))

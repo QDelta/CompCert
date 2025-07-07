@@ -530,15 +530,18 @@ Proof using.
 - inv H; auto.
 Qed.
 
-Lemma tunnel_step_correct:
-  forall st1 t st2, step ge st1 t st2 ->
-  forall st1' (MS: match_states st1 st1'),
-  (exists st2', step tge st1' t st2' /\ match_states st2 st2')
-  \/ (measure st2 < measure st1 /\ t = E0 /\ match_states st2 st1')%nat.
+Lemma tunnel_step_correct_block:
+  forall s f sp pc rs m bb (H: (fn_code f) ! pc = Some bb),
+    forall st1' (MS: match_states (State s f sp pc rs m) st1'),
+    (exists st2' : state,
+      step tge st1' E0 st2' /\
+      match_states (Block s f sp bb rs m) st2') \/
+    (measure (Block s f sp bb rs m) <
+    measure (State s f sp pc rs m))%nat /\
+    E0 = E0 /\
+    match_states (Block s f sp bb rs m) st1'.
 Proof using TRANSL.
-  induction 1; intros; try inv MS.
-
-- (* entering a block *)
+  intros; inv MS.
   assert (DEFAULT: branch_target f pc = pc ->
     (exists st2' : state,
      step tge (State ts (tunnel_function f) sp (branch_target f pc) tls tm) E0 st2'
@@ -549,131 +552,332 @@ Proof using TRANSL.
 
   generalize (record_gotos_correct f pc). rewrite H.
   destruct bb; auto. destruct i; auto.
-+ (* Lbranch *)
-  intros [A | [B C]]. auto.
-  right. split. simpl. lia.
-  split. auto.
-  rewrite B. econstructor; eauto.
-+ (* Lcond *)
-  intros [A | (B & C & D & E)]. auto.
-  right. split. simpl. lia.
-  split. auto.
-  rewrite B. econstructor; eauto. congruence.
+  + (* Lbranch *)
+    intros [A | [B C]]. auto.
+    right. split. simpl. lia.
+    split. auto.
+    rewrite B. econstructor; eauto.
+  + (* Lcond *)
+    intros [A | (B & C & D & E)]. auto.
+    right. split. simpl. lia.
+    split. auto.
+    rewrite B. econstructor; eauto. congruence.
+Qed.
 
-- (* Lop *)
+Lemma tunnel_step_correct_Lop:
+  forall s f sp op args res bb rs m v rs'
+    (H: eval_operation ge sp op (reglist rs args) m = Some v)
+    (H0: rs' = Locmap.set (R res) v (undef_regs (destroyed_by_op op) rs)),
+  forall st1'
+    (MS: match_states (Block s f sp (Lop op args res :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\
+    match_states (Block s f sp bb rs' m) st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit eval_operation_lessdef. apply reglist_lessdef; eauto. eauto. eauto. 
   intros (tv & EV & LD).
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Lop with (v := tv); eauto.
   rewrite <- EV. apply eval_operation_preserved. exact symbols_preserved.
   econstructor; eauto using locmap_set_lessdef, locmap_undef_regs_lessdef.
-- (* Lload *)
+Qed.
+
+Lemma tunnel_step_correct_Lload:
+  forall s f sp chunk addr args dst bb rs m a v rs'
+    (H: eval_addressing ge sp addr (reglist rs args) = Some a)
+    (H0: Mem.loadv chunk m a = Some v)
+    (H1: rs' = Locmap.set (R dst) v (undef_regs (destroyed_by_load chunk addr) rs)),
+  forall st1'
+    (MS: match_states (Block s f sp (Lload chunk addr args dst :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Block s f sp bb rs' m) st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit eval_addressing_lessdef. apply reglist_lessdef; eauto. eauto. 
   intros (ta & EV & LD).
   exploit Mem.loadv_extends. eauto. eauto. eexact LD. 
   intros (tv & LOAD & LD').
-  left; simpl; econstructor; split.
+  simpl; eexists; split.
   eapply exec_Lload with (a := ta).
   rewrite <- EV. apply eval_addressing_preserved. exact symbols_preserved.
   eauto. eauto.
   econstructor; eauto using locmap_set_lessdef, locmap_undef_regs_lessdef.
-- (* Lgetstack *)
-  left; simpl; econstructor; split.
+Qed.
+
+Lemma tunnel_step_correct_Lgetstack:
+  forall s f sp sl ofs ty dst bb rs m rs'
+    (H: rs' = Locmap.set (R dst) (rs (S sl ofs ty)) (undef_regs (destroyed_by_getstack sl) rs)),
+  forall st1'
+    (MS: match_states (Block s f sp (Lgetstack sl ofs ty dst :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Block s f sp bb rs' m) st2').
+Proof using TRANSL.
+  intros; inv MS.
+  simpl; econstructor; split.
   econstructor; eauto.
   econstructor; eauto using locmap_set_lessdef, locmap_undef_regs_lessdef.
-- (* Lsetstack *)
-  left; simpl; econstructor; split.
+Qed.
+
+Lemma tunnel_step_correct_Lsetstack:
+  forall s f sp src sl ofs ty bb rs m rs'
+    (H: rs' = Locmap.set (S sl ofs ty) (rs (R src)) (undef_regs (destroyed_by_setstack ty) rs)),
+  forall st1'
+    (MS: match_states (Block s f sp (Lsetstack src sl ofs ty :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Block s f sp bb rs' m) st2').
+Proof using TRANSL.
+  intros; inv MS.
+  simpl; econstructor; split.
   econstructor; eauto.
   econstructor; eauto using locmap_set_lessdef, locmap_undef_regs_lessdef.
-- (* Lstore *)
+Qed.
+
+Lemma tunnel_step_correct_Lstore:
+  forall s f sp chunk addr args src bb rs m a rs' m'
+    (H: eval_addressing ge sp addr (reglist rs args) = Some a)
+    (H0: Mem.storev chunk m a (rs (R src)) = Some m')
+    (H1: rs' = undef_regs (destroyed_by_store chunk addr) rs),
+  forall st1'
+    (MS: match_states (Block s f sp (Lstore chunk addr args src :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Block s f sp bb rs' m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit eval_addressing_lessdef. apply reglist_lessdef; eauto. eauto. 
   intros (ta & EV & LD).
   exploit Mem.storev_extends. eauto. eauto. eexact LD. apply LS.  
   intros (tm' & STORE & MEM').
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Lstore with (a := ta).
   rewrite <- EV. apply eval_addressing_preserved. exact symbols_preserved.
   eauto. eauto.
   econstructor; eauto using locmap_undef_regs_lessdef.
-- (* Lcall *)
-  left; simpl; econstructor; split.
+Qed.
+
+Lemma tunnel_step_correct_Lcall:
+  forall s f sp sig ros bb rs m fd
+    (H: find_function ge ros rs = Some fd)
+    (H0: funsig fd = sig),
+  forall st1'
+    (MS: match_states (Block s f sp (Lcall sig ros :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\
+    match_states (Callstate (Stackframe f sp rs bb :: s) fd rs m) st2').
+Proof using TRANSL.
+  intros; inv MS.
+  simpl; econstructor; split.
   eapply exec_Lcall with (fd := tunnel_fundef fd); eauto.
   eapply find_function_translated; eauto.
   rewrite sig_preserved. auto.
   econstructor; eauto.
   constructor; auto.
   constructor; auto.
-- (* Ltailcall *)
+Qed.
+
+Lemma tunnel_step_correct_Ltailcall:
+  forall s f sp sig ros bb rs m fd rs' m'
+    (H: rs' = return_regs (parent_locset s) rs)
+    (H0: find_function ge ros rs' = Some fd)
+    (H1: funsig fd = sig)
+    (H2: Mem.free m sp 0 (fn_stacksize f) = Some m'),
+  forall st1'
+    (MS: match_states (Block s f (Vptr sp Integers.Ptrofs.zero) (Ltailcall sig ros :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Callstate s fd rs' m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit Mem.free_parallel_extends. eauto. eauto. intros (tm' & FREE & MEM'). 
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Ltailcall with (fd := tunnel_fundef fd); eauto.
   eapply find_function_translated; eauto using return_regs_lessdef, match_parent_locset.
   apply sig_preserved.
   econstructor; eauto using return_regs_lessdef, match_parent_locset.
-- (* Lbuiltin *)
+Qed.
+
+Lemma tunnel_step_correct_Lbuiltin:
+  forall s f sp ef args res bb rs m vargs t vres rs' m'
+    (H: eval_builtin_args ge rs sp m args vargs)
+    (H0: external_call ef ge vargs m t vres m')
+    (H1: rs' = Locmap.setres res vres (undef_regs (destroyed_by_builtin ef) rs)),
+  forall st1'
+    (MS: match_states (Block s f sp (Lbuiltin ef args res :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' t st2' /\ match_states (Block s f sp bb rs' m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit eval_builtin_args_lessdef. eexact LS. eauto. eauto. intros (tvargs & EVA & LDA).
   exploit external_call_mem_extends; eauto. intros (tvres & tm' & A & B & C & D).
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Lbuiltin; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved. 
   eapply external_call_symbols_preserved. apply senv_preserved. eauto.
   econstructor; eauto using locmap_setres_lessdef, locmap_undef_regs_lessdef.
-- (* Lbranch (preserved) *)
-  left; simpl; econstructor; split.
-  eapply exec_Lbranch; eauto.
-  fold (branch_target f pc). econstructor; eauto.
-- (* Lbranch (eliminated) *)
-  right; split. simpl. lia. split. auto. constructor; auto.
+Qed.
 
-- (* Lcond (preserved) *)
-  simpl tunneled_block.
-  set (s1 := U.repr (record_gotos f) pc1). set (s2 := U.repr (record_gotos f) pc2).
-  destruct (peq s1 s2).
-+ left; econstructor; split.
-  eapply exec_Lbranch.
-  set (pc := if b then pc1 else pc2).
-  replace s1 with (branch_target f pc) by (unfold pc; destruct b; auto).
-  constructor; eauto using locmap_undef_regs_lessdef_1.
-+ left; econstructor; split.
-  eapply exec_Lcond; eauto. eapply eval_condition_lessdef; eauto using reglist_lessdef.
-  destruct b; econstructor; eauto using locmap_undef_regs_lessdef.
-- (* Lcond (eliminated) *)
-  right; split. simpl. destruct b; lia.
-  split. auto.
-  set (pc := if b then pc1 else pc2).
-  replace (branch_target f pc1) with (branch_target f pc) by (unfold pc; destruct b; auto).
-  econstructor; eauto.
+Lemma tunnel_step_correct_Lbranch:
+  forall s f sp pc bb rs m,
+  forall st1'
+    (MS: match_states (Block s f sp (Lbranch pc :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (State s f sp pc rs m) st2') \/
+  (measure (State s f sp pc rs m) <
+    measure (Block s f sp (Lbranch pc :: bb) rs m))%nat /\
+  E0 = E0 /\ match_states (State s f sp pc rs m) st1'.
+Proof using TRANSL.
+  intros. inv MS.
+  - (* preserved *)
+    left; simpl; econstructor; split.
+    eapply exec_Lbranch; eauto.
+    fold (branch_target f pc). econstructor; eauto.
+  - (* eliminated *)
+    right; split. simpl. lia. split. auto. constructor; auto.
+Qed.
 
-- (* Ljumptable *)
+Lemma tunnel_step_correct_Lcond:
+  forall s f sp cond args pc1 pc2 bb rs b pc rs' m
+    (H: eval_condition cond (reglist rs args) m = Some b)
+    (H0: pc = (if b then pc1 else pc2))
+    (H1: rs' = undef_regs (destroyed_by_cond cond) rs),
+  forall st1'
+    (MS: match_states (Block s f sp (Lcond cond args pc1 pc2 :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (State s f sp pc rs' m) st2') \/
+  (measure (State s f sp pc rs' m) <
+    measure (Block s f sp (Lcond cond args pc1 pc2 :: bb) rs m))%nat /\
+  E0 = E0 /\ match_states (State s f sp pc rs' m) st1'.
+Proof using TRANSL.
+  intros; inv MS.
+  - (* preserved *)
+    simpl tunneled_block.
+    set (s1 := U.repr (record_gotos f) pc1). set (s2 := U.repr (record_gotos f) pc2).
+    destruct (peq s1 s2).
+    + left; econstructor; split.
+      eapply exec_Lbranch.
+      set (pc := if b then pc1 else pc2).
+      replace s1 with (branch_target f pc) by (unfold pc; destruct b; auto).
+      constructor; eauto using locmap_undef_regs_lessdef_1.
+    + left; econstructor; split.
+      eapply exec_Lcond; eauto. eapply eval_condition_lessdef; eauto using reglist_lessdef.
+      destruct b; econstructor; eauto using locmap_undef_regs_lessdef.
+  - (* eliminated *)
+    right; split. simpl. destruct b; lia.
+    split. auto.
+    set (pc := if b then pc1 else pc2).
+    replace (branch_target f pc1) with (branch_target f pc) by (unfold pc; destruct b; auto).
+    econstructor; eauto.
+Qed.
+
+Lemma tunnel_step_correct_Ljumptable:
+  forall s f sp arg tbl bb rs m n pc rs'
+    (H: rs (R arg) = Vint n)
+    (H0: list_nth_z tbl (Integers.Int.unsigned n) = Some pc)
+    (H1: rs' = undef_regs destroyed_by_jumptable rs),
+  forall st1'
+    (MS: match_states (Block s f sp (Ljumptable arg tbl :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (State s f sp pc rs' m) st2').
+Proof using TRANSL.
+  intros; inv MS.
   assert (tls (R arg) = Vint n).
   { generalize (LS (R arg)); rewrite H; intros LD; inv LD; auto. }
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Ljumptable.
   eauto. rewrite list_nth_z_map. change U.elt with node. rewrite H0. reflexivity. eauto.
   econstructor; eauto using locmap_undef_regs_lessdef.
-- (* Lreturn *)
+Qed.
+
+Lemma tunnel_step_correct_Lreturn:
+  forall s f sp bb rs m m'
+    (H: Mem.free m sp 0 (fn_stacksize f) = Some m'),
+  forall st1'
+    (MS: match_states (Block s f (Vptr sp Integers.Ptrofs.zero) (Lreturn :: bb) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\
+    match_states (Returnstate s (return_regs (parent_locset s) rs) m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit Mem.free_parallel_extends. eauto. eauto. intros (tm' & FREE & MEM'). 
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_Lreturn; eauto.
   constructor; eauto using return_regs_lessdef, match_parent_locset.
-- (* internal function *)
+Qed.
+
+Lemma tunnel_step_correct_internal_function:
+  forall s f rs m m' sp rs'
+    (H: Mem.alloc m 0 (fn_stacksize f) = (m', sp))
+    (H0: rs' = undef_regs destroyed_at_function_entry (call_regs rs)),
+  forall st1'
+    (MS: match_states (Callstate s (Internal f) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\
+    match_states
+      (State s f (Vptr sp Integers.Ptrofs.zero) (fn_entrypoint f) rs' m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit Mem.alloc_extends. eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros (tm' & ALLOC & MEM'). 
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_function_internal; eauto.
   simpl. econstructor; eauto using locmap_undef_regs_lessdef, call_regs_lessdef.
-- (* external function *)
+Qed.
+
+Lemma tunnel_step_correct_external_function:
+  forall s ef t args res rs m rs' m'
+    (H: args = map (fun p : rpair loc => Locmap.getpair p rs) (Conventions1.loc_arguments (ef_sig ef)))
+    (H0: external_call ef ge args m t res m')
+    (H1: rs' = Locmap.setpair (Conventions1.loc_result (ef_sig ef)) res (undef_caller_save_regs rs)),
+  forall st1'
+    (MS: match_states (Callstate s (External ef) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' t st2' /\ match_states (Returnstate s rs' m') st2').
+Proof using TRANSL.
+  intros; inv MS.
   exploit external_call_mem_extends; eauto using locmap_getpairs_lessdef.
   intros (tvres & tm' & A & B & C & D).
-  left; simpl; econstructor; split.
+  simpl; econstructor; split.
   eapply exec_function_external; eauto.
   eapply external_call_symbols_preserved; eauto. apply senv_preserved.
   simpl. econstructor; eauto using locmap_setpair_lessdef, locmap_undef_caller_save_regs_lessdef.
-- (* return *)
+Qed.
+
+Lemma tunnel_step_correct_external_return:
+  forall f sp rs1 bb s rs m,
+  forall st1'
+    (MS: match_states (Returnstate (Stackframe f sp rs1 bb :: s) rs m) st1'),
+  (exists st2' : state,
+    step tge st1' E0 st2' /\ match_states (Block s f sp bb rs m) st2').
+Proof using TRANSL.
+  intros; inv MS.
   inv STK. inv H1.
-  left; econstructor; split.
+  econstructor; split.
   eapply exec_return; eauto.
   constructor; auto.
+Qed.
+
+Lemma tunnel_step_correct:
+  forall st1 t st2, step ge st1 t st2 ->
+  forall st1' (MS: match_states st1 st1'),
+  (exists st2', step tge st1' t st2' /\ match_states st2 st2')
+  \/ (measure st2 < measure st1 /\ t = E0 /\ match_states st2 st1')%nat.
+Proof using TRANSL.
+  induction 1.
+- eapply tunnel_step_correct_block; eauto.
+- left. eapply tunnel_step_correct_Lop; eauto.
+- left. eapply tunnel_step_correct_Lload; eauto.
+- left. eapply tunnel_step_correct_Lgetstack; eauto.
+- left. eapply tunnel_step_correct_Lsetstack; eauto.
+- left. eapply tunnel_step_correct_Lstore; eauto.
+- left. eapply tunnel_step_correct_Lcall; eauto.
+- left. eapply tunnel_step_correct_Ltailcall; eauto.
+- left. eapply tunnel_step_correct_Lbuiltin; eauto.
+- eapply tunnel_step_correct_Lbranch; eauto.
+- eapply tunnel_step_correct_Lcond; eauto.
+- left. eapply tunnel_step_correct_Ljumptable; eauto.
+- left. eapply tunnel_step_correct_Lreturn; eauto.
+- left. eapply tunnel_step_correct_internal_function; eauto.
+- left. eapply tunnel_step_correct_external_function; eauto.
+- left. eapply tunnel_step_correct_external_return; eauto.
 Qed.
 
 Lemma transf_initial_states:
